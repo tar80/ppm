@@ -1,0 +1,164 @@
+ppx-plugin-manager
+
+Author: tar80 <tar80master@google.com>
+License: MIT License
+Repository: https://github.com/tar80/ppx-plugin-manager
+===============================================================================
+
+ppx-plugin-manager(以降ppm)は、TORO氏作のファイル操作ツール集
+Paper Plane xUI用のプラグインマネージャーのベータ版です。
+プラグインのインストール・アップデート・アンインストールができる他、
+ローカル設定ファイルの読み込みも可能です。
+どんなバグがあるかわらないので最初は別環境のPPxで試してみるのを推めます。
+
+なおppmはTORO氏とは一切関係ありませんのでPPx公式の掲示板でppmの質問はしないで
+ください。バグや動作不良の報告はgithubにイシューを立ててください。
+
+===============================================================================
+動作環境
+
+	UNICODE版、64bit版のPPxが対象。MultiByte版は動作対象外となります。
+	その他の条件として、
+		・PPx Script Module、PPx Key Moduleの導入
+		・正規表現ライブラリbregonig.dllの導入
+		・gitのインストール
+	が必要になります。
+
+===============================================================================
+インストール
+
+	ルートパスのinstall.jsを実行します。動作条件を満たしていればインストール
+	が開始されます。
+	インストールが成功した場合、必用なファイル類はルートディレクトリ
+		%HOME%が設定されていれば、%HOME%\.ppx\
+		%HOME%が設定されていなければ、%APPDATA%\ppx-plugin-manager\
+	以下へ作成されます。git cloneしたppx-plugin-managerリポジトリは不要です
+	ので削除してください。
+
+	引数に"1"を付けて実行すると、開発者モードとしてカレントディレクトリに
+	インストールされます。開発者モードではリモートからのアップデート対象外
+	となります。通常、開発者モードで実行する必要はありません。
+
+===============================================================================
+アンインストール
+
+	*ppmUninstallを実行します。プラグインが追加した設定の削除と<root>\repo、
+	repo\archが削除され、<root>\cache以下の設定ファイルは残ります。
+
+===============================================================================
+構成ファイルの説明
+
+	ppmは以下のファイルから構成されます。
+
+	<root>\		%HOME%\.ppx、または%APPDATA%\ppx-plugin-manager
+	 ├arch\	プラグインがダウンロードした書庫の保管場所
+	 ├repo\	プラグインごとのリポジトリ保管場所(ppm本体はここにある)
+	 └cache\
+	   └xxx\		PPxのプロファイルごとの保存場所
+	     ├backup\	日付ごとのPPx設定情報(PPX.CFG)の保存場所
+	     │ ├initial.cfg	ppmインストール前のPPx設定情報
+	     ├config\	<プラグインネーム>.cfgの保存場所
+	     ├list\	各種リストの保存場所
+	     │ ├_pluginlist	有効化するプラグインのパスリスト
+	     │ └_managefiles	ppmが管理中のプラグイン外の設定ファイルパス
+	     └ppm\		ppmが使うファイルの保存場所
+	        ├setup\	プラグインごとの追加PPxCFGの保存場所
+	        ├unset\	プラグインごとの削除PPxCFGの保存場所
+	        ├noplugin.cfg	プラグイン設定を除外したPPx設定情報
+	        └global.cfg	ppm設定値のバックアップファイル
+
+===============================================================================
+テーブル情報
+
+	S_ppm#global	ppmが使用する各種設定値の保存場所
+	 ├version	ppmのバージョン
+	 ├home		ppmが使用するファイルの保存場所
+	 ├ppm		ppmリポジトリのパス
+	 ├lib		ライブラリスクリプトの保存場所
+	 ├module	モジュールスクリプトの保存場所
+	 ├cache	ppmが直接操作するファイルの保存場所
+	 ├scripttype	使用中のjavascriptライブラリ
+	 ├dev		開発者モードのフラグ
+	 └plugins	適用中の全てのプラグインの名称
+
+	 S_ppm#plugins	インストール済みのプラグインの名称(キー)とパス(値)
+
+	 S_ppm#user	利用者が変更可能な設定値
+
+===============================================================================
+ユーザーコマンド
+
+	*ppmHelp <plugin-name> ; defult:ppx-plugin-manager
+		<plugin-name>のヘルプファイルを開きます。
+		引数なしでppmのヘルプを開きます。
+
+	*ppmInstall
+		_pluginlistに記載したプラグインをppmにインストールします。
+
+	*ppmUpdate
+		設定中のプラグインのアップデートをチェックし、更新があれば
+		ダウンロードの確認ダイアログを表示します。
+
+	*ppmUninstall
+		ppmをアンインストールします。
+
+	*ppmPluginlist
+		_pluginlistを編集します。
+
+	*ppmSetup <reset|set|unset> ; default:reset
+		ppmが適用中の全てのプラグイン設定をPPxに読み込みます。
+		最初に_managefilesに記載されたパスを読み込み、その後
+		プラグインを読み込みます。
+		reset:	現在のプラグイン設定を削除後、新しい設定を適用します。
+			backup\日付.cfg、backup\日付_noplugin.cfg、
+			ppm\noplugin.cfgを生成します。
+			引数なしの場合のデフォルト値です。
+		set:	全プラグイン設定を読み込みます。
+			backup\日付.cfgを生成します。
+		unset:	全プラグイン設定を削除します。
+			backup\日付_noplugin.cfg、ppm\nolugin.cfgを生成します。
+
+	*ppmDefault <plugin-name>
+		<plugin-name>のデフォルト設定を読み込みます。
+
+	*ppmEdit <plugin-name>
+		<plugin-name>の設定ファイルを編集し、その後設定を読み込むか
+		どうかのダイアログを表示します。
+
+	*ppmCompare <plugin-name>
+		<plugin-name>の現在の設定値とデフォルトの設定値の差分を表示し、
+		その後設定を読み込むかどうかのダイアログを表示します。
+
+	*ppmSet <plugin-name>
+		<plugin-name>を設定します。引数が必要です。
+
+	*ppmUnset <plugin-name>
+		<plugin-name>の設定を削除します。引数が必要です。
+
+	*ppmBackup
+		現在のPPxの設定を<日付>.cfgに出力します。
+
+	*ppmLoad
+		一行編集で選択した設定ファイルを読み込みます。
+
+	*ppmManageCfg
+		ppmで管理するプラグイン外のPPx設定ファイルを選択できます。
+		選択ファイルのパスは<root>\list\_managefilesに書き出されます。
+		何も選択しなかった場合は、cache\ppm\noplugin.cfgを読み込むか
+		どうか確認するダイアログを表示します。
+		noplugin.cfgは*ppmSetup実行時に生成されます。
+
+	*ppmRestoreText
+		PPeに*ppmRestore用のマクロを表示します。
+		この内容をPPXDEF.CFGにコピーしておくとPPcの初期化時に
+		*ppmRestoreが追加されます。
+	*ppmRestore
+		ppmで管理中の設定を読み込みます。PPxの初期化時にプラグイン設定
+		を復元できます。
+
+	*ppmCleanup
+		インストール済みで現在適用されていないプラグインを削除します。
+		<root>\repo内のプラグインが対象です。
+
+===============================================================================
+vim:tw=79:ts=8:sts=0:sw=4:norl:noet:fen:

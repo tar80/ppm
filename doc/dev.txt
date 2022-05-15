@@ -1,0 +1,160 @@
+Documents for ppm-plugin developers
+===============================================================================
+
+ppm-pluginの仕様書です。
+
+===============================================================================
+ディレクトリ構成
+
+ppm用プラグインは以下のディレクトリから構成されます。dev.zipを展開すれば
+そのままテンプレートとして使えます。
+
+	<plugin-name>\	ルートディレクトリ名はそのままプラグインの名称になる
+	 ├doc\
+	 │└help.txt	プラグインのヘルプ
+	 ├script\
+	 │├ecma\
+	 │├jscript\
+	 │├python\
+	 │└vbs\
+	 ├setting\
+	 │├base.cfg	プラグイン設定のベースとなるファイル
+	 │└patch.cfg	ユーザーが変更可能な設定値をまとめたファイル
+	 ├sheet\	ppm\cache\xxx\listにコピーされるリストの保存場所
+	 ├t\		テストスクリプトの保存場所
+	 ├install.js
+	 └readme.md
+
+===============================================================================
+install.js
+
+	プラグインの動作条件を指定できます。基本的には定数を指定するだけですが、
+	別途ファイルや設定を追加する場合は書き足してください。
+
+===============================================================================
+readme.md
+
+	リポジトリの説明書きです。
+
+===============================================================================
+dase.cfg
+
+	・patch.cfgとマージして生成するプラグイン設定の元になるファイルです。
+
+patch.cfg
+
+	・プラグインのインストール時に<plugin-name.cfg>として、
+	  <ppm>\cache\xxx\configにコピーされます。
+	・patch.cfgは*ppmDefault、*ppmCompareなどで使用され、デフォルト設定の
+	  雛形になります。
+	・<plugin-name.cfg>は*ppmEditコマンドでユーザーが直接編集でき、
+	  base.cfgとマージされます。
+
+===============================================================================
+base.cfgとpatch.cfgの仕様
+
+・コメントは行頭のセミコロン(;)のみ認識する
+  語尾のセミコロンはコメントと認識されない
+
+・base.cfgとpatch.cfgにはPPxのテーブル情報を書き込める
+  ラベル、キー、値はそれぞれ以下を指す
+	ラベル(label) = {
+	キー(key) = 値(value)
+	}
+
+・base.cfgの仕様
+	$replace:<name> = <value>
+		patch.cfg内の$<name>の値がキーとして置換される
+		patch.cfg内に$<name>が存在しない場合は設定されない
+	@default:<name> = <default-value>
+		patch.cfg内の@<name>の値が値として置換される
+		patch.cfg内に@<name>が存在しない場合は<default-value>が設定される
+	[?<name>:<default-value>]
+		patch.cfg内の?<name>の値と置換される
+		patch.cfg内に?<name>が存在しない場合は<default-value>が設定される
+
+・patch.cfgの仕様
+	$<name> = <value>
+		<value>の内容でbase.cfg内$replace:<name>の要素を置換する
+	@<name> = <value>
+		<value>の内容でbase.cfg内@default:<name>の値を置換する
+	?<name> = <value>
+		<value>の内容でbase.cfg内[?<name>:<defalut-value>]を置換する
+	[section][endsection]の間にはユーザーが自由に設定を書き込める
+	ラベルの頭に"-"を付けるとテーブルごと削除する
+	テーブルの削除のみが目的の場合は"-ラベル ="とする
+	[linecust][endlinecust]の間には"label,command"の書式でユーザーが
+	 自由に*linecustを書き込める
+
+===============================================================================
+サンプル設定
+
+【base.cfg】
+
+KC_main = {
+@default:A , %K"@A"
+@default:B , %K"@B"
+$replace:key1 , *linemessage [?msg:message1]
+$replace:key2 , *linemessage [?msg:message2]
+$replace:key3 , *linemessage [?msg:message3]
+}
+
+【patch.cfg】
+
+@A = %K"@R"
+$key1 = C
+$key2 = D
+;$key3 = E
+?msg = patch1
+
+[section]
+KC_main = {
+E , *ppe
+}
+
+-S_sample = {
+sample1 = sample1
+sample2 = %0
+sample3 = echo sample3
+}
+[endsection]
+
+[linecust]
+sample,KC_main:Firstevent,*set sample_flag=1
+[endlinecust]
+
+上記の設定ファイルをマージすると、下記の内容の設定ファイルが生成されます。
+
+【cache\ppm\setup\plugin-name.cfg】
+
+KC_main = {
+A , %K"@R"
+B , %K"@B"
+C , *linemessage patch1
+D , *linemessage message2
+E , *ppe
+FIRSTEVENT , ~
+	%msample *set sample_flag=1
+}
+S_sample = {
+sample1 = sample1
+sample2 = %0
+sample3 = echo sample3
+}
+
+【cache\ppm\unset\plugin-name.cfg】
+
+KC_main = {
+-|A =
+-|B =
+-|C =
+-|D =
+-|E =
+}
+-S_sample =
+
+[cache\ppm\unset\linecust.cfg]
+
+plugin-name=sample,KC_main:FIRSTEVENT,
+
+===============================================================================

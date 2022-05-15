@@ -1,0 +1,156 @@
+Paper Plane xUI Script Module Javascript modules Document
+===============================================================================
+
+スクリプト内で読み込んで使用する関数群です。
+
+/* 読込み用の処理 */
+var st = PPx.CreateObject('ADODB.stream');
+var module = function (filepath) {
+  var data;
+
+  st.Open;
+  st.Type = 2;
+  st.Charset = 'UTF-8';
+  st.LoadFromFile(filepath);
+  data = st.ReadText(-1);
+  st.Close;
+
+  return Function(' return ' + data)();
+};
+
+// モジュールごとの読み込み
+var xxx = module(PPx.Extract('%*getcust(S_ppm#global:ppm)\\module\\%*getcust(S_ppm#global:scripttype)\\xxx.js'));
+module = null;
+
+===============================================================================
+CONTENTS
+
+	util.js
+	plugin.js
+	gitm.js
+
+===============================================================================
+util.js
+
+ライブラリと同等の関数およびADODB.streamを使用する関数を実装
+
+object
+
+	Array.prototype.indexOf	polyfill (jscriptのみ)
+
+	.fmt	文字エスケープ
+		key: bregnoig
+
+	.newline	改行文字コード変換
+		key: js, ppx, adodb
+
+function
+
+	.script	実行中のスクリプトの情報
+		{name:スクリプトファイル名、path:親ディレクトリパス}
+		arguments:
+
+	.quitMsg	メッセージを表示して終了
+		arguments: 0=メッセージ
+
+	.error	ライブラリerrors.jsを実行して終了
+		arguments: 0=errors.jsのメソッド名
+
+	.setc	PPx.Execute('*setcust prop')の簡略化
+		arguments: 0=プロパティ名
+
+	.getc	PPx.Extract('%*getcust(prop)')の簡略化
+		arguments: 0=プロパティ名
+
+	.lib	ライブラリの実行 .callまたは.apply経由
+		arguments: ライブラリの引数
+
+	.reply	ライブラリの実行(戻り値あり) .callまたは.apply経由
+		arguments: ライブラリの引数
+
+	.print	PPeでメッセージを表示 .callまたは.apply経由で使用
+		arguments: {cmd=ppe|edit, title=タイトル, tab=タブ数},
+                array=一行ごとのメッセージ
+
+	.printw	PPeでメッセージを表示(ファイル出力あり) .callまたは.apply経由
+	 文字数制限対策のため、メッセージを一旦ファイルに出力して読み込む
+		arguments: {cmd=ppe|edit, title=タイトル, tab=タブ数},
+                array=一行ごとのメッセージ
+
+	.esc	文字列エスケープ
+		arguments: 0=obj.fmtのプロパティ名, 1=文字列
+
+	.check_linefeed	改行を含む文字列の改行コード判別
+		arguments: 0=文字列
+
+	.lines	UTF-8エンコードのファイルを読み込み一行ごとに配列にして返す
+	 .callまたは.apply経由
+		{data:配列データ, newline:ファイルで最初に使用された改行コード}
+		arguments: 0=ファイルパス
+
+	.write	配列を要素ごとに改行してファイルに出力 .callまたは.apply経由
+	 %'temp'およびS_ppm#global:cache以下のファイルのみ対象とします。
+		{filepath:出力ファイル, newline:改行コード},
+		array=一行ごとのメッセージ
+
+	.input	%*inputの結果に、["%]のエスケープを追加した文字列を返す
+		arguments:
+			0=エスケープ対象(0="|1="%),
+			1=文字列,
+			2=タイトル,
+			3=editmode,
+			4=カーソル・選択範囲,
+			5=%*inputのオプション-kの内容
+
+===============================================================================
+plugin.js
+
+プラグインの設定・削除に共通するコマンド関数
+*linecustで処理できるコマンド内の文字数は凡そ500文字の制限があり、
+これを回避するため*linecust相当の関数を実装
+
+object
+
+	Array.prototype.indexOf	polyfill (jscriptのみ)
+
+function
+
+
+	.complete	文字列補完
+		arguments: 0=obj.fmtのプロパティ名, 1=文字列
+
+	.check_linefeed	改行を含む文字列の改行コード判別
+		arguments: 0=文字列
+
+	.lines	UTF-8エンコードのファイルを読み込み一行ごとに配列にして返す
+	 .callまたは.apply経由
+		{data:配列データ, newline:ファイルで最初に使用された改行コード}
+		arguments: 0=ファイルパス
+
+	.unset	PPxからプラグインの設定を削除する
+        	arguments: 0=プラグイン名, 1=ドライランのフラグ
+	.addline	*linecustコマンドを変換してプロパティに追加
+		arguments: カンマ区切りの*linecustコマンド
+
+	.deleteline	path(指定なしはppm\unset\linecust.cfg)の内容をプロパティから削除
+		arguments: {
+                path:削除する%mを羅列したファイルのパス,
+                name:削除する%mを限定)
+                }
+
+===============================================================================
+gitm.js
+
+gitのレポジトリ情報を取得する関数を実装
+
+function
+
+	.root	リポジトリのルートパスを返す
+		arguments: 0=リポジトリのパス
+
+	.branch	アクティブブランチ名を返す
+		arguments: 0=リポジトリルートパス
+
+	.head	最新コミットのハッシュを返す
+		arguments: 0=リポジトリルートパス, 1=ブランチ名
+

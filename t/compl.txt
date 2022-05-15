@@ -1,0 +1,3 @@
+﻿operating_conditions ;動作条件の確認
+build ;build.jsの試行
+setup_reset ;setup.js,resetの試行

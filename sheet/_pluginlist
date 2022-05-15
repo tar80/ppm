@@ -1,0 +1,21 @@
+﻿;plugin repositories list
+;
+;#仕様
+; 行頭にremote|localがある行を読み込みます。
+; コメントはセミコロン(;)を使います。
+;
+; remote	github上で公開されているプラグインのurl該当箇所
+; 		一行に一つのパスを書く
+; local	ppmのプラグインファイルで構成されたローカルリポジトリのパス
+; 		一行に一つのパスを書く
+;
+; remote 'username/pluginname'
+; local  'path\to\repository'
+;-------------------------------------------------------------------------------
+
+;remote 'tar80/ppm-etp'
+;remote 'tar80/ppm-comppath'
+;remote 'tar80/ppm-switchmenu'
+
+;-------------------------------------------------------------------------------
+; vim:tw=79:ts=8:sw=8:sts=0:norl:fen:noet:
