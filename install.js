@@ -2,14 +2,14 @@
 /**
  * Install ppx-plugin-manager
  *
- * @version 0.1
+ * @version 0.11
  * @arg 0 If nonzero developer mode
  */
 
 /* constants */
 var PPX_VERSION = 18403;
 var SCRIPT_VERSION = 18;
-var PPM_VERSION = 0.1;
+var PPM_VERSION = 0.11;
 var NEWLINE_CODE = 'crlf';
 
 // Require modules
@@ -75,7 +75,6 @@ var print = function () {
 };
 
 // var g_dev = 1;
-// NOTE: return later
 var g_dev = PPx.Arguments.length && PPx.Arguments(0) | 0;
 var g_usejs = (function () {
   var num = PPx.Extract('%*getcust(_others:usejs9)') | 0;
