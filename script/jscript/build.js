@@ -239,7 +239,7 @@ var g_baseLines = (function (base, patches) {
   var match = {};
 
   var assembly = function (label, value) {
-    var reg2 = RegExp('\\[\\' + label + '([^\\]]+)]', 'g');
+    var reg2 = RegExp('\\[\\' + label + ':([^\\]]+)]', 'g');
     return thisLine.replace(reg2, value);
   };
 
@@ -454,8 +454,11 @@ if (g_args.setupPath === 'dryrun') {
     PPx.Echo('[Build setup ' + name + '.cfg]\n\n' + mergeLines.set.join(NEWLINE));
     PPx.Echo('[Build unset ' + name + '.cfg]\n\n' + mergeLines.unset.join(NEWLINE));
 
-    var linecust = mergeLines.linecust;
-    linecust.length !== 0 && PPx.Echo('[' + name + ']\n\n' + linecust.join(NEWLINE));
+    var setline = g_patches.linecust;
+    var unsetline = mergeLines.linecust;
+    setline.length !== 0 && PPx.Echo('[Linecust ' + name + ']\n\nset: \n' +
+      setline.join(NEWLINE) + '\n\nunset: \n' +
+      unsetline.join(NEWLINE));
 
     PPx.Quit(1);
   })(g_args.name);
