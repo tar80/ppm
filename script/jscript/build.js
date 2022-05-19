@@ -88,7 +88,7 @@ var g_args = (function (args) {
 var g_unsetLines = [];
 
 /* Extract patches from the patch file */
-var g_patches = (function (path, unsets) {
+var g_patches = (function (path, source, unsets) {
   var result = {rep: {}, conv: {}, section: [], linecust: [], unset: []};
   var patchLines = util.lines(path).data;
   var thisLine, thisProp;
@@ -209,7 +209,7 @@ var g_patches = (function (path, unsets) {
       sect();
     }
 
-    if (thisLine === '[linecust]') {
+    if (thisLine === '[linecust]' && source === 'user') {
       for (i++; i < l; i++) {
         thisLine = patchLines[i];
 
@@ -227,20 +227,21 @@ var g_patches = (function (path, unsets) {
   }
 
   return result;
-})(g_args.patchPath, g_unsetLines);
+})(g_args.patchPath, g_args.source, g_unsetLines);
 
 /* Conversion processing of string */
 var g_baseLines = (function (base, patches) {
   var result = [];
   var lines = util.lines(base).data;
-  var reg1 = /\[\?[^:]+:[^\]]+\]/;
+  var reg1 = /\[\?[^:]+:[^\]]*\]/;
   var reg2 = /\?[^:]+/g;
   var thisLine, thisMatch, thisPatch;
   var match = {};
 
   var assembly = function (label, value) {
-    var reg2 = RegExp('\\[\\' + label + ':([^\\]]+)]', 'g');
-    return thisLine.replace(reg2, value);
+    var reg2 = RegExp('\\[\\' + label + ':([^\\]]*)]', 'g');
+    var result = thisLine.replace(reg2, value);
+    return result;
   };
 
   for (var i = 0, l = lines.length; i < l; i++) {
