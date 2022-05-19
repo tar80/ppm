@@ -2,7 +2,7 @@
 /**
  * Install ppx-plugin-manager
  *
- * @version 0.12
+ * @version 0.13
  * @arg 0 If nonzero developer mode
  */
 
