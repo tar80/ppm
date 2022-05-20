@@ -34,9 +34,9 @@ var files = (function () {
     mark === 0 &&
     !PPx.Execute(
       '%"ppx-plugin-manager"' +
-      '%Q"Entry is not marked. Do you want to add a noplugin.cfg?%bn%bn' +
-      'NOTE:%btThe noplugin.cfg contains non-ppm management user-settings.%bn' +
-      '%btIt is generated at the time of *ppmSetup execution'
+        '%Q"Entry is not marked. Do you want to add a noplugin.cfg?%bn%bn' +
+        'NOTE:%btThe noplugin.cfg contains non-ppm management user-settings.%bn' +
+        '%btIt is generated at the time of *ppmSetup execution'
     )
   ) {
     path = cache_dir + '\\ppm\\noplugin.cfg';

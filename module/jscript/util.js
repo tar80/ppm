@@ -197,7 +197,7 @@
     }
     var linefeed = obj.check_linefeed(data_);
     data_ = data.split(linefeed);
-    if (data_.length === 0) return {newline: '', data: ''};
+    if (data_.length === 0) return {newline: '', data: []};
     if (data_[data_.length - 1] === '') data_.pop();
     return {newline: linefeed, data: data_};
   };
@@ -221,14 +221,16 @@
     st.Close;
   };
   obj.input = function () {
-    var result;
-    var rep = {0: [/"/g, {'"': '""'}], 1: [/["%]/g, {'"': '""', '%': '%%'}]}[this.type || 0];
-    text = this.text || '';
-    title = this.title || 'input.js';
-    mode = this.mode || 'g';
-    select = this.select || 'a';
-    postcmd = this.k ? ' -k ' + this.k : '';
-    result =
+    var rep = {
+      0: [/"/g, {'"': '""'}],
+      1: [/["%]/g, {'"': '""', '%': '%%'}]
+    }[this.type || 0];
+    var text = this.text || '';
+    var title = this.title || 'input.js';
+    var mode = this.mode || 'g';
+    var select = this.select || 'a';
+    var postcmd = this.k ? ' -k ' + this.k : '';
+    var result =
       PPx.Extract(
         '%*input(%("' +
           text +
@@ -251,7 +253,6 @@
     });
   };
   obj.basepath = function (filepath) {
-    var result = '';
     var data;
     if (!obj.fileexists(filepath)) return '';
     st.Open;
@@ -262,8 +263,7 @@
     st.SkipLine = 1;
     data = st.ReadText(-2);
     st.Close;
-    result = data.replace(/^;Base=(.*)\|\d*/, '$1');
-    return result;
+    return data.replace(/^;Base=(.*)\|\d*/, '$1');
   };
   return obj;
 })();

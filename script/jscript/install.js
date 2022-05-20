@@ -37,9 +37,9 @@ var fso = PPx.CreateObject('Scripting.FileSystemObject');
 var install = function (pluginname, path, lines) {
   var wd = fso.getFile(PPx.ScriptName).ParentFolder;
   var line = function (num) {
-    var data =lines[num].split('=');
-    return {key: data[0], value: data[1]}
-  }
+    var data = lines[num].split('=');
+    return {key: data[0], value: data[1]};
+  };
   var info = {};
   var thisLine;
 
@@ -58,14 +58,14 @@ var install = function (pluginname, path, lines) {
   /* Check versions */
   var versions = util.reply.call({name: 'version'}, [
     info.PPX_VERSION +
-    ',' +
-    info.SCRIPT_VERSION +
-    ',' +
-    info.CODETYPE_PERMISSION +
-    ',' +
-    info.SCRIPTTYPE_PERMISSION +
-    ',' +
-    info.PPM_VERSION
+      ',' +
+      info.SCRIPT_VERSION +
+      ',' +
+      info.CODETYPE_PERMISSION +
+      ',' +
+      info.SCRIPTTYPE_PERMISSION +
+      ',' +
+      info.PPM_VERSION
   ]);
 
   /* Check executables */
@@ -92,9 +92,7 @@ var install = function (pluginname, path, lines) {
 
   var thisDep = (function (dep) {
     var dep_ = dep.split(',');
-    var result = dep_[0] !== ''
-      ? '>Dependent plugins: ' + dep_.join(' ')
-      : '';
+    var result = dep_[0] !== '' ? '>Dependent plugins: ' + dep_.join(' ') : '';
     return result;
   })(info.DEPENDENCIES);
 
@@ -113,7 +111,7 @@ var install = function (pluginname, path, lines) {
     if (dry_run === 0 && specdir !== '') {
       configDir = PPx.Extract('%*getcust(S_ppm#global:cache)') + '\\';
 
-        PPx.Echo(path + '\\' + specdir, configDir, false);
+      PPx.Echo(path + '\\' + specdir, configDir, false);
       try {
         fso.CopyFolder(path + '\\' + specdir, configDir, false);
       } catch (_err) {
@@ -123,13 +121,13 @@ var install = function (pluginname, path, lines) {
   })(info.SPECIFIC_COPY_DIR);
 
   return versions + exeNames + moduleNames + thisDep;
-}
+};
 
 var resultMsg = (function () {
   var list = util.lines(util.getc('S_ppm#global:cache') + '\\list\\_pluginlist');
   var enable = util.getc('S_ppm#global:plugins').split(',');
   var ppm = {name: 'ppx-plugin-manager', path: util.getc('S_ppm#global:ppm')};
-  var curlOutput = PPx.Extract("%*temp()%\\curl_stdout");
+  var curlOutput = PPx.Extract('%*temp()%\\curl_stdout');
   var result = [ppm.name];
   var msg = [];
   var thisLine = [];
@@ -177,7 +175,7 @@ var resultMsg = (function () {
         PPx.Execute('%Os curl -fsL ' + url + '>"' + curlOutput + '"');
         lines = util.lines(curlOutput).data;
 
-        if (lines[0].indexOf('PPM_PLUGIN_NAME=' + name) !== 0) {
+        if (!~lines[0].indexOf(name)) {
           msg.push(
             'Failed: ' + thisLine[1] + ' [URL does not exist or not a ppm-plugin repository]'
           );
@@ -199,7 +197,9 @@ var resultMsg = (function () {
 
       if (errorMsg !== '') {
         if (errorMsg.indexOf('>Dependent plugins:') !== 0) {
-          msg.push('Failed: ' + name + '%%bn%%bt' + errorMsg.slice(0, -1).replace(/,/g, '%%bn%%bt'));
+          msg.push(
+            'Failed: ' + name + '%%bn%%bt' + errorMsg.slice(0, -1).replace(/,/g, '%%bn%%bt')
+          );
           continue;
         }
 
@@ -208,10 +208,10 @@ var resultMsg = (function () {
 
       errorMsg = PPx.Extract(
         '%*script("' +
-        util.getc('S_ppm#global:ppm') +
-        '\\script\\jscript\\build.js",' +
-        name +
-        ',def,0)'
+          util.getc('S_ppm#global:ppm') +
+          '\\script\\jscript\\build.js",' +
+          name +
+          ',def,0)'
       );
 
       if (errorMsg !== '') {
@@ -248,9 +248,7 @@ var resultMsg = (function () {
       lines = util.lines(path + '\\install').data;
 
       if (lines[0].indexOf('PPM_PLUGIN_NAME=' + name)) {
-        msg.push(
-          'Failed: ' + thisLine[1] + ' [Not a ppm-plugin repository]'
-        );
+        msg.push('Failed: ' + thisLine[1] + ' [Not a ppm-plugin repository]');
         continue;
       }
 
@@ -258,7 +256,9 @@ var resultMsg = (function () {
 
       if (errorMsg !== '') {
         if (errorMsg.indexOf('>Dependent plugins:') !== 0) {
-          msg.push('Failed: ' + name + '%%bn%%bt' + errorMsg.slice(0, -1).replace(/,/g, '%%bn%%bt'));
+          msg.push(
+            'Failed: ' + name + '%%bn%%bt' + errorMsg.slice(0, -1).replace(/,/g, '%%bn%%bt')
+          );
           continue;
         }
 
@@ -269,10 +269,10 @@ var resultMsg = (function () {
 
       errorMsg = PPx.Extract(
         '%*script("' +
-        util.getc('S_ppm#global:ppm') +
-        '\\script\\jscript\\build.js",' +
-        name +
-        ',def,0)'
+          util.getc('S_ppm#global:ppm') +
+          '\\script\\jscript\\build.js",' +
+          name +
+          ',def,0)'
       );
 
       if (errorMsg !== '') {

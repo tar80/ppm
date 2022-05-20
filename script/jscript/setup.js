@@ -78,23 +78,26 @@ if (g_args.process !== 'unset') {
     var len = managefiles.length;
     var post = (function () {
       var result = 'CA';
-      if (len === 1 && (~managefiles[0].indexOf('noplugin.cfg') || ~managefiles[0].indexOf('initial.cfg'))) {
+      if (
+        len === 1 &&
+        (~managefiles[0].indexOf('noplugin.cfg') || ~managefiles[0].indexOf('initial.cfg'))
+      ) {
         result = 'CS';
       }
 
       return result;
-    })()
+    })();
     var cmdline =
       dryrun === 0
-      ? function (path) {
-        return PPx.Execute(
-          '*execute BP,*linemessage *setcust @' + path + '%%bn %%: *ppcust ' + post + ' ' + path
-        );
-      }
-      : function (path) {
-        result.push(path);
-        return result;
-      };
+        ? function (path) {
+            return PPx.Execute(
+              '*execute BP,*linemessage *setcust @' + path + '%%bn %%: *ppcust ' + post + ' ' + path
+            );
+          }
+        : function (path) {
+            result.push(path);
+            return result;
+          };
     var thisFile;
 
     for (var i = 0; i < len; i++) {
@@ -115,12 +118,12 @@ if (g_args.process !== 'unset') {
         thisPlugin = plugins[i];
         msg = PPx.Extract(
           '%*script("' +
-          util.getc('S_ppm#global:ppm') +
-          '\\script\\jscript\\build.js",' +
-          thisPlugin +
-          ',user,' +
-          dryrun +
-          ')'
+            util.getc('S_ppm#global:ppm') +
+            '\\script\\jscript\\build.js",' +
+            thisPlugin +
+            ',user,' +
+            dryrun +
+            ')'
         );
         if (msg !== '') {
           result.push('Failed: ' + thisPlugin + ' ' + msg);
@@ -146,21 +149,21 @@ g_args.dryrun && PPx.Quit(1);
 /* Output settings to file */
 PPx.Execute(
   '*string o, path=' +
-  g_ppm.cache +
-  '\\backup\\%*now(date) %:' +
-  '*ppcust CD ' +
-  g_ppm.cache +
-  '\\ppm\\global.cfg' +
-  ' -mask:"S_ppm#global,S_ppm#plugins" %:' +
-  '*ppcust CD %so"path".cfg -nocomment %:' +
-  'copy /Y ' +
-  g_ppm.cache +
-  '\\ppm\\noplugin.cfg %so"path"_noplugin.cfg'
+    g_ppm.cache +
+    '\\backup\\%*now(date) %:' +
+    '*ppcust CD ' +
+    g_ppm.cache +
+    '\\ppm\\global.cfg' +
+    ' -mask:"S_ppm#global,S_ppm#plugins" %:' +
+    '*ppcust CD %so"path".cfg -nocomment %:' +
+    'copy /Y ' +
+    g_ppm.cache +
+    '\\ppm\\noplugin.cfg %so"path"_noplugin.cfg'
 );
 
 var postcmd = g_args.process !== 'unset' ? '*focus BP' : '*closeppx BP';
 
 PPx.Execute(
   '*execute BP,%%"ppx-plugin-manager"%%Q"セットアップが完了しました%%bnPPcを再起動します" %%: *closeppx C* %%: *wait 200,2 %%: *ppc -k ' +
-  postcmd
+    postcmd
 );

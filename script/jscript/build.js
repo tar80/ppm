@@ -459,9 +459,15 @@ if (g_args.setupPath === 'dryrun') {
     PPx.Echo('[Build setup ' + name + '.cfg]\n\n' + mergeLines.set.join(NEWLINE));
     PPx.Echo('[Build unset ' + name + '.cfg]\n\n' + mergeLines.unset.join(NEWLINE));
 
-    setline.length !== 0 && PPx.Echo('[Linecust ' + name + ']\n\nset: \n' +
-      setline.join(NEWLINE) + '\n\nunset: \n' +
-      unsetline.join(NEWLINE));
+    setline.length !== 0 &&
+      PPx.Echo(
+        '[Linecust ' +
+          name +
+          ']\n\nset: \n' +
+          setline.join(NEWLINE) +
+          '\n\nunset: \n' +
+          unsetline.join(NEWLINE)
+      );
 
     PPx.Quit(1);
   })(g_args.name);

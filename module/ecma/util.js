@@ -29,10 +29,12 @@
       '\\=': '=',
       '\\*': '*',
       '\\+': '+',
-      '\\+': '+',
+      '\\?': '?',
       '\\.': '.',
+      '\\/': '/',
       '\\s': ' ',
-      '\\t': '\t'
+      '\\t': '\t',
+      '\\\\': '\\'
     }
   };
   obj.newline = {
@@ -88,6 +90,8 @@
     PPx.Execute(`*script "${ecma}\\errors.js",${method},${PPx.ScriptName}`);
     PPx.Quit(-1);
   };
+  obj.fileexists = (filepath) =>
+    PPx.Execute('*ifmatch "o:e,a:d-",' + filepath + '%:*stop') === 0 ? false : true;
   obj.setc = (item) => PPx.Execute(`*setcust ${item}`);
   obj.getc = (item) => PPx.Extract(`%*getcust(${item})`);
   obj.lib = function () {
@@ -120,7 +124,13 @@
       `*${this.cmd} -utf8bom -${newline} -tab:${tab} ${path} -k *editmode -modify:silent -modify:readonly %%: *setcaption ${this.title}`
     );
   };
-  obj.esc = (format, text) => text.replace(/./g, (match) => obj.fmt[format][match] || match);
+  obj.esc = (format, text) => {
+    const reg = {
+      esc: /./g,
+      nor: /\\./g
+    }[format];
+    return text.replace(reg, (match) => obj.fmt[format][match] || match);
+  };
   obj.check_linefeed = (data) => {
     const codes = ['\r\n', '\n', '\r'];
     for (let i = 0, l = codes.length; i < l; i++) {
@@ -167,21 +177,37 @@
     st.SaveToFile(this.filepath, 2);
     st.Close;
   };
-  obj.input = (type, text, title, mode, select, postcmd) => {
+  obj.input = () => {
     const rep = {
       0: [/"/g, {'"': '""'}],
       1: [/["%]/g, {'"': '""', '%': '%%'}]
-    }[type];
-    text = text || '';
-    title = title || 'input.js';
-    mode = mode || 'g';
-    select = select || 'a';
-    postcmd = postcmd ? ` -k %(${postcmd}%)` : '';
+    }[this.type || 0];
+    const text = this.text || '';
+    const title = this.title || 'input.js';
+    const mode = this.mode || 'g';
+    const select = this.select || 'a';
+    const postcmd = this.k ? ` -k ${this.k}` : '';
     const result =
       PPx.Extract(
-        `%*input(%("${text}"%) -title:"${title}" -mode:${mode} -select:${select}${postcmd})`
+        `%*input(%("${text}" -title:"${title}"%) -mode:${mode} -select:${select}${postcmd})`
       ) || PPx.Quit(-1);
     return result.replace(rep[0], (c) => rep[1][c]);
+  };
+  obj.auxlocalpath = (wd) =>
+    wd.replace(/^aux:([\\/]{2})?[MS]_[^\\/]+[\\/](.*)/, (_p0, p1, p2) =>
+      typeof p1 === 'undefined' ? p2 : ''
+    );
+  obj.basepath = (filepath) => {
+    if (!obj.fileexists(filepath)) return '';
+    st.Open;
+    st.Type = 2;
+    st.Charset = 'UTF-16LE';
+    st.LoadFromFile(filepath);
+    st.LineSeparator = -1;
+    st.SkipLine = 1;
+    const data = st.ReadText(-2);
+    st.Close;
+    return data.replace(/^;Base=(.*)\|\d*/, '$1');
   };
   return obj;
 })();
