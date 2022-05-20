@@ -68,6 +68,10 @@ function
 	.reply	ライブラリの実行(戻り値あり) .callまたは.apply経由
 		arguments: ライブラリの引数
 
+	.fileexists	ファイルの存在確認をして真偽値を返す
+	 FileSystemObject.FileExistsより遅い
+		arguments: 0=ファイルパス
+
 	.print	PPeでメッセージを表示 .callまたは.apply経由で使用
 		arguments: {cmd=ppe|edit, title=タイトル, tab=タブ数},
                 array=一行ごとのメッセージ
@@ -94,13 +98,23 @@ function
 		array=一行ごとのメッセージ
 
 	.input	%*inputの結果に、["%]のエスケープを追加した文字列を返す
-		arguments:
-			0=エスケープ対象(0="|1="%),
-			1=文字列,
-			2=タイトル,
-			3=editmode,
-			4=カーソル・選択範囲,
-			5=%*inputのオプション-kの内容
+	 .callまたは.apply経由
+		{
+			type: エスケープ対象(0="|1="%),
+			text: 文字列,
+			title: タイトル,
+			mode: editmode,
+			select: カーソル・選択範囲,
+			k: %*inputのオプション-kの内容
+		}
+
+	.auxlocalpath	リストファイルではないaux:パスからローカルパスを取得
+	 該当しないときは空文字を返す
+		arguments: 0=aux:パス
+
+	.basepath	リストファイルのBaseパスを取得
+	 Baseパスがないときは空文字を返す
+		arguments: 0=リストファイルのパス
 
 ===============================================================================
 plugin.js
