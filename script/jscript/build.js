@@ -88,7 +88,7 @@ var g_args = (function (args) {
 var g_unsetLines = [];
 
 /* Extract patches from the patch file */
-var g_patches = (function (path, unsets) {
+var g_patches = (function (path, source, unsets) {
   var result = {rep: {}, conv: {}, section: [], linecust: [], unset: []};
   var patchLines = util.lines(path).data;
   var thisLine, thisProp;
@@ -209,7 +209,7 @@ var g_patches = (function (path, unsets) {
       sect();
     }
 
-    if (thisLine === '[linecust]') {
+    if (source === 'user' && thisLine === '[linecust]') {
       for (i++; i < l; i++) {
         thisLine = patchLines[i];
 
@@ -227,20 +227,21 @@ var g_patches = (function (path, unsets) {
   }
 
   return result;
-})(g_args.patchPath, g_unsetLines);
+})(g_args.patchPath, g_args.source, g_unsetLines);
 
 /* Conversion processing of string */
 var g_baseLines = (function (base, patches) {
   var result = [];
   var lines = util.lines(base).data;
-  var reg1 = /\[\?[^:]+:[^\]]+\]/;
+  var reg1 = /\[\?[^:]+:[^\]]*\]/;
   var reg2 = /\?[^:]+/g;
   var thisLine, thisMatch, thisPatch;
   var match = {};
 
   var assembly = function (label, value) {
-    var reg2 = RegExp('\\[\\' + label + '([^\\]]+)]', 'g');
-    return thisLine.replace(reg2, value);
+    var reg2 = RegExp('\\[\\' + label + ':([^\\]]*)]', 'g');
+    var result = thisLine.replace(reg2, value);
+    return result;
   };
 
   for (var i = 0, l = lines.length; i < l; i++) {
@@ -424,7 +425,7 @@ var mergeLines = (function (name, source, lines, patches, unsets, linecustpath) 
   })();
 
   result['linecust'] = (function () {
-    var linecusts = [];
+    var linecusts = {set: [], unset: []};
     var lines = util.lines(linecustpath).data;
 
     if (source === 'user') {
@@ -436,8 +437,10 @@ var mergeLines = (function (name, source, lines, patches, unsets, linecustpath) 
 
         if (typeof thisLine !== 'undefined') {
           thisLine_ = thisLine.replace(reg, name + '=$1');
-          if (!~lines.indexOf(thisLine_)) {
-            linecusts.push(thisLine_);
+          if (~lines.indexOf(thisLine_)) {
+            linecusts.unset.push(thisLine_);
+          } else {
+            linecusts.set.push(thisLine_);
           }
         }
       }
@@ -451,11 +454,14 @@ var mergeLines = (function (name, source, lines, patches, unsets, linecustpath) 
 
 if (g_args.setupPath === 'dryrun') {
   (function (name) {
+    var setline = g_patches.linecust;
+    var unsetline = mergeLines.linecust.unset;
     PPx.Echo('[Build setup ' + name + '.cfg]\n\n' + mergeLines.set.join(NEWLINE));
     PPx.Echo('[Build unset ' + name + '.cfg]\n\n' + mergeLines.unset.join(NEWLINE));
 
-    var linecust = mergeLines.linecust;
-    linecust.length !== 0 && PPx.Echo('[' + name + ']\n\n' + linecust.join(NEWLINE));
+    setline.length !== 0 && PPx.Echo('[Linecust ' + name + ']\n\nset: \n' +
+      setline.join(NEWLINE) + '\n\nunset: \n' +
+      unsetline.join(NEWLINE));
 
     PPx.Quit(1);
   })(g_args.name);
@@ -494,4 +500,4 @@ save(mergeLines.unset, g_args.unsetPath, 0);
   if (del.length !== 0) {
     save(del, filepath, 1);
   }
-})(g_patches.linecust, mergeLines.linecust, g_args.linecustPath);
+})(g_patches.linecust, mergeLines.linecust.set, g_args.linecustPath);

@@ -21,7 +21,7 @@
   var obj = {};
   var jscript = PPx.Extract('%*getcust(S_ppm#global:ppm)') + '\\lib\\jscript';
   obj.fmt = {
-    bregonig: {
+    esc: {
       '^': '\\^',
       '$': '\\$',
       '(': '\\(',
@@ -35,6 +35,24 @@
       '.': '\\.',
       '/': '\\/',
       '\\': '\\\\'
+    },
+    nor: {
+      '\\^': '^',
+      '\\$': '$',
+      '\\(': '(',
+      '\\)': ')',
+      '\\[': '[',
+      '\\]': ']',
+      '\\|': '|',
+      '\\=': '=',
+      '\\*': '*',
+      '\\+': '+',
+      '\\?': '?',
+      '\\.': '.',
+      '\\/': '/',
+      '\\s': ' ',
+      '\\t': '\t',
+      '\\\\': '\\'
     }
   };
   obj.newline = {
@@ -90,6 +108,9 @@
     PPx.Execute('*script "' + jscript + '\\errors.js",' + method + ',' + PPx.ScriptName);
     PPx.Quit(-1);
   };
+  obj.fileexists = function (filepath) {
+    return PPx.Execute('*ifmatch "o:e,a:d-",' + filepath + '%:*stop') === 0 ? false : true;
+  };
   obj.setc = function (item) {
     return PPx.Execute('*setcust ' + item);
   };
@@ -98,11 +119,15 @@
   };
   obj.lib = function () {
     var args = [].slice.call(arguments);
-    return PPx.Execute('*script "' + jscript + '\\' + this.name + '.js",' + args);
+    var path = jscript + '\\' + this.name + '.js';
+    if (!obj.fileexists(path)) return obj.quitMsg('Not exist\n\n' + path);
+    return PPx.Execute('*script "' + path + '",' + args);
   };
   obj.reply = function () {
     var args = [].slice.call(arguments);
-    return PPx.Extract('%*script("' + jscript + '\\' + this.name + '.js",' + args + ')');
+    var path = jscript + '\\' + this.name + '.js';
+    if (!obj.fileexists(path)) return 'Not exist: ' + path;
+    return PPx.Extract('%*script("' + path + '",' + args + ')');
   };
   obj.print = function () {
     var args = [].slice.call(arguments);
@@ -141,7 +166,11 @@
     );
   };
   obj.esc = function (format, text) {
-    return text.replace(/./g, function (match) {
+    var reg = {
+      esc: /./g,
+      nor: /\\./g
+    }[format];
+    return text.replace(reg, function (match) {
       return obj.fmt[format][match] || match;
     });
   };
@@ -191,24 +220,21 @@
     st.SaveToFile(this.filepath, 2);
     st.Close;
   };
-  obj.input = function (type, text, title, mode, select, postcmd) {
+  obj.input = function () {
     var result;
-    var rep = {
-      0: [/"/g, {'"': '""'}],
-      1: [/["%]/g, {'"': '""', '%': '%%'}]
-    }[type];
-    text = text || '';
-    title = title || 'input.js';
-    mode = mode || 'g';
-    select = select || 'a';
-    postcmd = postcmd ? ' -k %(' + postcmd + '%)' : '';
+    var rep = {0: [/"/g, {'"': '""'}], 1: [/["%]/g, {'"': '""', '%': '%%'}]}[this.type || 0];
+    text = this.text || '';
+    title = this.title || 'input.js';
+    mode = this.mode || 'g';
+    select = this.select || 'a';
+    postcmd = this.k ? ' -k ' + this.k : '';
     result =
       PPx.Extract(
         '%*input(%("' +
           text +
-          '%)" -title:"' +
+          '" -title:"' +
           title +
-          '" -mode:' +
+          '"%) -mode:' +
           mode +
           ' -select:' +
           select +
@@ -218,6 +244,26 @@
     return result.replace(rep[0], function (c) {
       return rep[1][c];
     });
+  };
+  obj.auxlocalpath = function (wd) {
+    return wd.replace(/^aux:([\\/]{2})?[MS]_[^\\/]+[\\/](.*)/, function (_p0, p1, p2) {
+      return typeof p1 === 'undefined' ? p2 : '';
+    });
+  };
+  obj.basepath = function (filepath) {
+    var result = '';
+    var data;
+    if (!obj.fileexists(filepath)) return '';
+    st.Open;
+    st.Type = 2;
+    st.Charset = 'UTF-16LE';
+    st.LoadFromFile(filepath);
+    st.LineSeparator = -1;
+    st.SkipLine = 1;
+    data = st.ReadText(-2);
+    st.Close;
+    result = data.replace(/^;Base=(.*)\|\d*/, '$1');
+    return result;
   };
   return obj;
 })();

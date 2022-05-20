@@ -3,6 +3,11 @@
   return {
     root: function (pwd) {
       var hasGit;
+      if (pwd.indexOf('aux:') === 0) {
+        pwd = pwd.replace(/aux:([\\\/])*[SM]_[^\\]*\\(.*)?/, function (_p0, p1, p2) {
+          return typeof p1 === 'undefined' ? p2 : '';
+        });
+      }
       if (pwd !== '') {
         pwd = obj.GetFolder(pwd);
         do {
