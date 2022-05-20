@@ -92,7 +92,7 @@ var install = function (pluginname, path, lines) {
 
   var thisDep = (function (dep) {
     var dep_ = dep.split(',');
-    var result = dep_.length > 0
+    var result = dep_[0] !== ''
       ? '>Dependent plugins: ' + dep_.join(' ')
       : '';
     return result;

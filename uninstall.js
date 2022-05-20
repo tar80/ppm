@@ -32,7 +32,7 @@ var module = function (filepath) {
 var util = module(ppm_dir + '\\module\\jscript\\util.js');
 module = null;
 
-if (PPx.Extract("%'ppm_running'") !== '1') {
+if (PPx.Extract("%'ppm_uninstall'") !== '1') {
   PPx.Echo(util.script.name + ': This script can only be run *ppmUninstall');
   PPx.Quit(-1);
 }
@@ -51,4 +51,4 @@ PPx.Execute(
 );
 
 PPx.Execute('*set ppm_uninstall=');
-exitcode ? PPx.Execute('*focus BP') : PPx.Execute('*closeppx BP');
+PPx.Execute(exitcode ? '*focus BP' : '*closeppx BP');
