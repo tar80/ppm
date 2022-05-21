@@ -28,6 +28,7 @@ PPxのプラグインマネージャーβ版です。
 - [ppm-edit](https://github.com/tar80/ppm-edit) PPeや一行編集のキー設定などいろいろ
 - [ppm-etp](https://github.com/tar80/ppm-etp) Everything Search Moduleの設定サポート
 <!-- - [ppm-iconicfont](https://github.com/tar80/ppm-iconicfont) 拡張子アイコンをNerdFontsで描画 -->
+<!-- - [ppm-grep](https://github.com/tar80/ppm-grep) grepの結果をリストファイルに出力 -->
 <!-- - [ppm-misc](https://github.cim/tar80/ppm-misc) 細々としたカスタマイズの詰め合わせ -->
 - [ppm-switchmenu](https://github.com/tar80/ppm-switchmenu) 入れ替え可能なプリセットメニュー
 

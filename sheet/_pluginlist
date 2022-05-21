@@ -13,9 +13,8 @@
 ; local  'path\to\repository'
 ;-------------------------------------------------------------------------------
 
-;remote 'tar80/ppm-etp'
 ;remote 'tar80/ppm-comppath'
+;remote 'tar80/ppm-edit'
+;remote 'tar80/ppm-etp'
+;remote 'tar80/ppm-grep'
 ;remote 'tar80/ppm-switchmenu'
-
-;-------------------------------------------------------------------------------
-; vim:tw=79:ts=8:sw=8:sts=0:norl:fen:noet:
