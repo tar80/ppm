@@ -2,14 +2,14 @@
 /**
  * Install ppx-plugin-manager
  *
- * @version 0.21
+ * @version 0.3
  * @arg 0 If nonzero developer mode
  */
 
 /* constants */
 var PPX_VERSION = 18403;
 var SCRIPT_VERSION = 18;
-var PPM_VERSION = 0.21;
+var PPM_VERSION = 0.3;
 var NEWLINE_CODE = 'crlf';
 
 // Require modules
@@ -89,7 +89,7 @@ var home_dir = (function () {
   var home = PPx.Extract("%'HOME'");
 
   return home !== ''
-    ? fso.BuildPath(PPx.Extract("%'home'"), '.ppx')
+    ? fso.BuildPath(PPx.Extract("%'home'"), '.ppm')
     : fso.BuildPath(PPx.Extract("%'appdata'"), plugin_name);
 })();
 var repo_dir = fso.BuildPath(home_dir, 'repo');

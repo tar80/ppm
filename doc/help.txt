@@ -30,7 +30,7 @@ Paper Plane xUI用のプラグインマネージャーのベータ版です。
 	ルートパスのinstall.jsを実行します。動作条件を満たしていればインストール
 	が開始されます。
 	インストールが成功した場合、必用なファイル類はルートディレクトリ
-		%HOME%が設定されていれば、%HOME%\.ppx\
+		%HOME%が設定されていれば、%HOME%\.ppm\
 		%HOME%が設定されていなければ、%APPDATA%\ppx-plugin-manager\
 	以下へ作成されます。git cloneしたppx-plugin-managerリポジトリは不要です
 	ので削除してください。
@@ -57,7 +57,7 @@ Paper Plane xUI用のプラグインマネージャーのベータ版です。
 
 	ppmは以下のファイルから構成されます。
 
-	<root>\		%HOME%\.ppx、または%APPDATA%\ppx-plugin-manager
+	<root>\		%HOME%\.ppm、または%APPDATA%\ppx-plugin-manager
 	 ├arch\	プラグインがダウンロードした書庫の保管場所
 	 ├repo\	プラグインごとのリポジトリ保管場所(ppm本体はここにある)
 	 └cache\
