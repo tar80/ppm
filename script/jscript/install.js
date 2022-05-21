@@ -111,7 +111,6 @@ var install = function (pluginname, path, lines) {
     if (dry_run === 0 && specdir !== '') {
       configDir = PPx.Extract('%*getcust(S_ppm#global:cache)') + '\\';
 
-      PPx.Echo(path + '\\' + specdir, configDir, false);
       try {
         fso.CopyFolder(path + '\\' + specdir, configDir, false);
       } catch (_err) {
@@ -247,7 +246,7 @@ var resultMsg = (function () {
 
       lines = util.lines(path + '\\install').data;
 
-      if (lines[0].indexOf('PPM_PLUGIN_NAME=' + name)) {
+      if (!~lines[0].indexOf(name)) {
         msg.push('Failed: ' + thisLine[1] + ' [Not a ppm-plugin repository]');
         continue;
       }

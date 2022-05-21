@@ -389,7 +389,6 @@ var mergeLines = (function (name, source, lines, patches, unsets, linecustpath) 
           });
 
           if (typeof thisProp.value !== 'undefined') {
-            PPx.Echo('createlines undefined: ' + thisProp.key);
             setLines.push(thisProp.key + ' ' + thisProp.value);
             unsetLines[thisTable.key].push('-|' + thisProp.key + ' =');
             skip = true;
