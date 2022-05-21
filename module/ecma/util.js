@@ -100,7 +100,9 @@
   };
   obj.reply = function () {
     const args = [].slice.call(arguments);
-    return PPx.Extract(`%*script("${ecma}\\${this.name}.js",${args})`);
+    const path = `${ecma}\\${this.name}.js`;
+    if (!obj.fileexists(path)) return 'Not exist: ' + path;
+    return PPx.Extract(`%*script("${path}",${args})`);
   };
   obj.print = function () {
     const args = [].slice.call(arguments);
@@ -177,7 +179,7 @@
     st.SaveToFile(this.filepath, 2);
     st.Close;
   };
-  obj.input = () => {
+  obj.input = function () {
     const rep = {
       0: [/"/g, {'"': '""'}],
       1: [/["%]/g, {'"': '""', '%': '%%'}]

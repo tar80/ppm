@@ -4,7 +4,7 @@
     root: function (pwd) {
       var hasGit;
       if (pwd.indexOf('aux:') === 0) {
-        pwd = pwd.replace(/aux:([\\\/])*[SM]_[^\\]*\\(.*)?/, function (_p0, p1, p2) {
+        pwd = pwd.replace(/aux:([\\/])*[SM]_[^\\]*\\(.*)?/, function (_p0, p1, p2) {
           return typeof p1 === 'undefined' ? p2 : '';
         });
       }
@@ -12,13 +12,9 @@
         pwd = obj.GetFolder(pwd);
         do {
           hasGit = obj.BuildPath(pwd, '.git');
-          if (obj.FolderExists(hasGit)) {
-            return String(pwd);
-          }
+          if (obj.FolderExists(hasGit)) return String(pwd);
           pwd = pwd.ParentFolder;
-          if (pwd === null || pwd.IsRootFolder) {
-            break;
-          }
+          if (pwd === null || pwd.IsRootFolder) break;
         } while (!pwd.IsRootFolder);
       }
       return '';
@@ -32,7 +28,6 @@
         st.LoadFromFile(hasHead);
         var data = st.ReadText(-1);
         st.close;
-
         return ~data.indexOf('ref:') ? data.slice(16, -1) : data.slice(0, -1);
       }
     },
