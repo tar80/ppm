@@ -62,19 +62,25 @@ var resultMsg = (function () {
       if (dry_run === 0) {
         PPx.Execute('%Os *cd ' + pwd + ' %: git pull');
         PPx.Execute(
-          '%Os *cd ' +
+          '%Os *execute BP,*cd ' +
             pwd +
-            ' %:git log --oneline head...' +
-            localHead +
-            '|%0pptrayw -c *string u,stdout=%%*stdin(-utf8) %&'
+            ' %%:git log --oneline head...' +
+            localHead
         );
-        log = PPx.Extract('%*getcust(_User:stdout)');
-        chr = util.check_linefeed(log);
-        reg = new RegExp(chr + '\t', 'g');
-        log = log.replace(reg, util.newline.ppx[chr]);
+//         PPx.Execute(
+//           '%Os *cd ' +
+//             pwd +
+//             ' %:git log --oneline head...' +
+//             localHead +
+//             '|%0pptrayw -c *string u,stdout=%%*stdin(-utf8) %&'
+//         );
+//         log = PPx.Extract('%*getcust(_User:stdout)');
+//         chr = util.check_linefeed(log);
+//         reg = new RegExp(chr + '\t', 'g');
+//         log = log.replace(reg, util.newline.ppx[chr]);
       }
 
-      msg.push('Update: ' + name[1], log);
+      // msg.push('Update: ' + name[1], log);
       update = true;
       return;
     }
@@ -109,5 +115,6 @@ var resultMsg = (function () {
 PPx.Execute('*deletecust _User:stdout');
 PPx.Execute('*job end');
 
-util.print.apply({cmd: 'ppe', title: 'PLUGIN UPDATE RESULT'}, resultMsg);
+PPx.Execute('*execute BP,*linemessage ' + resultMsg);
+// util.print.apply({cmd: 'ppe', title: 'PLUGIN UPDATE RESULT'}, resultMsg);
 // PPx.Execute('*closeppx BP');
