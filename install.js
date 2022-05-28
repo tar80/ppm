@@ -2,14 +2,14 @@
 /**
  * Install ppx-plugin-manager
  *
- * @version 0.32
+ * @version 0.4
  * @arg 0 If nonzero developer mode
  */
 
 /* constants */
 var PPX_VERSION = 18403;
 var SCRIPT_VERSION = 18;
-var PPM_VERSION = 0.32;
+var PPM_VERSION = 0.4;
 var NEWLINE_CODE = 'crlf';
 
 // Require modules
@@ -103,6 +103,7 @@ var module_dir = fso.BuildPath(ppm_dir + '\\module', g_usejs);
 var cache_dir = fso.BuildPath(home_dir + '\\cache', PPx.Extract('%0').slice(3).replace(/\\/g, '@'));
 var config_dir = fso.BuildPath(cache_dir, 'config');
 var backup_dir = fso.BuildPath(cache_dir, 'backup');
+var script_dir = fso.BuildPath(cache_dir, 'script');
 var list_dir = fso.BuildPath(cache_dir, 'list');
 
 var errors = '';
@@ -153,6 +154,7 @@ PPx.Execute('*makedir ' + repo_dir);
 PPx.Execute('*makedir ' + config_dir);
 PPx.Execute('*makedir ' + backup_dir);
 PPx.Execute('*makedir ' + list_dir);
+PPx.Execute('*makedir ' + script_dir);
 PPx.Execute('*makedir ' + cache_dir + '\\ppm\\setup');
 PPx.Execute('*makedir ' + cache_dir + '\\ppm\\unset');
 fso.CreateTextFile(cache_dir + '\\ppm\\unset\\linecust.cfg');

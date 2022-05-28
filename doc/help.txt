@@ -61,18 +61,19 @@ Paper Plane xUI用のプラグインマネージャーのベータ版です。
 	 ├arch\	プラグインがダウンロードした書庫の保管場所
 	 ├repo\	プラグインごとのリポジトリ保管場所(ppm本体はここにある)
 	 └cache\
-	   └xxx\		PPxのプロファイルごとの保存場所
+	   └xxx\	PPxのプロファイルごとの保存場所
 	     ├backup\	日付ごとのPPx設定情報(PPX.CFG)の保存場所
 	     │ ├initial.cfg	ppmインストール前のPPx設定情報
 	     ├config\	<プラグインネーム>.cfgの保存場所
 	     ├list\	各種リストの保存場所
 	     │ ├_pluginlist	有効化するプラグインのパスリスト
 	     │ └_managefiles	ppmが管理中のプラグイン外の設定ファイルパス
-	     └ppm\		ppmが使うファイルの保存場所
-	        ├setup\	プラグインごとの追加PPxCFGの保存場所
-	        ├unset\	プラグインごとの削除PPxCFGの保存場所
-	        ├noplugin.cfg	プラグイン設定を除外したPPx設定情報
-	        └global.cfg	ppm設定値のバックアップファイル
+	     ├ppm\	ppmが使うファイルの保存場所
+	     │ ├setup\	プラグインごとの追加PPxCFGの保存場所
+	     │ ├unset\	プラグインごとの削除PPxCFGの保存場所
+	     │ ├noplugin.cfg	プラグイン設定を除外したPPx設定情報
+	     │ └global.cfg	ppm設定値のバックアップファイル
+	     └script\	利用者が編集可能なスクリプトの補完場所
 
 ===============================================================================
 テーブル情報
