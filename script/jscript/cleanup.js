@@ -82,9 +82,13 @@ var clean = (function () {
   return result;
 })();
 
+
 if (dry_run !== 0) {
   var cmdline = '%"ppx-plugin-manager"%I"Deleted directories:%bn';
   clean.length === 0
     ? PPx.Execute(cmdline + 'Nothing"')
     : PPx.Execute(cmdline + clean.join('%bn') + '"');
+} else if (clean.length === 0) {
+  PPx.SetPopLineMessage('!"No deleted plugin');
 }
+
