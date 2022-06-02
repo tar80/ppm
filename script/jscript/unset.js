@@ -21,19 +21,15 @@ var module = function (filepath) {
   return Function(' return ' + data)();
 };
 
+var util = module(PPx.Extract('%*getcust(S_ppm#global:ppm)\\module\\jscript\\util.js'));
 var plugin = module(PPx.Extract('%*getcust(S_ppm#global:ppm)\\module\\jscript\\plugin.js'));
 module = null;
-
-var getc = function (item) {
-  return PPx.Extract('%*getcust(' + item + ')');
-};
 
 var g_args = (function (args) {
   var len = args.length;
 
   if (len < 1) {
-    PPx.Execute('*script "' + g_ppm.lib + '\\errors.js",arg,' + PPx.ScriptName);
-    PPx.Quit(-1);
+    util.error('arg');
   }
 
   return {
@@ -42,15 +38,15 @@ var g_args = (function (args) {
   };
 })(PPx.Arguments());
 
-var enable_plugin = getc('S_ppm#global:plugins').split(',');
-var cache_dir = getc('S_ppm#global:cache');
+var enable_plugin = util.getc('S_ppm#global:plugins').split(',');
+var cache_dir = util.getc('S_ppm#global:cache');
 var unset_cfg = cache_dir + '\\ppm\\unset\\' + g_args.name + '.cfg';
 var global_cfg = cache_dir + '\\ppm\\global.cfg';
 
-// if (!~enable_plugin.indexOf(g_args.name)) {
-//   PPx.Execute('%"ppx-plugin-manager"%I"' + g_args.name + ' is not installed"');
-//   PPx.Quit(1);
-// }
+if (!~enable_plugin.indexOf(g_args.name)) {
+  PPx.Execute('%"ppx-plugin-manager"%I"' + g_args.name + ' is not installed"');
+  PPx.Quit(1);
+}
 
 /* Initial plugin */
 var init_result = plugin.unset(g_args.name, g_args.dryrun);
@@ -61,7 +57,22 @@ if (g_args.dryrun !== 0) {
 
 if (~enable_plugin.indexOf(g_args.name)) {
   enable_plugin.splice(enable_plugin.indexOf(g_args.name), 1);
-  PPx.Execute('*setcust S_ppm#global:plugins=' + enable_plugin.join(','));
+  util.setc('S_ppm#global:plugins=' + enable_plugin.join(','));
+
+  (function () {
+    var listpath = cache_dir + '\\list\\_pluginlist';
+    var lines = util.lines(listpath);
+
+    for (var i = 0, l = lines.data.length; i < l; i++) {
+      var thisLine = lines.data[i];
+
+      if (thisLine.indexOf(';') !== 0 && ~thisLine.indexOf(g_args.name)) {
+        lines.data[i] = ';' + thisLine;
+      }
+    }
+
+    util.write.apply({filepath: listpath, newline: lines.newline}, lines.data);
+  })();
 }
 
 /* Output settings to file */

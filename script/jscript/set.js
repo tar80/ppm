@@ -23,32 +23,29 @@ var module = function (filepath) {
   return Function(' return ' + data)();
 };
 
+var util = module(PPx.Extract('%*getcust(S_ppm#global:ppm)\\module\\jscript\\util.js'));
 var plugin = module(PPx.Extract('%*getcust(S_ppm#global:ppm)\\module\\jscript\\plugin.js'));
 module = null;
 
-var getc = function (item) {
-  return PPx.Extract('%*getcust(' + item + ')');
-};
+// var print = (function () {
+// var newline = getc('S_ppm#user:newline');
 
-var print = (function () {
-  var newline = getc('S_ppm#user:newline');
-
-  return function () {
-    var args = [].slice.call(arguments);
-    PPx.Execute(
-      '*script "' + g_ppm.lib + '\\print.js",ppe,' + newline + ',' + this.title + ',' + args
-    );
-    PPx.Quit(-1);
-  };
-})();
+// return function () {
+// var args = [].slice.call(arguments);
+// PPx.Execute(
+// '*script "' + g_ppm.lib + '\\print.js",ppe,' + newline + ',' + this.title + ',' + args
+// );
+// PPx.Quit(-1);
+// };
+// })();
 
 var g_ppm = (function () {
-  var ppm = getc('S_ppm#global:ppm');
+  var ppm = util.getc('S_ppm#global:ppm');
 
   return {
     lib: ppm + '\\lib\\jscript',
     script: ppm + '\\script\\jscript',
-    cache: getc('S_ppm#global:cache')
+    cache: util.getc('S_ppm#global:cache')
   };
 })();
 
@@ -56,13 +53,12 @@ var g_args = (function (args) {
   var len = args.length;
 
   if (len < 3) {
-    PPx.Execute('*script "' + g_ppm.lib + '\\errors.js",arg,' + PPx.ScriptName);
-    PPx.Quit(-1);
+    util.error('arg');
   }
 
   var scriptName = PPx.scriptName;
   var pluginName = args.item(0);
-  var pluginDir = getc('S_ppm#plugins:' + pluginName);
+  var pluginDir = util.getc('S_ppm#plugins:' + pluginName);
 
   if (pluginDir === '') {
     PPx.Execute(
@@ -148,7 +144,10 @@ if (g_args.dryrun !== 0) {
   );
 
   if (msg !== '') {
-    print.call({title: 'BUILD CONFIG FILE ABORTING'}, 'Failure: ' + plug.name + ' ' + msg);
+    util.print.call(
+      {cmd: 'ppe', title: 'BUILD CONFIG FILE ABORTING'},
+      'Failure: ' + plug.name + ' ' + msg
+    );
   }
 })(g_args, g_ppm);
 
@@ -158,12 +157,28 @@ if (g_args.dryrun !== 0) {
 }
 
 /* Load settings */
-PPx.Execute('*setcust @' + cfg.setup);
+util.setc('@' + cfg.setup);
 
-var enable_plugin = getc('S_ppm#global:plugins').split(',');
+var enable_plugin = util.getc('S_ppm#global:plugins').split(',');
 
-!~enable_plugin.indexOf(g_args.name) &&
-  PPx.Execute('*setcust S_ppm#global:plugins=' + getc('S_ppm#global:plugins') + ',' + g_args.name);
+if (!~enable_plugin.indexOf(g_args.name)) {
+  util.setc('S_ppm#global:plugins=' + util.getc('S_ppm#global:plugins') + ',' + g_args.name);
+  (function () {
+    var listpath = util.getc('S_ppm#global:cache') + '\\list\\_pluginlist';
+    var lines = util.lines(listpath);
+
+    for (var i = 0, l = lines.data.length; i < l; i++) {
+      var thisLine = lines.data[i];
+
+      if (~thisLine.indexOf(g_args.name)) {
+        lines.data[i] = thisLine.indexOf(';') === 0 ? thisLine.slice(1) : thisLine;
+        break;
+      }
+    }
+
+    util.write.apply({filepath: listpath, newline: lines.newline}, lines.data);
+  })();
+}
 
 /* Output settings to file */
 PPx.Execute('%Obd *ppcust CD ' + global_cfg + ' -mask:"S_ppm#global,S_ppm#plugins"');
