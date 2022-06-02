@@ -128,6 +128,7 @@ var cfg = (function (name) {
 
 /* Initial plugin */
 var init_result = plugin.unset(g_args.name, g_args.dryrun);
+
 if (g_args.dryrun !== 0) {
   PPx.Echo('[Unset]\n\n' + init_result);
 }
