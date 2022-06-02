@@ -96,28 +96,34 @@ var install = function (pluginname, path, lines) {
     return result;
   })(info.DEPENDENCIES);
 
-  (function (specdir) {
-    var configDir;
+  (function (files, scripts, specdir) {
+    var copyfile = function (send, dest) {
+      var destDir = PPx.Extract('%*getcust(S_ppm#global:cache)') + '\\' + dest + '\\';
+      var sendDir = path + '\\' + send + '\\*';
 
-    if (dry_run === 0 && info.COPY_FLAG !== '') {
+      if (!fso.FolderExists(destDir)) {
+        PPx.Execute('*makedir ' + destDir);
+      }
+
       try {
-        configDir = PPx.Extract('%*getcust(S_ppm#global:cache)') + '\\list\\';
-        fso.CopyFile(wd + '\\sheet\\*', configDir, false);
+        fso.CopyFile(sendDir, destDir, false);
       } catch (_err) {
         null;
       }
+    };
+
+    if (dry_run === 0 && files === 'true') {
+      copyfile('sheet', 'list');
+    }
+
+    if (dry_run === 0 && scripts === 'true') {
+      copyfile('userscript', 'script');
     }
 
     if (dry_run === 0 && specdir !== '') {
-      configDir = PPx.Extract('%*getcust(S_ppm#global:cache)') + '\\';
-
-      try {
-        fso.CopyFolder(path + '\\' + specdir, configDir, false);
-      } catch (_err) {
-        null;
-      }
+      copyfile(specdir, specdir);
     }
-  })(info.SPECIFIC_COPY_DIR);
+  })(info.COPY_FLAG, info.COPY_SCRIPT, info.SPECIFIC_COPY_DIR);
 
   return versions + exeNames + moduleNames + thisDep;
 };
