@@ -2,14 +2,14 @@
 /**
  * Install ppx-plugin-manager
  *
- * @version 0.51
+ * @version 0.52
  * @arg 0 If nonzero developer mode
  */
 
 /* constants */
 var PPX_VERSION = 18403;
 var SCRIPT_VERSION = 18;
-var PPM_VERSION = 0.51;
+var PPM_VERSION = 0.52;
 var NEWLINE_CODE = 'crlf';
 
 // Require modules

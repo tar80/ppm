@@ -180,7 +180,7 @@ var resultMsg = (function () {
         PPx.Execute('%Os curl -fsL ' + url + '>"' + curlOutput + '"');
         lines = util.lines(curlOutput).data;
 
-        if (!~lines[0].indexOf(name)) {
+        if (typeof lines[0] === 'undefined' || !~lines[0].indexOf(name)) {
           msg.push(
             'Failed: ' + thisLine[1] + ' [URL does not exist or not a ppm-plugin repository]'
           );
