@@ -56,7 +56,7 @@ var lib_dir = ppm_dir + '\\lib\\jscript\\';
     '}%%%%bn' +
     ';[endppm]"';
 
-  if (reply.call({name: 'read_utf8'}, ppxdef, 'exists', ';[ppm]') !== '0') {
+  if (reply.call({name: 'read_utf8'}, ppxdef, 'exists', ';[ppm]') === '0') {
     print.call({title: 'COPY THIS TEXT IN PPXDEF.CFG'}, text);
     PPx.Quit(-1);
   }
