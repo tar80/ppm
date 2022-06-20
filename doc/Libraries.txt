@@ -19,7 +19,6 @@ CONTENTS
 	print.js
 	errors.js
 	input.js
-	text_escape.js
 	setsel.js
 	files.js
 	stdout.js

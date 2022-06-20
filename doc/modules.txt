@@ -39,10 +39,10 @@ object
 	Array.prototype.indexOf	polyfill (jscriptのみ)
 
 	.fmt	文字エスケープ
-		key: bregnoig
+		key: esc | nor
 
 	.newline	改行文字コード変換
-		key: js, ppx, adodb
+		key: js | ppx | adodb
 
 function
 

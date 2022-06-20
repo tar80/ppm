@@ -2,7 +2,7 @@
 /**
  * Setup plugin settings
  *
- * @arg 0 Setup process, reset | set | unset
+ * @arg 0 Setup process. reset | set | unset
  * @arg 1 If nonzero dry run
  */
 

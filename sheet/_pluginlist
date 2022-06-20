@@ -13,8 +13,10 @@
 ; local  'path\to\repository'
 ;-------------------------------------------------------------------------------
 
+;remote 'tar80/ppm-adjacentdir'
 ;remote 'tar80/ppm-comppath'
 ;remote 'tar80/ppm-edit'
 ;remote 'tar80/ppm-etp'
 ;remote 'tar80/ppm-grep'
+;remote 'tar80/ppm-iconicfont'
 ;remote 'tar80/ppm-switchmenu'

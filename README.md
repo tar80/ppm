@@ -24,12 +24,13 @@ PPxのプラグインマネージャーβ版です。
 
 ### PLUGINS
 
+- [ppm-adjacentdir](https://github.com/tar80/ppm-adjacentdir) 隣接するディレクトリへ移動
 - [ppm-comppath](https://github.com/tar80/ppm-comppath) パス補完一行編集
 - [ppm-edit](https://github.com/tar80/ppm-edit) PPeや一行編集のキー設定などいろいろ
 - [ppm-etp](https://github.com/tar80/ppm-etp) Everything Search Moduleの設定サポート
+- [ppm-grep](https://github.com/tar80/ppm-grep) grepの結果を指定した方法で出力
 - [ppm-iconicfont](https://github.com/tar80/ppm-iconicfont) 拡張子アイコンをNerdFontsで描画
-<!-- - [ppm-grep](https://github.com/tar80/ppm-grep) grepの結果をリストファイルに出力 -->
-<!-- - [ppm-misc](https://github.cim/tar80/ppm-misc) 細々としたカスタマイズの詰め合わせ -->
 - [ppm-switchmenu](https://github.com/tar80/ppm-switchmenu) 入れ替え可能なプリセットメニュー
+<!-- - [ppm-misc](https://github.cim/tar80/ppm-misc) 細々としたカスタマイズの詰め合わせ -->
 
 
