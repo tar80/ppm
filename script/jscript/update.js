@@ -96,4 +96,6 @@ var resultMsg = (function () {
 PPx.Execute('*deletecust _User:stdout');
 PPx.Execute('*job end');
 
-PPx.Execute('*execute BP,*linemessage ' + resultMsg);
+if (!PPx.Execute('*script %*getcust(S_ppm#global:ppm)\\install.js,2')) {
+  PPx.Execute('*execute BP,*linemessage ' + resultMsg);
+}

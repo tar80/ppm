@@ -2,14 +2,14 @@
 /**
  * Install ppx-plugin-manager
  *
- * @version 0.52
- * @arg 0 If nonzero developer mode
+ * @version 0.6
+ * @arg 0 Install process. 0:user | 1:developer | 2:update
  */
 
 /* constants */
 var PPX_VERSION = 18403;
 var SCRIPT_VERSION = 18;
-var PPM_VERSION = 0.53;
+var PPM_VERSION = 0.6;
 var NEWLINE_CODE = 'crlf';
 
 // Require modules
@@ -25,6 +25,9 @@ var CODETYPE_PERMISSION = 1;
 var SCRIPTTYPE_PERMISSION = 0;
 
 /* Initial */
+var fso = PPx.CreateObject('Scripting.FileSystemObject');
+var wd = fso.getFile(PPx.ScriptName).ParentFolder;
+
 var quitMsg = function (msg) {
   PPx.Echo(msg);
   PPx.Quit(-1);
@@ -32,17 +35,6 @@ var quitMsg = function (msg) {
 
 var setc = function (item) {
   return PPx.Execute('*setcust ' + item);
-};
-
-var lib = function () {
-  var args = [].slice.call(arguments);
-  var path = wd + '\\lib\\jscript\\' + this.name + '.js';
-
-  if (!fso.FileExists(path)) {
-    quitMsg('Not found:\n' + path);
-  }
-
-  PPx.Execute('*script "' + path + '",' + args);
 };
 
 var reply = function () {
@@ -74,16 +66,24 @@ var print = function () {
   );
 };
 
-// var g_dev = 1;
-var g_dev = PPx.Arguments.length && PPx.Arguments(0) | 0;
+var g_arg = (function (arg) {
+  var len = arg.length;
+  var result = len === 0 ? 0 : PPx.Arguments(0) | 0;
+
+  if (result > 2) {
+    reply.call({name: 'errors'}, 'arg', PPx.ScriptName);
+    PPx.Quit(-1);
+  }
+
+  return result;
+})(PPx.Arguments());
+
 var g_usejs = (function () {
   var num = PPx.Extract('%*getcust(_others:usejs9)') | 0;
 
   return num === 4 ? 'ecma' : 'jscript';
 })();
 
-var fso = PPx.CreateObject('Scripting.FileSystemObject');
-var wd = fso.getFile(PPx.ScriptName).ParentFolder;
 var plugin_name = 'ppx-plugin-manager';
 var home_dir = (function () {
   var home = PPx.Extract("%'HOME'");
@@ -95,9 +95,10 @@ var home_dir = (function () {
 var repo_dir = fso.BuildPath(home_dir, 'repo');
 var arch_dir = fso.BuildPath(home_dir, 'arch');
 var ppm_dir = {
+  2: PPx.Extract('%*getcust(S_ppm#global:ppm)'),
   1: wd,
   0: fso.BuildPath(repo_dir, plugin_name)
-}[g_dev];
+}[g_arg];
 var lib_dir = fso.BuildPath(ppm_dir + '\\lib', g_usejs);
 var module_dir = fso.BuildPath(ppm_dir + '\\module', g_usejs);
 var cache_dir = fso.BuildPath(home_dir + '\\cache', PPx.Extract('%0').slice(3).replace(/\\/g, '@'));
@@ -105,7 +106,6 @@ var config_dir = fso.BuildPath(cache_dir, 'config');
 var backup_dir = fso.BuildPath(cache_dir, 'backup');
 var script_dir = fso.BuildPath(cache_dir, 'script');
 var list_dir = fso.BuildPath(cache_dir, 'list');
-
 var errors = '';
 
 /* Check versions */
@@ -144,7 +144,9 @@ if (PPx.Extract('%*regexp(?)') !== 'bregonig') {
 }
 
 if (errors !== '') {
-  print.call({cmd: 'ppe', title: 'INSTALL ABORTING'}, errors);
+  g_arg !== 2
+    ? print.call({cmd: 'ppe', title: 'INSTALL ABORTING'}, errors)
+    : PPx.Execute('*execute BP,*linemessage ' + errors);
   PPx.Quit(-1);
 }
 
@@ -159,6 +161,11 @@ PPx.Execute('*makedir ' + cache_dir + '\\ppm\\setup');
 PPx.Execute('*makedir ' + cache_dir + '\\ppm\\unset');
 fso.CreateTextFile(cache_dir + '\\ppm\\unset\\linecust.cfg');
 
+if (g_arg === 2) {
+  setc('S_ppm#global:version=' + PPM_VERSION);
+  PPx.Quit(1);
+}
+
 try {
   fso.CopyFile(wd + '\\setting\\patch.cfg', config_dir + '\\' + plugin_name + '.cfg', false);
 } catch (_err) {
@@ -172,7 +179,7 @@ try {
 }
 
 try {
-  g_dev !== 1 && fso.CopyFolder(wd, repo_dir + '\\' + plugin_name, false);
+  g_arg === 0 && fso.CopyFolder(wd, repo_dir + '\\' + plugin_name, false);
 } catch (_err) {
   null;
 }
@@ -192,7 +199,7 @@ setc('S_ppm#global:lib=' + lib_dir);
 setc('S_ppm#global:module=' + module_dir);
 setc('S_ppm#global:cache=' + cache_dir);
 setc('S_ppm#global:scripttype=' + g_usejs);
-setc('S_ppm#global:dev=' + g_dev);
+setc('S_ppm#global:dev=' + g_arg);
 setc('S_ppm#global:plugins=' + plugin_name);
 
 /* Plugin information */
