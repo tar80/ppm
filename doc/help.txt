@@ -156,10 +156,10 @@ Paper Plane xUI用のプラグインマネージャーのベータ版です。
 		どうか確認するダイアログを表示します。
 		noplugin.cfgは*ppmSetup実行時に生成されます。
 
-	*ppmRestoreText
-		PPeに*ppmRestore用のマクロを表示します。
-		この内容をPPXDEF.CFGにコピーしておくとPPcの初期化時に
-		*ppmRestoreが追加されます。
+	*ppmRestoreReg
+		PPXDEF.CFGに*ppmRestoreの記述を追記します。
+	*ppmRestoreUnreg
+		PPXDEF.CFGから*ppmRestoreの記述を削除します。
 	*ppmRestore
 		ppmで管理中の設定を読み込みます。PPxの初期化時にプラグイン設定
 		を復元できます。
