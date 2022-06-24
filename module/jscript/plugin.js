@@ -146,27 +146,29 @@
   obj.deleteline = function () {
     var args = [].slice.call(arguments);
     var reg = /^([^=]+)=([^,]+),([^:]+:)([^,=]+[,=])/;
-    var data = (function () {
-      if (typeof this.path === 'undefined') {
+    var data = (function (path) {
+      if (typeof path === 'undefined') {
         return args;
       }
-      return (PPx.Extract(
-        '%*script("%*getcust(S_ppm#global:ppm)\\lib\\jscript\\exists.js",path,' + this.path + ')'
-      ) !== '' ? args : obj.lines(this.path).data)
-    })();
-    var lines = (function () {
+      return PPx.Extract(
+        '%*script("%*getcust(S_ppm#global:ppm)\\lib\\jscript\\exists.js",path,' + path + ')'
+      ) !== ''
+        ? args
+        : obj.lines(path).data;
+    })(this.path);
+    var lines = (function (name) {
       var result = [];
-      if (typeof this.name === 'undefined') {
+      if (typeof name === 'undefined') {
         return data;
       }
       for (var i = 0, l = data.length; i < l; i++) {
         var thisData = data[i];
-        if (thisData.indexOf(this.name) === 0) {
+        if (thisData.indexOf(name) === 0) {
           result.push(thisData);
         }
       }
       return result;
-    })();
+    })(this.name);
     if (lines.length === 0) {
       return '';
     }

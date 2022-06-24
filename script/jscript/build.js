@@ -428,7 +428,7 @@ var mergeLines = (function (name, source, lines, patches, unsets, linecustpath) 
     var lines = util.lines(linecustpath).data;
 
     if (source === 'user') {
-      var thisLine;
+      var thisLine, thisLine_;
       var reg = /^([^,]+,[^:]+:[^=,]+[=,]).*/;
 
       for (var i = 0, l = patches.linecust.length; i < l; i++) {

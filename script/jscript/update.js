@@ -52,7 +52,7 @@ var resultMsg = (function () {
     var remoteHead = PPx.Extract('%*getcust(_User:stdout)').split('\t');
 
     if (remoteHead[0] === '') {
-      msg.push('URL not found: ' + name[1]);
+      msg.push('Branch not found: ' + name[1] + '[' + branch + ']');
       return;
     }
 
@@ -97,5 +97,5 @@ PPx.Execute('*deletecust _User:stdout');
 PPx.Execute('*job end');
 
 if (!PPx.Execute('*script %*getcust(S_ppm#global:ppm)\\install.js,2')) {
-  PPx.Execute('*execute BP,*linemessage ' + resultMsg);
+  PPx.Execute('*execute BP,%%OC *linemessage ' + resultMsg.join('%%bn'));
 }
