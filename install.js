@@ -2,7 +2,7 @@
 /**
  * Install ppx-plugin-manager
  *
- * @version 0.72
+ * @version 0.73
  * @arg 0 Install process. 0:user | 1:developer | 2:update
  */
 

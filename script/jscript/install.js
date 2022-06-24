@@ -34,7 +34,7 @@ var dry_run = PPx.Arguments.Length ? PPx.Arguments.Item(0) | 0 : 0;
 
 var fso = PPx.CreateObject('Scripting.FileSystemObject');
 
-var install = function (pluginname, path, lines) {
+var install = function (path, lines) {
   var wd = fso.getFile(PPx.ScriptName).ParentFolder;
   var line = function (num) {
     var data = lines[num].split('=');
@@ -165,6 +165,7 @@ var resultMsg = (function () {
 
       if (fso.FolderExists(path)) {
         !~enable.indexOf(name) && setcPlugins(name, path);
+        copyPatch(path, name);
         result.push(name);
         msg.push('Holding: ' + path);
         continue;
@@ -198,7 +199,7 @@ var resultMsg = (function () {
 
       setcPlugins(name, path);
 
-      errorMsg = install(name, path, lines);
+      errorMsg = install(path, lines);
 
       if (errorMsg !== '') {
         if (errorMsg.indexOf('>Dependent plugins:') !== 0) {
@@ -257,7 +258,7 @@ var resultMsg = (function () {
         continue;
       }
 
-      errorMsg = install(name, path, lines);
+      errorMsg = install(path, lines);
 
       if (errorMsg !== '') {
         if (errorMsg.indexOf('>Dependent plugins:') !== 0) {
