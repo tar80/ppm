@@ -9,7 +9,7 @@
 /* constants */
 var PPX_VERSION = 18403;
 var SCRIPT_VERSION = 18;
-var PPM_VERSION = 0.72;
+var PPM_VERSION = 0.73;
 var NEWLINE_CODE = 'crlf';
 
 // Require modules

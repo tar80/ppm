@@ -90,14 +90,14 @@ register['unset'] = function (lines) {
     if (~thisLine.indexOf(range.start)) {
       for (var j = i + 1; j < l; j++) {
         thisLine = lines.data[j];
+        i = j;
 
         if (~thisLine.indexOf(range.end)) {
-          i = j + 2;
           break;
         }
       }
 
-      break;
+      continue;
     }
 
     result.push(thisLine);
