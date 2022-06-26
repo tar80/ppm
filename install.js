@@ -9,7 +9,7 @@
 /* constants */
 var PPX_VERSION = 18403;
 var SCRIPT_VERSION = 18;
-var PPM_VERSION = 0.73;
+var PPM_VERSION = 0.74;
 var NEWLINE_CODE = 'crlf';
 
 // Require modules
@@ -138,7 +138,7 @@ var errors = '';
   }
 })();
 
-/* Check regular expression library */
+/* Check Regular Expression library */
 if (PPx.Extract('%*regexp(?)') !== 'bregonig') {
   errors += 'Requires bregonig.dll';
 }
