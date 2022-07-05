@@ -140,7 +140,7 @@
     }
     return '';
   };
-  obj.lines = (filepath) => {
+  obj.readLines = (filepath) => {
     let data, data_;
     st.Open;
     st.Type = 2;

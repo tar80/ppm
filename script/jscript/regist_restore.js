@@ -36,7 +36,7 @@ var g_order = (function (args) {
 })(PPx.Arguments());
 
 var g_ppxdef = PPx.Extract('%0%\\PPXDEF.CFG');
-var g_lines = util.lines(g_ppxdef);
+var g_lines = util.readLines(g_ppxdef);
 
 var write = function (data, newline) {
   st.Open;

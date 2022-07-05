@@ -165,7 +165,7 @@ if (!~enable_plugin.indexOf(g_args.name)) {
   util.setc('S_ppm#global:plugins=' + util.getc('S_ppm#global:plugins') + ',' + g_args.name);
   (function () {
     var listpath = util.getc('S_ppm#global:cache') + '\\list\\_pluginlist';
-    var lines = util.lines(listpath);
+    var lines = util.readLines(listpath);
 
     for (var i = 0, l = lines.data.length; i < l; i++) {
       var thisLine = lines.data[i];

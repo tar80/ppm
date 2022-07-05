@@ -67,8 +67,8 @@
     return '';
   };
   obj.lines = function (filepath) {
-    if (typeof util === 'object' && typeof util.lines === 'function') {
-      return util.lines(filepath);
+    if (typeof util === 'object' && typeof util.readLines === 'function') {
+      return util.readLines(filepath);
     }
     var data, data_;
     st.Open;

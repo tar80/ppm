@@ -129,7 +129,7 @@ var install = function (pluginname, path, lines) {
 };
 
 var resultMsg = (function () {
-  var list = util.lines(util.getc('S_ppm#global:cache') + '\\list\\_pluginlist');
+  var list = util.readLines(util.getc('S_ppm#global:cache') + '\\list\\_pluginlist');
   var enable = util.getc('S_ppm#global:plugins').split(',');
   var ppm = {name: 'ppx-plugin-manager', path: util.getc('S_ppm#global:ppm')};
   var curlOutput = PPx.Extract('%*temp()%\\curl_stdout');
@@ -177,8 +177,8 @@ var resultMsg = (function () {
 
       if (!fso.FolderExists(path)) {
         url = 'https://raw.githubusercontent.com/' + thisLine[1] + '/master/install';
-        PPx.Execute('%Os curl -fsL ' + url + '>"' + curlOutput + '"');
-        lines = util.lines(curlOutput).data;
+        PPx.Execute('%Os curl -fsL ' + url + '>"' + curl_output + '"');
+        lines = util.readLines(curl_output).data;
 
         if (typeof lines[0] === 'undefined' || !~lines[0].indexOf(name)) {
           msg.push(
@@ -250,7 +250,7 @@ var resultMsg = (function () {
         continue;
       }
 
-      lines = util.lines(path + '\\install').data;
+      lines = util.readLines(path + '\\install').data;
 
       if (!~lines[0].indexOf(name)) {
         msg.push('Failed: ' + thisLine[1] + ' [Not a ppm-plugin repository]');

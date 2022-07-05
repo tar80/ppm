@@ -44,7 +44,7 @@ var prop = (function (v) {
 
   for (var i = 0, l = plugins.length; i < l; i++) {
     thisFile = v.setup + plugins[i] + '.cfg';
-    lines = util.lines(thisFile);
+    lines = util.readLines(thisFile);
 
     if (lines.newline !== '') {
       for (var j = 0, k = lines.data.length; j < k; j++) {
@@ -78,7 +78,7 @@ var prop = (function (v) {
 
   result['linecust'] = (function () {
     var result = [];
-    var lines = util.lines(v.linecust).data;
+    var lines = util.readLines(v.linecust).data;
     var reg = /^([^=]+)=([^,]+),(.+)/;
 
     for (var i = 0, l = lines.length; i < l; i++) {

@@ -90,8 +90,7 @@ var g_unsetLines = [];
 /* Extract patches from the patch file */
 var g_patches = (function (path, source, unsets) {
   var result = {rep: {}, conv: {}, section: [], linecust: [], unset: []};
-  var patchLines = util.lines(path).data;
-  var thisLine, thisProp;
+  var patchLines = util.readLines(path).data;
   var skip = false;
 
   var func = function (obj) {
@@ -232,7 +231,7 @@ var g_patches = (function (path, source, unsets) {
 /* Conversion processing of string */
 var g_baseLines = (function (base, patches) {
   var result = [];
-  var lines = util.lines(base).data;
+  var lines = util.readLines(base).data;
   var reg1 = /\[\?[^:]+:[^\]]*\]/;
   var reg2 = /\?[^:]+/g;
   var thisLine, thisMatch, thisPatch;
@@ -425,7 +424,7 @@ var mergeLines = (function (name, source, lines, patches, unsets, linecustpath) 
 
   result['linecust'] = (function () {
     var linecusts = {set: [], unset: []};
-    var lines = util.lines(linecustpath).data;
+    var lines = util.readLines(linecustpath).data;
 
     if (source === 'user') {
       var thisLine, thisLine_;

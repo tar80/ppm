@@ -31,7 +31,7 @@ module = null;
 var dry_run = PPx.Arguments.length && PPx.Arguments(0) | 0;
 
 var resultMsg = (function () {
-  var list = util.lines(util.getc('S_ppm#global:cache') + '\\list\\_pluginlist');
+  var list = util.readLines(util.getc('S_ppm#global:cache') + '\\list\\_pluginlist');
   var msg = [];
   var update = false;
   var thisLine = [];

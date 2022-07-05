@@ -45,7 +45,7 @@ var g_ppm = (function () {
   return {
     cache: cache,
     currentSet: util.getc('S_ppm#global:plugins').split(','),
-    cfgFiles: util.lines(cache + '\\list\\_managefiles'),
+    cfgFiles: util.readLines(cache + '\\list\\_managefiles'),
     linecust: cache + '\\ppm\\unset\\linecust.cfg'
   };
 })();

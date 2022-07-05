@@ -181,7 +181,7 @@
     }
     return '';
   };
-  obj.lines = function (filepath) {
+  obj.readLines = function (filepath) {
     var data, data_;
     st.Open;
     st.Type = 2;
