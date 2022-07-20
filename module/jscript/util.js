@@ -1,4 +1,9 @@
 ﻿(function () {
+  if (!String.prototype.trim) {
+    String.prototype.trim = function () {
+      return this.replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, '');
+    };
+  }
   if (!Array.prototype.indexOf) {
     Array.prototype.indexOf = (function (Object, max, min) {
       return function indexOf(member, fromIndex) {
@@ -20,7 +25,7 @@
   }
   var obj = {};
   var jscript = PPx.Extract('%*getcust(S_ppm#global:ppm)') + '\\lib\\jscript';
-  obj.fmt = {
+  obj.metaRegexp = {
     esc: {
       '^': '\\^',
       '$': '\\$',
@@ -55,8 +60,8 @@
       '\\\\': '\\'
     }
   };
-  obj.newline = {
-    js: {
+  obj.metaNewline = {
+    esc: {
       lf: '\n',
       cr: '\r',
       crlf: '\r\n',
@@ -81,7 +86,7 @@
       '\r': '%%br',
       '\r\n': '%%bn'
     },
-    adodb: {
+    ansi: {
       lf: '10',
       cr: '13',
       crlf: '-1',
@@ -96,12 +101,12 @@
   obj.script = (function () {
     var path = PPx.ScriptName;
     return {
-      name: path.slice(path.lastIndexOf('\\') + 1),
+      name: PPx.Extract('%*name(C,' + path + ')'),
       path: PPx.Extract('%*name(D,' + path + ')')
     };
   })();
   obj.quitMsg = function (msg) {
-    PPx.Echo(obj.script.name + ': ' + msg);
+    PPx.Echo(obj.script.name + '\r\n\r\n' + msg);
     PPx.Quit(-1);
   };
   obj.error = function (method) {
@@ -117,6 +122,9 @@
   obj.getc = function (item) {
     return PPx.Extract('%*getcust(' + item + ')');
   };
+  obj.plugScript = function (plug, scr) {
+    return PPx.Extract('%*getcust(S_ppm#plugins:' + plug + ')') + '\\script\\' + scr + '.js';
+  };
   obj.lib = function () {
     var args = [].slice.call(arguments);
     var path = jscript + '\\' + this.name + '.js';
@@ -131,32 +139,32 @@
   };
   obj.print = function () {
     var args = [].slice.call(arguments);
-    var newline = PPx.Extract('%*getcust(S_ppm#user:newline)');
+    var linefeed = PPx.Extract('%*getcust(S_ppm#user:newline)');
     var tab = this.tab || 8;
     PPx.Execute(
       '*' +
         this.cmd +
         ' -utf8bom -' +
-        newline +
+        linefeed +
         ' -tab:' +
         tab +
         ' -k *editmode -modify:silent -modify:readonly %%: *setcaption ' +
         this.title +
-        '%%: *insert %%OD ' +
-        args.join(obj.newline.ppx[newline])
+        '%%: *insert ' +
+        args.join(obj.metaNewline.ppx[linefeed])
     );
   };
   obj.printw = function () {
     var args = [].slice.call(arguments);
-    var newline = PPx.Extract('%*getcust(S_ppm#user:newline)');
+    var linefeed = PPx.Extract('%*getcust(S_ppm#user:newline)');
     var tab = this.tab || 8;
     var path = PPx.Extract('%*temp()%\\printw.txt');
-    obj.write.apply({filepath: path, newline: newline}, args);
+    obj.write.apply({filepath: path, newline: linefeed}, args);
     PPx.Execute(
       '*' +
         this.cmd +
         ' -utf8bom -' +
-        newline +
+        linefeed +
         ' -tab:' +
         tab +
         ' ' +
@@ -165,16 +173,16 @@
         this.title
     );
   };
-  obj.esc = function (format, text) {
+  obj.esconv = function (format, text) {
     var reg = {
       esc: /./g,
       nor: /\\./g
     }[format];
     return text.replace(reg, function (match) {
-      return obj.fmt[format][match] || match;
+      return obj.metaRegexp[format][match] || match;
     });
   };
-  obj.check_linefeed = function (data) {
+  obj.linefeedback = function (data) {
     var codes = ['\r\n', '\n', '\r'];
     for (var i = 0, l = codes.length; i < l; i++) {
       if (~data.indexOf(codes[i])) return codes[i];
@@ -191,15 +199,15 @@
       data = st.ReadText(-1);
       data_ = data.slice(0, 120);
     } catch (_err) {
-      return {newline: '[error]', data: []};
+      return {data: [], newline: ''};
     } finally {
       st.Close;
     }
-    var linefeed = obj.check_linefeed(data_);
+    var linefeed = obj.linefeedback(data_);
     data_ = data.split(linefeed);
-    if (data_.length === 0) return {newline: '', data: []};
+    if (data_.length === 0) return {data: [], newline: ''};
     if (data_[data_.length - 1] === '') data_.pop();
-    return {newline: linefeed, data: data_};
+    return {data: data_, newline: linefeed};
   };
   obj.write = function () {
     if (
@@ -215,8 +223,8 @@
     st.Open;
     st.Type = 2;
     st.Charset = 'UTF-8';
-    st.LineSeparator = obj.newline.adodb[this.newline];
-    st.WriteText(args.join(obj.newline.js[this.newline]), 1);
+    st.LineSeparator = obj.metaNewline.ansi[this.newline];
+    st.WriteText(args.join(obj.metaNewline.esc[this.newline]), 1);
     st.SaveToFile(this.filepath, 2);
     st.Close;
   };

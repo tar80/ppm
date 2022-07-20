@@ -22,13 +22,13 @@ var module = function (filepath) {
   return Function(' return ' + data)();
 };
 
-var plugin = module(
-  PPx.Extract('%*getcust(S_ppm#global:ppm)\\module\\jscript\\plugin.js')
+var ppm = module(
+  PPx.Extract('%*getcust(S_ppm#global:ppm)\\module\\jscript\\ppm.js')
 );
 module = null;
 
 PPx.Execute(
-  plugin.addline.call(
+  ppm.addCmdline.call(
     {},
     'THIS,KC_main:FIRSTEVENT,',
     'IS,KC_main:FIRSTEVENT,',
@@ -37,9 +37,9 @@ PPx.Execute(
   )
 );
 PPx.Echo(
-  '>plugin.addline.call()\n\n' + PPx.Extract('%*getcust(KC_main:FIRSTEVENT)')
+  '>plugin.addCmdline.call()\n\n' + PPx.Extract('%*getcust(KC_main:FIRSTEVENT)')
 );
-var new_cmdline = plugin.deleteline.call({}, 'test=THIS,KC_main:FIRSTEVENT,', 'test=IS,KC_main:FIRSTEVENT,', 'test=TEST,KC_main:FIRSTEVENT,', 'test=MESSAGE,KC_main:FIRSTEVENT,');
+var new_cmdline = ppm.delCmdline.call({}, 'test=THIS,KC_main:FIRSTEVENT,', 'test=IS,KC_main:FIRSTEVENT,', 'test=TEST,KC_main:FIRSTEVENT,', 'test=MESSAGE,KC_main:FIRSTEVENT,');
 
 PPx.Execute(new_cmdline.set);
 PPx.Echo(
