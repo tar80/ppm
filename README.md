@@ -10,7 +10,7 @@ PPxのプラグインマネージャーβ版です。
 - UNICODE版、64bit版のPPxが対象。MultiByte版は動作対象外となります。  
 その他の条件として、
 
-  - PPx Script Module、PPx Key Moduleの導入
+  - PPx Script Module、PPx Key Module, PPx Message Moduleの導入
   - 正規表現ライブラリbregonig.dllの導入
   - gitのインストール
 

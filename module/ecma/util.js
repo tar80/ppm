@@ -129,7 +129,7 @@
       `*${this.cmd} -utf8bom -${linefeed} -tab:${tab} ${path} -k *editmode -modify:silent -modify:readonly %%: *setcaption ${this.title}`
     );
   };
-  obj.esc = (format, text) => {
+  obj.esconv = (format, text) => {
     const reg = {
       esc: /./g,
       nor: /\\./g

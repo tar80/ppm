@@ -23,11 +23,11 @@ var module = function (filepath) {
 };
 
 var util = module(PPx.Extract('%*getcust(S_ppm#global:ppm)\\module\\jscript\\util.js'));
-var plugin = module(PPx.Extract('%*getcust(S_ppm#global:ppm)\\module\\jscript\\plugin.js'));
+var ppm = module(PPx.Extract('%*getcust(S_ppm#global:ppm)\\module\\jscript\\ppm.js'));
 module = null;
 
 if (PPx.Extract('%n').charAt(0) !== 'B') {
-  PPx.Echo(util.script.name + ': This script can only be run PPb');
+  PPx.Echo(util.script.name + ': This script can only be run on PPb');
   PPx.Quit(-1);
 }
 
@@ -35,10 +35,10 @@ var g_args = (function (args) {
   var len = args.length;
 
   return {
-    process: len ? args.item(0) : 'reset',
-    dryrun: len > 1 ? args.item(1) | 0 : 0
+    process: len ? args.Item(0) : 'reset',
+    dryrun: len > 1 ? args.Item(1) | 0 : 0
   };
-})(PPx.Arguments());
+})(PPx.Arguments);
 
 var g_ppm = (function () {
   var cache = util.getc('S_ppm#global:cache');
@@ -54,15 +54,15 @@ var g_ppm = (function () {
 /* Initial plugins */
 if (g_args.process !== 'set') {
   (function (cache, plugins, dryrun) {
-    var result = ['[Unset]'];
-    var msg;
+    var unsets = ['[Unset]'];
+
     for (var i = 0, l = plugins.length; i < l; i++) {
-      result.push(plugin.unset(plugins[i], dryrun));
+      unsets.push(ppm.unsetLines(plugins[i], dryrun));
     }
 
     if (dryrun !== 0) {
-      if (result.length) {
-        PPx.Execute('*execute BP,*linemessage ' + plugin.complete('cmd', result.join('\n')));
+      if (unsets.length) {
+        PPx.Execute('*execute BP,*linemessage ' + ppm.complcode('cmd', unsets.join('\n')));
       }
 
       return;
@@ -74,14 +74,14 @@ if (g_args.process !== 'set') {
 
 if (g_args.process !== 'unset') {
   /* Load settings */
-  (function (cache, managefiles, plugins, linecust, dryrun) {
-    var result = ['[Load]'];
-    var len = managefiles.length;
-    var post = (function () {
+  (function (cache, manageFiles, plugins, linecust, dryrun) {
+    var settings = ['[Load]'];
+    var len = manageFiles.length;
+    var custOpt = (function () {
       var result = 'CA';
       if (
         len === 1 &&
-        (~managefiles[0].indexOf('noplugin.cfg') || ~managefiles[0].indexOf('initial.cfg'))
+        (~manageFiles[0].indexOf('noplugin.cfg') || ~manageFiles[0].indexOf('initial.cfg'))
       ) {
         result = 'CS';
       }
@@ -89,30 +89,34 @@ if (g_args.process !== 'unset') {
       return result;
     })();
     var cmdline =
-      dryrun === 0
+      dryrun !== 0
         ? function (path) {
-            return PPx.Execute(
-              '*execute BP,*linemessage *setcust @' + path + '%%bn %%: *ppcust ' + post + ' ' + path
-            );
+            settings.push(path);
+            return settings;
           }
         : function (path) {
-            result.push(path);
-            return result;
+            return PPx.Execute(
+              '*execute BP,*linemessage *setcust @' +
+                path +
+                '%%bn %%: *ppcust ' +
+                custOpt +
+                ' ' +
+                path
+            );
           };
-    var thisFile;
 
     for (var i = 0; i < len; i++) {
-      thisFile = managefiles[i];
-      cmdline(thisFile);
+      cmdline(manageFiles[i]);
     }
 
-    dryrun !== 0 && PPx.Execute('*execute BP, *linemessage ' + result.join('%%bn'));
+    dryrun !== 0 && PPx.Execute('*execute BP,*linemessage ' + settings.join('%%bn'));
 
     /* Build settings */
     (function () {
       var result = [];
       var thisPlugin, msg;
 
+      // Initial linecust.cfg
       dryrun === 0 && PPx.Execute('@type nul>' + linecust);
 
       for (var i = 0, l = plugins.length; i < l; i++) {
@@ -138,6 +142,8 @@ if (g_args.process !== 'unset') {
       }
     })();
 
+    var thisFile;
+
     for (var j = 0, k = plugins.length; j < k; j++) {
       thisFile = cache + '\\ppm\\setup\\' + plugins[j] + '.cfg';
       cmdline(thisFile);
@@ -149,22 +155,27 @@ g_args.dryrun && PPx.Quit(1);
 
 /* Output settings to file */
 PPx.Execute(
-  '*string o, path=' +
+  '*string o,backupcfg=' +
     g_ppm.cache +
     '\\backup\\%*now(date) %:' +
+    '*string o,noplugincfg=' +
+    g_ppm.cache +
+    '\\ppm\\noplugin.cfg %:' +
     '*ppcust CD ' +
     g_ppm.cache +
     '\\ppm\\global.cfg' +
     ' -mask:"S_ppm#global,S_ppm#plugins" %:' +
-    '*ppcust CD %so"path".cfg -nocomment %:' +
-    'copy /Y ' +
-    g_ppm.cache +
-    '\\ppm\\noplugin.cfg %so"path"_noplugin.cfg'
+    '*ppcust CD %so"backupcfg".cfg -nocomment %:' +
+    '*ifmatch "o:e,a:d-",%so"noplugincfg" %:' +
+    'copy /Y %so"noplugincfg" %so"backupcfg"_noplugin.cfg'
 );
 
 var postcmd = g_args.process !== 'unset' ? '*focus BP' : '*closeppx BP';
 
 PPx.Execute(
-  '*execute BP,%%"ppx-plugin-manager"%%Q"セットアップが完了しました%%bnPPcを再起動します" %%: *closeppx C* %%: *wait 200,2 %%: *ppc -k ' +
+  '*execute BP,%%"ppx-plugin-manager"%%Q"Setup complete.%%bnRestart PPc now?"%%:' +
+    '*closeppx C*%%:' +
+    '*wait 200,2%%:' +
+    '*ppc -k ' +
     postcmd
 );

@@ -25,52 +25,39 @@ var module = function (filepath) {
 // Load module
 var util = module(PPx.Extract('%*getcust(S_ppm#global:ppm)\\module\\jscript\\util.js'));
 module = null;
-
-var g_ppm = (function () {
-  var cache = util.getc('S_ppm#global:cache');
-  return {
-    currentSet: util.getc('S_ppm#global:plugins').split(','),
-    setup: cache + '\\ppm\\setup\\',
-    linecust: cache + '\\ppm\\unset\\linecust.cfg'
-  };
-})();
-
-var prop = (function (v) {
+var prop = (function () {
   var result = {};
-  var lines = {};
-  var thisPlugin, thisFile, thisLine, thisLine_;
-  var plugins = v.currentSet;
-  var skip = false;
-  var reg = /^([^\s]*_\S+)\s?=\s?({)$/;
+  var cacheDir = util.getc('S_ppm#global:cache');
+  var setupDir = cacheDir + '\\ppm\\setup';
+  var plugins = util.getc('S_ppm#global:plugins').split(',');
+  var linecustCfg = cacheDir + '\\ppm\\unset\\linecust.cfg';
+  var reg = /^(\S+)\s*[=,]\s*(.*)$/;
+  var del = '@#=#@';
 
   for (var i = 0, l = plugins.length; i < l; i++) {
-    thisFile = v.setup + plugins[i] + '.cfg';
-    lines = util.readLines(thisFile);
+    var thisPlugin = plugins[i];
+    var lines = util.readLines(setupDir + '\\' + thisPlugin + '.cfg');
 
     if (lines.newline !== '') {
       for (var j = 0, k = lines.data.length; j < k; j++) {
-        thisLine = lines.data[j];
+        var thisTable = lines.data[j].replace(reg, '$1' + del + '$2').split(del);
 
-        if (thisLine.indexOf('}') === 0) {
-          skip = false;
-          continue;
-        }
+        if (thisTable[1] === '{') {
+          for (j++; j < k; j++) {
+            var thisLine = lines.data[j];
+            var thisLine_ = thisLine.replace(reg, '$1' + del + '$2').split(del);
 
-        if (skip === true) {
-          if (/^\S/.test(thisLine)) {
-            result[thisLine_[0]].push(thisLine.replace(/^(\S+).+/, '$1\t' + thisPlugin));
-          }
-          continue;
-        }
+            if (typeof result[thisTable[0]] === 'undefined') {
+              result[thisTable[0]] = [];
+            }
 
-        thisLine_ = thisLine.replace(reg, '$1,$2').split(',');
+            if (thisLine_[0].trim().indexOf('}') === 0) {
+              break;
+            }
 
-        if (thisLine_[1] === '{') {
-          skip = true;
-          thisPlugin = plugins[i];
-
-          if (typeof result[thisLine_[0]] === 'undefined') {
-            result[thisLine_[0]] = [];
+            if (/^\S/.test(thisLine_[0])) {
+              result[thisTable[0]].push(thisLine_[0].trim() + '\t' + thisPlugin);
+            }
           }
         }
       }
@@ -78,22 +65,23 @@ var prop = (function (v) {
   }
 
   result['linecust'] = (function () {
-    var result = [];
-    var lines = util.readLines(v.linecust).data;
+    var data = [];
+    var lines = util.readLines(linecustCfg).data;
     var reg = /^([^=]+)=([^,]+),(.+)/;
 
     for (var i = 0, l = lines.length; i < l; i++) {
-      result.push(lines[i].replace(reg, '$3$2\t$1'));
+      data.push(lines[i].replace(reg, '$3$2\t$1'));
     }
 
-    return result;
+    return data;
   })();
 
   return result;
-})(g_ppm);
+})();
 
 /* Print using information */
 var output = [];
+
 for (var item in prop) {
   if (Object.prototype.hasOwnProperty.call(prop, item)) {
     output.push('[' + item + ']');

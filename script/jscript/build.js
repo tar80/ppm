@@ -9,8 +9,7 @@
  * @arg 2 If nonzero, dry run
  */
 
-// Linefeed code for output file
-var NEWLINE = '\r\n';
+var NL_CHAR = '\r\n';
 
 /* Initial */
 // Read module
@@ -30,60 +29,60 @@ var module = function (filepath) {
 
 // Load module
 var util = module(PPx.Extract('%*getcust(S_ppm#global:ppm)\\module\\jscript\\util.js'));
-var plugin = module(PPx.Extract('%*getcust(S_ppm#global:ppm)\\module\\jscript\\plugin.js'));
+var ppm = module(PPx.Extract('%*getcust(S_ppm#global:ppm)\\module\\jscript\\ppm.js'));
 module = null;
 
-var g_args = (function (args) {
+var g_cfg = (function (args) {
   var len = args.length;
 
   if (len < 2) {
     util.error('arg');
   }
 
-  var pluginName = args.item(0);
+  var pluginName = args.Item(0);
   var pluginDir = util.getc('S_ppm#plugins:' + pluginName);
 
   if (pluginDir === '') {
-    PPx.Result = '[NotInstalled]';
+    PPx.result = '[NotInstalled]';
     PPx.Quit(1);
   }
 
-  var outputDir = util.getc('S_ppm#global:cache') + '\\ppm';
-  var filename = pluginName + '.cfg';
-  var source = args.item(1);
-  var sourcePath = {
+  var baseDir = util.getc('S_ppm#global:cache') + '\\ppm';
+  var userCfg = pluginName + '.cfg';
+  var sourceCfg = args.Item(1);
+  var source = {
     def: pluginDir + '\\setting\\patch.cfg',
-    user: util.getc('S_ppm#global:cache') + '\\config\\' + filename
-  }[source];
+    user: util.getc('S_ppm#global:cache') + '\\config\\' + userCfg
+  }[sourceCfg];
 
-  if (typeof sourcePath === 'undefined') {
+  if (typeof source === 'undefined') {
     util.quitMsg('Invalid PPx.Arguments.Item(1)\nSpecify build source, "def" of "user"');
   }
 
-  var output1 = len > 2 && args.item(2) !== '0' ? 'dryrun' : outputDir + '\\setup\\' + filename;
-  var output2 = outputDir + '\\unset\\' + filename;
-  var output3 = outputDir + '\\unset\\linecust.cfg';
+  var setupCfg = len > 2 && args.item(2) !== '0' ? 'dryrun' : baseDir + '\\setup\\' + userCfg;
+  var unsetCfg = baseDir + '\\unset\\' + userCfg;
+  var linecustCfg = baseDir + '\\unset\\linecust.cfg';
 
   return {
     name: pluginName,
-    source: source,
+    source: sourceCfg,
     basePath: pluginDir + '\\setting\\base.cfg',
-    patchPath: sourcePath,
-    setupPath: output1,
-    unsetPath: output2,
-    linecustPath: output3
+    sourcePath: source,
+    setupPath: setupCfg,
+    unsetPath: unsetCfg,
+    linecustPath: linecustCfg
   };
-})(PPx.Arguments());
+})(PPx.Arguments);
 
 /* Checking existence of the files */
 (function (args) {
-  var notExists = util.reply.call({name: 'exists'}, 'path', args.basePath, args.patchPath);
+  var notExists = util.reply.call({name: 'exists'}, 'path', 'both', args.basePath, args.sourcePath);
 
   if (notExists !== '') {
-    PPx.Result = 'Not Exists:,' + notExists;
+    PPx.result = 'Not Exists:,' + notExists;
     PPx.Quit(1);
   }
-})(g_args);
+})(g_cfg);
 
 // Tables & prorerties to de deleted
 var g_unsetLines = [];
@@ -93,32 +92,43 @@ var g_patches = (function (path, source, unsets) {
   var result = {rep: {}, conv: {}, section: [], linecust: [], unset: []};
   var patchLines = util.readLines(path).data;
   var skip = false;
+  var thisProp = {};
+  var thisLine;
 
-  var func = function (obj) {
+  var getProp = function (form) {
     var reg = {
-      rep: /^[@|$]([^\s=,]+)\s*[=,]\s*(.*)/,
-      conv: /^(\?[^\s=,]+)\s*[=,]\s*(.*)/
-    }[obj];
+      rep: /^[@|$]([^ =,]+)\s*([=,])\s*(.*)/,
+      conv: /^(\?[^ =,]+)\s*([=,])\s*(.*)/
+    }[form];
+    var repEx = /^\$([^\s=]+)[\s=]+(.)j\s*/i;
 
     skip = false;
-    thisLine.replace(reg, function (_p0, p1, p2) {
-      thisProp = {key: p1, value: p2};
+
+    if (thisLine.indexOf('$') === 0 && repEx.test(thisLine)) {
+      thisLine = thisLine.replace(repEx, '$$$1 = $2V_H4A');
+    }
+
+    thisLine.replace(reg, function (_p0, p1, p2, p3) {
+      thisProp['key'] = p1;
+      thisProp['sep'] = p2;
+      thisProp['value'] = p3;
     });
 
-    if (thisProp.value === '' && obj === 'rep') {
-      result[obj][thisProp.key] = null;
+    if (thisProp.value === '' && form === 'rep') {
+      result[form][thisProp.key] = null;
       return;
     }
 
     skip = true;
-    result[obj][thisProp.key] = thisProp.value;
+    result[form][thisProp.key] =
+      thisLine.indexOf('@') === 0 ? ' ' + thisProp.sep + ' ' + thisProp.value : thisProp.value;
     return result;
   };
 
-  var sect = function () {
+  var getSect = function (i, l) {
     var prop = {key: '', value: ''};
+    var reg = /^([^ -=,]+)\s*[=,]\s*(.*)$/;
     var skip = false;
-    var reg1 = /^([^\s-=,]+)\s*[=,]\s*(.*)$/;
 
     for (i++; i < l; i++) {
       thisLine = patchLines[i];
@@ -148,8 +158,9 @@ var g_patches = (function (path, source, unsets) {
       }
 
       if (thisLine.indexOf('-') === 0) {
-        thisLine.slice(1).replace(reg1, function (_p0, p1, p2) {
-          prop = {key: p1, value: p2};
+        thisLine.slice(1).replace(reg, function (_p0, p1, p2) {
+          prop.key = p1;
+          prop.value = p2;
         });
 
         result.unset.push(prop.key);
@@ -163,8 +174,9 @@ var g_patches = (function (path, source, unsets) {
         continue;
       }
 
-      thisLine.replace(reg1, function (_p0, p1, p2) {
-        prop = {key: p1, value: p2};
+      thisLine.replace(reg, function (_p0, p1, p2) {
+        prop.key = p1;
+        prop.value = p2;
       });
 
       if (prop.value.indexOf('{') === 0) {
@@ -189,24 +201,24 @@ var g_patches = (function (path, source, unsets) {
     }
 
     if (skip && (thisLine.indexOf(' ') === 0 || thisLine.indexOf('\t') === 0)) {
-      result.rep[thisProp.key] = result.rep[thisProp.value] + NEWLINE + '\t' + thisLine;
+      result.rep[thisProp.key] = result.rep[thisProp.value] + NL_CHAR + '\t' + thisLine;
       continue;
     }
 
     if (thisLine.indexOf('@') === 0 || thisLine.indexOf('$') === 0) {
-      func('rep');
+      getProp('rep');
       continue;
     }
 
     if (thisLine.indexOf('?') === 0) {
-      func('conv');
+      getProp('conv');
       continue;
     }
 
     skip = false;
 
     if (thisLine === '[section]') {
-      sect();
+      getSect(i, l);
     }
 
     if (source === 'user' && thisLine === '[linecust]') {
@@ -227,7 +239,7 @@ var g_patches = (function (path, source, unsets) {
   }
 
   return result;
-})(g_args.patchPath, g_args.source, g_unsetLines);
+})(g_cfg.sourcePath, g_cfg.source, g_unsetLines);
 
 /* Conversion processing of string */
 var g_baseLines = (function (base, patches) {
@@ -235,10 +247,10 @@ var g_baseLines = (function (base, patches) {
   var lines = util.readLines(base).data;
   var reg1 = /\[\?[^:]+:[^\]]*\]/;
   var reg2 = /\?[^:]+/g;
-  var thisLine, thisMatch, thisPatch;
   var match = {};
+  var thisLine, thisMatch, thisPatch;
 
-  var assembly = function (label, value) {
+  var setValue = function (label, value) {
     var reg2 = RegExp('\\[\\' + label + ':([^\\]]*)]', 'g');
     var result = thisLine.replace(reg2, value);
     return result;
@@ -258,8 +270,8 @@ var g_baseLines = (function (base, patches) {
         thisPatch = patches.conv[thisMatch];
         thisLine =
           typeof thisPatch === 'undefined'
-            ? assembly(thisMatch, '$1')
-            : assembly(thisMatch, thisPatch);
+            ? setValue(thisMatch, '$1')
+            : setValue(thisMatch, thisPatch);
       }
     }
 
@@ -267,7 +279,7 @@ var g_baseLines = (function (base, patches) {
   }
 
   return result;
-})(g_args.basePath, g_patches);
+})(g_cfg.basePath, g_patches);
 
 /* Merge patches with the contents of base file */
 var mergeLines = (function (name, source, lines, patches, unsets, linecustpath) {
@@ -282,55 +294,60 @@ var mergeLines = (function (name, source, lines, patches, unsets, linecustpath) 
     var thisLine;
 
     //Process merge of lines
-    var cleateLines = function (chr) {
+    var cleateLines = function (prefix) {
       var reg = {
-        '@': /^@default:(\S+)\s*=\s*(.*)/,
-        '$': /^\$replace:(\S+)\s*(.*)/
-      }[chr];
+        '@': /^@default:(\S+)\s*([=,])\s*(.*)/,
+        '$': /^\$replace:(\S+)\s*([=,])\s*(.*)/
+      }[prefix];
       var cmdline = {
         '@': function (table, key) {
-          setLines.push(key + ' = ' + patches.rep[key]);
+          setLines.push(key + patches.rep[key]);
           unsetLines[table].push('-|' + key + ' =');
         },
-        '$': function (table, key, value) {
-          setLines.push(patches.rep[key] + ' ' + value);
+        '$': function (table, key, sep, value) {
+          setLines.push(patches.rep[key] + ' ' + sep + ' ' + value);
           unsetLines[table].push('-|' + patches.rep[key] + ' =');
         }
-      }[chr];
-      var thisKey, thisValue;
+      }[prefix];
+      var thisKey, thisSep, thisValue;
 
       for (var item in patches.rep) {
         skip = false;
 
         if (Object.prototype.hasOwnProperty.call(patches.rep, item)) {
-          thisLine.replace(reg, function (_p0, p1, p2) {
+          thisLine.replace(reg, function (_p0, p1, p2, p3) {
             thisKey = p1;
-            thisValue = p2;
+            thisSep = p2;
+            thisValue = p3;
             return;
           });
 
           if (patches.rep[thisKey] === null) {
-            setLines.push(thisKey + ' = ' + thisValue);
+            setLines.push(thisKey + ' ' + thisSep + ' ' + thisValue);
             unsetLines[thisTable.key].push('-|' + thisKey + ' =');
+            delete patches.rep[thisKey];
             return;
           }
 
           if (thisKey === item) {
-            cmdline(thisTable.key, thisKey, thisValue);
+            cmdline(thisTable.key, thisKey, thisSep, thisValue);
             delete patches.rep[thisKey];
             return;
           }
         }
       }
 
+      if (prefix !== '$') {
+        setLines.push(thisKey + ' ' + thisSep + ' ' + thisValue);
+        unsetLines[thisTable.key].push('-|' + thisKey + ' =');
+        return;
+      }
+
       skip = true;
     };
 
-    // for table
-    var reg1 = /^(?:-\|)?([^\s=-]+)\s*=\s*(.*)$/;
-
-    // for property
-    var reg2 = /^([^\s=,-]+)\s*([=,]\s*.*)$/;
+    var regTable = /^(?:-\|)?([^ =-]+)\s*([=,])\s*(.*)$/;
+    var regProp = /^([^ =,-]+)\s*([=,]\s*.*)$/;
 
     // Main loop of the build
     for (var i = 0, l = lines.length; i < l; i++) {
@@ -340,9 +357,10 @@ var mergeLines = (function (name, source, lines, patches, unsets, linecustpath) 
         continue;
       }
 
-      lines[i].replace(reg1, function (_p0, p1, p2) {
-        thisTable = {key: p1, value: p2};
-        return;
+      lines[i].replace(regTable, function (_p0, p1, p2, p3) {
+        thisTable.key = p1;
+        thisTable.sep = p2;
+        thisTable.value = p3;
       });
 
       if (thisTable.value.indexOf('{') === 0) {
@@ -383,8 +401,9 @@ var mergeLines = (function (name, source, lines, patches, unsets, linecustpath) 
             continue;
           }
 
-          thisLine.replace(reg2, function (_p0, p1, p2) {
-            thisProp = {key: p1, value: p2};
+          thisLine.replace(regProp, function (_p0, p1, p2) {
+            thisProp.key = p1;
+            thisProp.value = p2;
             return;
           });
 
@@ -449,34 +468,34 @@ var mergeLines = (function (name, source, lines, patches, unsets, linecustpath) 
   })();
 
   return result;
-})(g_args.name, g_args.source, g_baseLines, g_patches, g_unsetLines, g_args.linecustPath);
+})(g_cfg.name, g_cfg.source, g_baseLines, g_patches, g_unsetLines, g_cfg.linecustPath);
 
-if (g_args.setupPath === 'dryrun') {
+if (g_cfg.setupPath === 'dryrun') {
   (function (name) {
     var setline = g_patches.linecust;
     var unsetline = mergeLines.linecust.unset;
-    PPx.Echo('[Build setup ' + name + '.cfg]\n\n' + mergeLines.set.join(NEWLINE));
-    PPx.Echo('[Build unset ' + name + '.cfg]\n\n' + mergeLines.unset.join(NEWLINE));
+    PPx.Echo('[Build setup ' + name + '.cfg]\n\n' + mergeLines.set.join(NL_CHAR));
+    PPx.Echo('[Build unset ' + name + '.cfg]\n\n' + mergeLines.unset.join(NL_CHAR));
 
     setline.length !== 0 &&
       PPx.Echo(
         '[Linecust ' +
           name +
           ']\n\nset: \n' +
-          setline.join(NEWLINE) +
+          setline.join(NL_CHAR) +
           '\n\nunset: \n' +
-          unsetline.join(NEWLINE)
+          unsetline.join(NL_CHAR)
       );
 
     PPx.Quit(1);
-  })(g_args.name);
+  })(g_cfg.name);
 }
 
 /* Make part of PPxcfg */
-var save = function (data, savefile, load) {
+var save = function (data, savefile, append) {
   st.open;
 
-  if (load === 1) {
+  if (append === 1) {
     st.LoadFromFile(savefile);
     st.Position = st.Size;
     st.SetEOS;
@@ -484,25 +503,27 @@ var save = function (data, savefile, load) {
     st.Position = 0;
   }
 
-  st.WriteText(data.join(NEWLINE), 1);
+  st.WriteText(data.join(NL_CHAR), 1);
   st.SaveToFile(savefile, 2);
   st.Close;
   PPx.Execute('*wait 10');
 };
 
-// File to add plugin settings
-save(mergeLines.set, g_args.setupPath, 0);
+// Save plugin settings to a file
+save(mergeLines.set, g_cfg.setupPath, 0);
 
-// File to delete plugin settings
-save(mergeLines.unset, g_args.unsetPath, 0);
+// Save plugin deletion settings to a file
+save(mergeLines.unset, g_cfg.unsetPath, 0);
 
-// File to delete linecust settinges
-(function (add, del, filepath) {
-  if (add.length !== 0) {
-    PPx.Execute(plugin.addline.apply({}, add));
+// Save plugin deletion linecusts to a file
+(function (linecusts, deletecusts, filepath) {
+  if (linecusts.length !== 0) {
+    PPx.Execute(ppm.addCmdline.apply({}, linecusts));
   }
 
-  if (del.length !== 0) {
-    save(del, filepath, 1);
+  if (deletecusts.length !== 0) {
+    save(deletecusts, filepath, 1);
   }
-})(g_patches.linecust, mergeLines.linecust.set, g_args.linecustPath);
+})(g_patches.linecust, mergeLines.linecust.set, g_cfg.linecustPath);
+
+PPx.result = '';

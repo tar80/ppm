@@ -26,7 +26,7 @@ module = null;
 CONTENTS
 
 	util.js
-	plugin.js
+	ppm.js  (改名) 22/07/05 plugin > ppm
 	gitm.js
 
 ===============================================================================
@@ -34,21 +34,27 @@ util.js
 
 ライブラリと同等の関数およびADODB.streamを使用する関数を実装
 
-object
+プロパティ
 
 	Array.prototype.indexOf	polyfill (jscriptのみ)
 
-	.fmt	文字エスケープ
+	(改名) fmt > metaRegexp 22/07/05
+	.metaRegexp	文字エスケープ
 		key: esc | nor
 
-	.newline	改行文字コード変換
-		key: js | ppx | adodb
+	(改名) newline > metaNewline 22/07/05
+		js > esc, adodb > ansi
+	.metaNewline	改行文字コード変換
+		key: esc | ppx | ansi
 
-function
+メソッド
 
 	.script	実行中のスクリプトの情報
 		{name:スクリプトファイル名、path:親ディレクトリパス}
 		arguments:
+
+	.plugScript	プラグイン固有のスクリプトパスを返す
+		arguments: 0=プラグイン名, 1=スクリプト名
 
 	.quitMsg	メッセージを表示して終了
 		arguments: 0=メッセージ
@@ -81,14 +87,18 @@ function
 		arguments: {cmd=ppe|edit, title=タイトル, tab=タブ数},
                 array=一行ごとのメッセージ
 
-	.esc	文字列エスケープ
+	(改名) esc > esconv 22/07/05
+	.esconv	文字列エスケープ
 		arguments: 0=obj.fmtのプロパティ名, 1=文字列
 
-	.check_linefeed	改行を含む文字列の改行コード判別
+	(改名) check_linefeed > linefeedback 22/07/05
+	.linefeedback	改行を含む文字列の改行コード判別
 		arguments: 0=文字列
 
-	.lines	UTF-8エンコードのファイルを読み込み一行ごとに配列にして返す
+        (改名) lines > readLines 22/07/05
+	.readLines	UTF-8エンコードのファイルを読み込み一行ごとに配列にして返す
 	 .callまたは.apply経由
+         改行コードが判別できないときは空文字を返す
 		{data:配列データ, newline:ファイルで最初に使用された改行コード}
 		arguments: 0=ファイルパス
 
@@ -117,39 +127,41 @@ function
 		arguments: 0=リストファイルのパス
 
 ===============================================================================
-plugin.js
+ppm.js
 
 プラグインの設定・削除に共通するコマンド関数
 *linecustで処理できるコマンド内の文字数は凡そ500文字の制限があり、
 これを回避するため*linecust相当の関数を実装
 
-object
+
+メソッド
 
 	Array.prototype.indexOf	polyfill (jscriptのみ)
 
-function
-
-
-	.complete	文字列補完
+	(改名) complete > complcode 22/07/05
+	.complcode	文字列補完
 		arguments: 0=obj.fmtのプロパティ名, 1=文字列
 
-	.check_linefeed	改行を含む文字列の改行コード判別
+	(改名) check_linefeed > linefeedback 22/07/05
+	.linefeedback	改行を含む文字列の改行コード判別
 		arguments: 0=文字列
 
-	.lines	UTF-8エンコードのファイルを読み込み一行ごとに配列にして返す
+	(改名) lines > readLines 22/07/05
+	.readLines	UTF-8エンコードのファイルを読み込み一行ごとに配列にして返す
 	 .callまたは.apply経由
 		{data:配列データ, newline:ファイルで最初に使用された改行コード}
 		arguments: 0=ファイルパス
 
-	.unset	PPxからプラグインの設定を削除する
+        (改名) unset > unsetLines, addline > addCmdline, deleteline > delCmdline 22/07/06
+	.unsetLines	PPxからプラグインの設定を削除する
         	arguments: 0=プラグイン名, 1=ドライランのフラグ
-	.addline	*linecustコマンドを変換してプロパティに追加
+	.addCmdline	*linecustコマンドを変換してプロパティに追加
 		arguments: カンマ区切りの*linecustコマンド
 
-	.deleteline	path(指定なしはppm\unset\linecust.cfg)の内容をプロパティから削除
+	.delCmdline	path(指定なしはppm\unset\linecust.cfg)の内容をプロパティから削除
 		arguments: {
-                path:削除する%mを羅列したファイルのパス,
-                name:削除する%mを限定)
+			path:削除する%mを羅列したファイルのパス,
+			name:削除する%mを限定)
                 }
 
 ===============================================================================
@@ -157,7 +169,7 @@ gitm.js
 
 gitのレポジトリ情報を取得する関数を実装
 
-function
+メソッド
 
 	.root	リポジトリのルートパスを返す
 		arguments: 0=リポジトリのパス

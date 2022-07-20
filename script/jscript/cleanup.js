@@ -21,27 +21,29 @@ var module = function (filepath) {
   return Function(' return ' + data)();
 };
 
-var util = module(PPx.Extract('%*getcust(S_ppm#global:ppm)\\module\\jscript\\util.js'));
+var util = module(
+  PPx.Extract('%*getcust(S_ppm#global:ppm)\\module\\jscript\\util.js')
+);
 module = null;
 
-var dry_run = PPx.Arguments.Length ? PPx.Arguments.Item(0) | 0 : 0;
+var dry_run = PPx.Arguments.length ? PPx.Arguments.Item(0) | 0 : 0;
 
-var plugins = (function () {
+var plugin_list = (function () {
   var result = {};
-  var table = PPx.Extract('%*getcust(S_ppm#plugins)');
-  var linefeed = util.check_linefeed(table);
-  var plugins = table.split(linefeed);
-  var reg = /^([^\s=]+)[\s=]+(.+)/;
-  var thisPlugin;
+  var list = PPx.Extract('%*getcust(S_ppm#plugins)');
+  var linefeed = util.linefeedback(list);
+  var listLines = list.split(linefeed);
+  var reg = /^(\S+)[\s=]+(\S+)/;
+  var thisLine;
 
-  for (var i = 1, l = plugins.length; i < l; i++) {
-    thisPlugin = plugins[i];
+  for (var i = 1, l = listLines.length; i < l; i++) {
+    thisLine = listLines[i];
 
-    if (thisPlugin.indexOf('}') === 0) {
+    if (thisLine.indexOf('}') === 0) {
       break;
     }
 
-    thisPlugin.replace(reg, function (_p0, p1, p2) {
+    thisLine.replace(reg, function (_p0, p1, p2) {
       result[p1] = p2;
     });
   }
@@ -49,32 +51,28 @@ var plugins = (function () {
   return result;
 })();
 
-var enable = util.getc('S_ppm#global:plugins').split(',');
-
-var clean = (function () {
+var cleanup_plugins = (function () {
   var repo = util.getc('S_ppm#global:ppm') + '\\repo';
   var result = [];
-  var thisPlugin;
+  var enablePlugins = util.getc('S_ppm#global:plugins');
 
-  for (var plugin in plugins) {
-    if (Object.prototype.hasOwnProperty.call(plugins, plugin)) {
-      thisPlugin = plugins[plugin];
-      if (thisPlugin) {
-        if (!~enable.indexOf(plugin)) {
-          if (thisPlugin.indexOf(repo)) {
-            result.push(thisPlugin);
+  for (var plugin in plugin_list) {
+    if (Object.prototype.hasOwnProperty.call(plugin_list, plugin)) {
+      var thisPath = plugin_list[plugin];
 
-            if (
-              dry_run === 0 &&
-              !PPx.Execute('%"ppx-plugin-manager"%Q"Delete ' + thisPlugin + '?"')
-            ) {
-              PPx.Execute(
-                '*script %*getcust(S_ppm#global:ppm)\\script\\jscript\\unset.js,' + plugin
-              );
-              PPx.Execute('*deletecust S_ppm#plugins:' + plugin);
-              PPx.Execute('*delete ' + thisPlugin);
-            }
-          }
+      if (!~enablePlugins.indexOf(plugin) && thisPath.indexOf(repo)) {
+        result.push(thisPath);
+
+        if (
+          dry_run === 0 &&
+          !PPx.Execute('%"ppx-plugin-manager"%Q"Delete ' + thisPath + '?"')
+        ) {
+          PPx.Execute(
+            '*script %*getcust(S_ppm#global:ppm)\\script\\jscript\\unset.js,' +
+              plugin
+          );
+          PPx.Execute('*deletecust S_ppm#plugins:' + plugin);
+          PPx.Execute('*delete ' + thisPath);
         }
       }
     }
@@ -83,13 +81,15 @@ var clean = (function () {
   return result;
 })();
 
-
 if (dry_run !== 0) {
-  var cmdline = '%"ppx-plugin-manager"%I"Deleted directories:%bn';
-  clean.length === 0
-    ? PPx.Execute(cmdline + 'Nothing"')
-    : PPx.Execute(cmdline + clean.join('%bn') + '"');
-} else if (clean.length === 0) {
-  PPx.SetPopLineMessage('!"No deleted plugin');
+  var msg = '%"ppx-plugin-manager"%I"Deleted directories:%bn';
+
+  cleanup_plugins.length === 0
+    ? PPx.Execute(msg + 'Nothing"')
+    : PPx.Execute(msg + cleanup_plugins.join('%bn') + '"');
+  PPx.Quit(1);
 }
 
+if (cleanup_plugins.length === 0) {
+  PPx.SetPopLineMessage('!"No deleted plugin');
+}
