@@ -1,13 +1,10 @@
 ﻿//!*script
+// deno-lint-ignore-file no-var
 /**
  * Update remote plugins
  *
  * @arg 0 If nonzero dry run
  */
-
-PPx.Execute('*job start');
-PPx.Execute('%Oa *ppb -bootid:p');
-PPx.Execute('*wait 200,2');
 
 /* Initial */
 var st = PPx.CreateObject('ADODB.stream');
@@ -28,17 +25,21 @@ var util = module(PPx.Extract('%*getcust(S_ppm#global:ppm)\\module\\jscript\\uti
 var git = module(PPx.Extract('%*getcust(S_ppm#global:ppm)\\module\\jscript\\gitm.js'));
 module = null;
 
-var dry_run = PPx.Arguments.length && PPx.Arguments(0) | 0;
+PPx.Execute('*job start');
+PPx.Execute('%Oa *ppb -bootid:p');
+PPx.Execute('*wait 200,2');
+
+var dry_run = PPx.Arguments.length && PPx.Arguments.Item(0) | 0;
 
 var resultMsg = (function () {
-  var list = util.lines(util.getc('S_ppm#global:cache') + '\\list\\_pluginlist');
+  var list = util.readLines(util.getc('S_ppm#global:cache') + '\\list\\_pluginlist');
   var msg = [];
   var update = false;
   var thisLine = [];
   var name, path;
   var reg = /^([^\s]+)\s+['"](.+)['"]/;
 
-  var change = function (pwd) {
+  var commited = function (pwd) {
     var branch = git.branch(pwd);
     var localHead = git.head(pwd, branch);
 
@@ -49,7 +50,8 @@ var resultMsg = (function () {
         branch +
         '|%0pptrayw -c *string u,stdout=%%*stdin(-utf8) %&'
     );
-    var remoteHead = PPx.Extract('%*getcust(_User:stdout)').split('\t');
+
+    var remoteHead = util.getc('_User:stdout').split('\t');
 
     if (remoteHead[0] === '') {
       msg.push('Branch not found: ' + name[1] + '[' + branch + ']');
@@ -69,7 +71,7 @@ var resultMsg = (function () {
 
   if (util.getc('S_ppm#global:dev') !== '1') {
     name = ['tar80', 'ppx-plugin-manager'];
-    change(util.getc('S_ppm#global:ppm'));
+    commited(util.getc('S_ppm#global:ppm'));
   }
 
   var fso = PPx.CreateObject('Scripting.FileSystemObject');
@@ -81,7 +83,7 @@ var resultMsg = (function () {
       path = util.getc('S_ppm#plugins:' + name[1]);
 
       if (fso.FolderExists(path)) {
-        change(path);
+        commited(path);
         continue;
       }
     }

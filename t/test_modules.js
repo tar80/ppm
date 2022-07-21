@@ -32,8 +32,8 @@ var result = (function () {
   var u = ['[util]'];
   u.push('.script: {name: ' + util.script.name + ', path: ' + util.script.path + '}');
   u.push(".getc('S_ppm#global:version'): " + util.getc('S_ppm#global:version'));
-  u.push(".fmt('esc', '^$(){|=:+?./\\'): " + util.esc('esc', '^$(){|=:+?./\\'));
-  u.push(".fmt('nor', '\\^\\$\\(\\)\\{\\|\\=\\:\\+\\?\\.\\/\\\\'): " + util.esc('nor', '\\^\\$\\(\\)\\{\\|\\=\\:\\+\\?\\.\\/\\\\'));
+  u.push(".metaRegexp('esc', '^$(){|=:+?./\\'): " + util.esconv('esc', '^$(){|=:+?./\\'));
+  u.push(".metaRegexp('nor', '\\^\\$\\(\\)\\{\\|\\=\\:\\+\\?\\.\\/\\\\'): " + util.esconv('nor', '\\^\\$\\(\\)\\{\\|\\=\\:\\+\\?\\.\\/\\\\'));
   u.push(
     ".reply.call({name: 'files'}, util.script.path): " +
       util.reply.call({name: 'files'}, util.script.path)

@@ -1,8 +1,11 @@
 ﻿//!*script
+// deno-lint-ignore-file no-var
 /**
  * Manage Local Configuration files
  *
  */
+
+var NL_CODE = 'crlf';
 
 /* Initial */
 var st = PPx.CreateObject('ADODB.stream');
@@ -23,19 +26,21 @@ var util = module(PPx.Extract('%*getcust(S_ppm#global:ppm)\\module\\jscript\\uti
 module = null;
 
 var cache_dir = util.getc('S_ppm#global:cache');
-var files = (function () {
-  var result = [];
-  var mark = PPx.EntryMarkCount;
+var over_write = cache_dir + '\\list\\_managefiles';
+
+var manage_files = (function () {
+  var userCfgs = [];
+  var markCount = PPx.EntryMarkCount;
   var thisEntry = PPx.Entry;
-  var wd = PPx.Extract('%FD%\\');
+  var wd = PPx.Extract('%FD');
   var path;
 
   if (
-    mark === 0 &&
+    markCount === 0 &&
     !PPx.Execute(
       '%"ppx-plugin-manager"' +
-        '%Q"Entry is not marked. Do you want to add a noplugin.cfg?%bn%bn' +
-        'NOTE:%btThe noplugin.cfg contains non-ppm management user-settings.%bn' +
+        '%Q"No entries marked. Add noplugin.cfg to your _managefiles?%bn%bn' +
+        'NOTE:%btThe noplugin.cfg is a user configuration excluding ppm settings.%bn' +
         '%btIt is generated at the time of *ppmSetup execution'
     )
   ) {
@@ -46,21 +51,22 @@ var files = (function () {
   }
 
   thisEntry.FirstMark;
+
   do {
     if (PPx.Extract('%*name(T,"' + thisEntry.Name + '")').toUpperCase() === 'CFG') {
-      result.push(wd + thisEntry.Name);
+      userCfgs.push(wd + '\\' + thisEntry.Name);
     }
   } while (thisEntry.NextMark);
 
-  return result;
+  return userCfgs;
 })();
 
 util.write.apply(
   {
-    filepath: util.getc('S_ppm#global:cache') + '\\list\\_managefiles',
-    newline: util.getc('S_ppm#user:newline')
+    filepath: over_write,
+    newline: NL_CODE
   },
-  files
+  manage_files
 );
 
 PPx.Execute('*deletecust "K_ppmTemp" %: *closeppx CP');

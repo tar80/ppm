@@ -9,7 +9,7 @@ var wd = fso.getFile(PPx.ScriptName).ParentFolder;
 var pwd = wd.ParentFolder;
 
 if (PPx.Extract('%*getcust(S_ppm#global:ppm)') === '') {
-  PPx.Echo('Need to install ppm first');
+  PPx.Echo('Must be installed ppm.');
   PPx.Quit(1);
 }
 
@@ -105,6 +105,10 @@ test['setup_reset'] = function () {
   PPx.Execute(
     '*ppb -bootid:p%:*wait 300%:%On *ppb -c *script ' + pwd + '\\script\\jscript\\setup.js,reset,1'
   );
+};
+
+test['cleanup'] = function () {
+  PPx.Extract('%*script(' + pwd + '\\script\\jscript\\cleanup.js,1)');
 };
 
 test[test_func]();

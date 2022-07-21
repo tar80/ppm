@@ -19,14 +19,6 @@
     })(Object, Math.max, Math.min);
   }
   var obj = {};
-  var newline = {
-    lf: '\n',
-    cr: '\r',
-    crlf: '\r\n',
-    unix: '\n',
-    mac: '\r',
-    dos: '\r\n'
-  };
   var linecustItems = function (items, reg, label, value) {
     var result = {};
     var thisLabel;
@@ -41,34 +33,26 @@
     }
     return result;
   };
-  obj.complete = function (format, data) {
+  obj.complcode = function (format, data) {
     var fmt = {
-      internal: {
-        reg: /%/g,
-        rep: {'%': '%%'}
-      },
-      cmd: {
-        reg: /[%\n]/g,
-        rep: {'%': '%%%%', '\n': '%%bn'}
-      }
+
+      internal: {reg: /%/g, rep: {'%': '%%'}},
+      cmd: {reg: /[%\n]/g, rep: {'%': '%%%%', '\n': '%%bn'}}
     }[format];
     return data.replace(fmt.reg, function (c) {
       return fmt.rep[c];
     });
   };
-  obj.check_linefeed = function (data) {
-    if (typeof util === 'object' && typeof util.check_linefeed === 'function') {
-      return util.check_linefeed(data);
-    }
-    var codes = ['\r\n', '\n', '\r', ''];
+  obj.linefeedback = function (data) {
+    var codes = ['\r\n', '\n', '\r'];
     for (var i = 0, l = codes.length; i < l; i++) {
       if (~data.indexOf(codes[i])) return codes[i];
     }
     return '';
   };
-  obj.lines = function (filepath) {
-    if (typeof util === 'object' && typeof util.lines === 'function') {
-      return util.lines(filepath);
+  obj.readLines = function (filepath) {
+    if (typeof util === 'object' && typeof util.readLines === 'function') {
+      return util.readLines(filepath);
     }
     var data, data_;
     st.Open;
@@ -83,7 +67,7 @@
     } finally {
       st.Close;
     }
-    var linefeed = obj.check_linefeed(data_);
+    var linefeed = obj.linefeedback(data_);
     data_ = data.split(linefeed);
     if (data_.length === 0) {
       return {newline: '', data: ''};
@@ -93,10 +77,10 @@
     }
     return {newline: linefeed, data: data_};
   };
-  obj.unset = function (name, dryrun) {
+  obj.unsetLines = function (name, dryrun) {
     var cfgPath = PPx.Extract('%*getcust(S_ppm#global:cache)') + '\\ppm\\unset\\' + name + '.cfg';
     var filepath = PPx.Extract('%*getcust(S_ppm#global:cache)') + '\\ppm\\unset\\linecust.cfg';
-    var deleteLine = obj.deleteline.call({name: name, path: filepath});
+    var deleteLine = obj.delCmdline.call({name: name, path: filepath});
     if (dryrun !== 0) {
       return cfgPath + (deleteLine.omit ? '\n' + deleteLine.omit : '');
     }
@@ -104,10 +88,10 @@
     PPx.Execute('*setcust @' + cfgPath);
     deleteLine.set && PPx.Execute(deleteLine.set);
   };
-  obj.addline = function () {
+  obj.addCmdline = function () {
     var args = [].slice.call(arguments);
     var result = [];
-    var linefeed = newline[PPx.Extract('%*getcust(S_ppm#user:newline)')];
+    var linefeed = '%%bn';
     var reg = /^([^,]+),([^:]+:)([^,=]+[,=])(.*)/;
     var delim = '@#=#@';
     var label = function (_p1, p2, p3, _p4) {
@@ -122,8 +106,8 @@
       if (Object.prototype.hasOwnProperty.call(items, item)) {
         queue = PPx.Extract('%*getcust(' + item + ')');
         if (queue !== '') {
-          linefeed = obj.check_linefeed(queue);
-          queue = obj.complete('internal', queue);
+          linefeed = obj.linefeedback(queue);
+          queue = obj.complcode('internal', queue);
         }
         for (var i = 0, l = items[item].length; i < l; i++) {
           thisItem = items[item][i].split(delim);
@@ -143,7 +127,7 @@
     }
     return result.length !== 0 ? '%OC ' + result.join(linefeed + '\t') : '';
   };
-  obj.deleteline = function () {
+  obj.delCmdline = function () {
     var args = [].slice.call(arguments);
     var reg = /^([^=]+)=([^,]+),([^:]+:)([^,=]+[,=])/;
     var data = (function (path) {
@@ -151,10 +135,10 @@
         return args;
       }
       return PPx.Extract(
-        '%*script("%*getcust(S_ppm#global:ppm)\\lib\\jscript\\exists.js",path,' + path + ')'
+        '%*script("%*getcust(S_ppm#global:ppm)\\lib\\jscript\\exists.js",path,file,' + path + ')'
       ) !== ''
         ? args
-        : obj.lines(path).data;
+        : obj.readLines(path).data;
     })(this.path);
     var lines = (function (name) {
       var result = [];
@@ -190,7 +174,7 @@
           if (queue === '') {
             break;
           }
-          linefeed = obj.check_linefeed(queue);
+          linefeed = obj.linefeedback(queue);
           queue_ = linefeed !== '' ? queue.split(linefeed) : [queue];
           for (var l = queue_.length; l--; ) {
             thisLine = queue_[l];
@@ -204,7 +188,7 @@
               }
             }
           }
-          result.push('*setcust ' + item + obj.complete('internal', queue_.join(linefeed)));
+          result.push('*setcust ' + item + obj.complcode('internal', queue_.join(linefeed)));
         }
       }
       return result.length !== 0 ? '%OC ' + result : '';

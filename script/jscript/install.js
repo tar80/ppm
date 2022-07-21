@@ -1,16 +1,12 @@
 ﻿//!*script
+// deno-lint-ignore-file no-var
 /**
  * Install plugins
  *
  * @rag 0 If nonzero dry run
  */
 
-PPx.Execute('*job start');
-PPx.Execute('%Oa *ppb -bootid:p');
-PPx.Execute('*wait 200,2');
-
-/* Line feed code for output file */
-var NEWLINE = '\r\n';
+var NL_CHAR = '\r\n';
 
 /* Initial */
 var st = PPx.CreateObject('ADODB.stream');
@@ -30,9 +26,16 @@ var module = function (filepath) {
 var util = module(PPx.Extract('%*getcust(S_ppm#global:ppm)\\module\\jscript\\util.js'));
 module = null;
 
-var dry_run = PPx.Arguments.Length ? PPx.Arguments.Item(0) | 0 : 0;
+var DEP_TITLE = '>Dependent plugins:';
+var curl_output = PPx.Extract('%*temp()%\\curl_stdout');
+var dry_run = PPx.Arguments.length ? PPx.Arguments.Item(0) | 0 : 0;
+
+PPx.Execute('*job start');
+PPx.Execute('%Oa *ppb -bootid:p');
+PPx.Execute('*wait 200,2');
 
 var fso = PPx.CreateObject('Scripting.FileSystemObject');
+<<<<<<< HEAD
 
 var install = function (path, lines) {
   var wd = fso.getFile(PPx.ScriptName).ParentFolder;
@@ -127,65 +130,180 @@ var install = function (path, lines) {
 
   return versions + exeNames + moduleNames + thisDep;
 };
+=======
+var cache_dir = util.getc('S_ppm#global:cache');
+var ppm_dir = util.getc('S_ppm#global:ppm');
+>>>>>>> dev
 
 var resultMsg = (function () {
-  var list = util.lines(util.getc('S_ppm#global:cache') + '\\list\\_pluginlist');
-  var enable = util.getc('S_ppm#global:plugins').split(',');
-  var ppm = {name: 'ppx-plugin-manager', path: util.getc('S_ppm#global:ppm')};
-  var curlOutput = PPx.Extract('%*temp()%\\curl_stdout');
-  var result = [ppm.name];
+  var newPlugins = ['ppx-plugin-manager'];
+  var usedPlugins = util.getc('S_ppm#global:plugins').split(',');
+  var candidates = util.readLines(cache_dir + '\\list\\_pluginlist');
+  var reg = /^([^ ]+)\s+['"](.+)['"]/;
+  var installInfo = {};
   var msg = [];
-  var thisLine = [];
-  var depends = '';
-  var name, path, url, lines, errorlevel, errorMsg;
-  var reg = /^([^\s]+)\s+['"](.+)['"]/;
+  var lines = [];
+  var name, path, url, errorlevel, errorMsg;
 
-  var setcPlugins = function (key, value) {
-    return PPx.Execute('*setcust S_ppm#plugins:' + key + '=' + value);
-  };
+  var permissions = function () {
+    var line = function (num) {
+      var data = lines[num].split('=');
 
-  var copyPatch = function (wd, plugin) {
-    try {
-      fso.CopyFile(
-        wd + '\\setting\\patch.cfg',
-        util.getc('S_ppm#global:cache') + '\\config\\' + plugin + '.cfg',
-        false
-      );
-    } catch (_err) {
-      null;
+      return {key: data[0], value: data[1]};
+    };
+
+    if (typeof lines[0] === 'undefined' || !~lines[0].indexOf(name)) {
+      return 'Failed: ' + lines[1] + ' [Not a ppm-plugin repository]';
     }
+
+    for (var i = 1, l = lines.length; i < l; i++) {
+      var thisLine = line(i);
+
+      if (thisLine.key === '' || thisLine.key.indexOf('#') === 0) {
+        continue;
+      }
+
+      if (typeof thisLine.value !== 'undefined') {
+        installInfo[thisLine.key] = thisLine.value;
+      }
+    }
+
+    // Check versions
+    var versions = (function () {
+      var result = util.reply.call(
+        {name: 'version'},
+        installInfo.PPX_VERSION,
+        installInfo.SCRIPT_VERSION,
+        installInfo.CODETYPE_PERMISSION,
+        installInfo.SCRIPTTYPE_PERMISSION,
+        installInfo.PPM_VERSION
+      );
+
+      return result.split(',').length > 1 ? result + ',' : '';
+    })();
+
+    // Check executables
+    var exeNames = (function (exe) {
+      var result = exe.length > 0 ? util.reply.call({name: 'exe_exists'}, 2, 1, exe) : '';
+
+      return result.split(',').length > 1 ? result.replace(/,/g, ' ') + ',' : '';
+    })(installInfo.EXECUTABLES);
+
+    // Check modules
+    var moduleNames = (function (mod) {
+      var result = mod.length > 0 ? util.reply.call({name: 'module_exists'}, 2, 1, mod) : '';
+
+      return result.split(',').length > 1 ? result.replace(/,/g, ' ') + ',' : '';
+    })(installInfo.MODULES);
+
+    // Check dependencies
+    var thisDep = (function (dep) {
+      var dep_ = dep.split(',');
+
+      return dep_[0] !== '' ? DEP_TITLE + dep_.join(' ') : '';
+    })(installInfo.DEPENDENCIES);
+
+    return versions + exeNames + moduleNames + thisDep;
   };
 
-  for (var i = 0, l = list.data.length; i < l; i++) {
-    thisLine = list.data[i].replace(reg, '$1,$2').split(',');
+  var setcPlugins = function () {
+    var copyFiles = function (send, dest) {
+      var sendDir = '"' + path + '\\' + send + '\\*"';
+      var destDir = cache_dir + '\\' + dest;
+
+      return PPx.Execute(
+        '*execute C,*ppcfile !copy -min -src:' +
+          sendDir +
+          ' -dest:' +
+          destDir +
+          ' -same:3 -sameall -log:off -nocount -checkexistfirst:off -querycreatedirectory:off -qstart'
+      );
+    };
+
+    if (dry_run === 0 && installInfo.COPY_FLAG === 'true') {
+      copyFiles('sheet', 'list');
+    }
+
+    if (dry_run === 0 && installInfo.COPY_SCRIPT === 'true') {
+      copyFiles('userscript', 'script');
+    }
+
+    var spec_dir, thisDir;
+
+    if (dry_run === 0 && installInfo.SPECIFIC_COPY_DIR !== '') {
+      spec_dir = installInfo.SPECIFIC_COPY_DIR.split(',');
+      for (var i = 0; i < spec_dir.length; i++) {
+        thisDir = spec_dir[i];
+        copyFiles(thisDir, thisDir);
+      }
+    }
+
+    var userPatch = cache_dir + '\\config\\' + name + '.cfg';
+
+    if (dry_run === 0 && !fso.FileExists(userPatch)) {
+      fso.CopyFile(path + '\\setting\\patch.cfg', userPatch, false);
+    }
+
+    !~usedPlugins.indexOf(name) && util.setc('S_ppm#plugins:' + name + '=' + path);
+  };
+
+  // Check use Jscript version
+  (function () {
+    var useJs = util.getc('_others:usejs9');
+
+    util.setc('S_ppm#global:scripttype=' + useJs  === '4' ? 'ecma' : 'jscript');
+  })();
+
+  /* Main loop */
+  for (var i = 0, l = candidates.data.length; i < l; i++) {
+    var depends = '';
+    var thisLine = candidates.data[i].replace(reg, '$1,$2').split(',');
 
     if (thisLine[0] === 'remote') {
       name = thisLine[1].slice(thisLine[1].indexOf('/') + 1);
       path = util.getc('S_ppm#global:home') + '\\repo\\' + thisLine[1].replace('/', '\\');
-
-      if (fso.FolderExists(path)) {
-        !~enable.indexOf(name) && setcPlugins(name, path);
-        copyPatch(path, name);
-        result.push(name);
-        msg.push('Holding: ' + path);
-        continue;
-      }
 
       if (dry_run !== 0) {
         msg.push('Installation target: ' + path);
         continue;
       }
 
-      if (!fso.FolderExists(path)) {
-        url = 'https://raw.githubusercontent.com/' + thisLine[1] + '/master/install';
-        PPx.Execute('%Os curl -fsL ' + url + '>"' + curlOutput + '"');
-        lines = util.lines(curlOutput).data;
+      if (fso.FolderExists(path)) {
+        lines = util.readLines(path + '\\install').data;
 
-        if (typeof lines[0] === 'undefined' || !~lines[0].indexOf(name)) {
-          msg.push(
-            'Failed: ' + thisLine[1] + ' [URL does not exist or not a ppm-plugin repository]'
-          );
+        errorMsg = permissions();
+
+        if (errorMsg !== '') {
+          if (errorMsg.indexOf(DEP_TITLE) !== 0) {
+            msg.push(
+              'Failed: ' + name + '%%bn%%bt' + errorMsg.slice(0, -1).replace(/,/g, '%%bn%%bt')
+            );
+            continue;
+          }
+
+          depends = '%%bn%%bt' + errorMsg;
+        }
+      } else {
+        url = 'https://raw.githubusercontent.com/' + thisLine[1] + '/master/install';
+        PPx.Execute('%Os curl -fsL ' + url + '>"' + curl_output + '"');
+        lines = util.readLines(curl_output).data;
+
+        if (lines[0] === undefined || !~lines[0].indexOf(name)) {
+          msg.push('Failed: ' + lines[1] + ' [URL does not exist of not a ppm-plugin repository]');
           continue;
+        }
+
+        errorMsg = permissions();
+
+        if (errorMsg !== '') {
+          if (errorMsg.indexOf(DEP_TITLE) !== 0) {
+            msg.push(
+              'Failed: ' + name + '%%bn%%bt' + errorMsg.slice(0, -1).replace(/,/g, '%%bn%%bt')
+            );
+            continue;
+          }
+
+          depends = '%%bn%%bt' + errorMsg;
         }
 
         url = 'https://github.com/' + thisLine[1];
@@ -197,36 +315,17 @@ var resultMsg = (function () {
         }
       }
 
-      setcPlugins(name, path);
-
-      errorMsg = install(path, lines);
-
-      if (errorMsg !== '') {
-        if (errorMsg.indexOf('>Dependent plugins:') !== 0) {
-          msg.push(
-            'Failed: ' + name + '%%bn%%bt' + errorMsg.slice(0, -1).replace(/,/g, '%%bn%%bt')
-          );
-          continue;
-        }
-
-        depends = '%%bn%%bt' + errorMsg;
-      }
-
+      setcPlugins();
       errorMsg = PPx.Extract(
-        '%*script("' +
-          util.getc('S_ppm#global:ppm') +
-          '\\script\\jscript\\build.js",' +
-          name +
-          ',def,0)'
+        '%*script("' + ppm_dir + '\\script\\jscript\\build.js",' + name + ',def,0)'
       );
 
       if (errorMsg !== '') {
-        msg.push('Failed: ' + name + ' ' + errorMsg);
+        msg.push('Failed: ' + name + ' ' + errorMsg.replace(',', '%%bn%%bt'));
         continue;
       }
 
-      result.push(name);
-      copyPatch(path, name);
+      newPlugins.push(name);
       msg.push('Install: ' + thisLine[1]);
       continue;
     }
@@ -234,12 +333,6 @@ var resultMsg = (function () {
     if (thisLine[0] === 'local') {
       name = thisLine[1].slice(thisLine[1].lastIndexOf('\\') + 1);
       path = thisLine[1];
-
-      if (~enable.indexOf(name)) {
-        result.push(name);
-        msg.push('Holding: ' + path);
-        continue;
-      }
 
       if (dry_run !== 0) {
         msg.push('Installation target: ' + path);
@@ -251,17 +344,12 @@ var resultMsg = (function () {
         continue;
       }
 
-      lines = util.lines(path + '\\install').data;
+      lines = util.readLines(path + '\\install').data;
 
-      if (!~lines[0].indexOf(name)) {
-        msg.push('Failed: ' + thisLine[1] + ' [Not a ppm-plugin repository]');
-        continue;
-      }
-
-      errorMsg = install(path, lines);
+      errorMsg = permissions();
 
       if (errorMsg !== '') {
-        if (errorMsg.indexOf('>Dependent plugins:') !== 0) {
+        if (errorMsg.indexOf(DEP_TITLE) !== 0) {
           msg.push(
             'Failed: ' + name + '%%bn%%bt' + errorMsg.slice(0, -1).replace(/,/g, '%%bn%%bt')
           );
@@ -271,14 +359,9 @@ var resultMsg = (function () {
         depends = '%%bn%%bt' + errorMsg;
       }
 
-      setcPlugins(name, path);
-
+      setcPlugins();
       errorMsg = PPx.Extract(
-        '%*script("' +
-          util.getc('S_ppm#global:ppm') +
-          '\\script\\jscript\\build.js",' +
-          name +
-          ',def,0)'
+        '%*script("' + ppm_dir + '\\script\\jscript\\build.js",' + name + ',def,0)'
       );
 
       if (errorMsg !== '') {
@@ -286,28 +369,29 @@ var resultMsg = (function () {
         continue;
       }
 
-      result.push(name);
-      copyPatch(path, name);
+      newPlugins.push(name);
       msg.push('Install: ' + path + depends);
       continue;
     }
   }
 
   if (dry_run === 0) {
-    util.setc('S_ppm#global:plugins=' + result.join());
+    util.setc('S_ppm#global:plugins=' + newPlugins.toString());
     util.write.apply(
-      {filepath: util.getc('S_ppm#global:cache') + '\\list\\enable_plugins.txt', newline: NEWLINE},
-      result
+      {
+        filepath: cache_dir + '\\list\\enable_plugins.txt',
+        newline: NL_CHAR
+      },
+      newPlugins
     );
   }
 
   return msg;
 })();
 
-PPx.Execute('*job end');
-
 resultMsg.length
   ? util.print.apply({cmd: 'ppe', title: 'PLUGIN INSTALLATION RESULT'}, resultMsg)
-  : util.print.call({cmd: 'ppe', title: 'PLUGIN INSTALLATION RESULT'}, 'Not specify plugin.');
+  : util.print.call({cmd: 'ppe', title: 'PLUGIN INSTALLATION RESULT'}, 'Plugin not specified.');
 
 PPx.Execute('*closeppx BP');
+PPx.Execute('*job end');
