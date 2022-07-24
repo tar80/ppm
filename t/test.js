@@ -103,7 +103,7 @@ test['build'] = function () {
 
 test['setup_reset'] = function () {
   PPx.Execute(
-    '*ppb -bootid:p%:*wait 300%:%On *ppb -c *script ' + pwd + '\\script\\jscript\\setup.js,reset,1'
+    '*ppb -bootid:p%:*wait 300%:%On *ppb -c *script ' + pwd + '\\script\\jscript\\setup.js,reset,0,1'
   );
 };
 
