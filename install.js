@@ -3,7 +3,7 @@
 /**
  * Install ppx-plugin-manager
  *
- * @version 0.81
+ * @version 0.82
  * @arg 0 Install process. 0=user | 1=developer | 2=update
  * @arg 1 If nonzero, only check the permission. do not install.
  */
@@ -18,9 +18,9 @@ var script_name = PPx.Extract('%*name(C,"' + PPx.ScriptName + '")');
 
 /* constants */
 var PLUGIN_NAME = 'ppx-plugin-manager';
-var PPX_VERSION = 18506;
+var PPX_VERSION = 186;
 var SCRIPT_VERSION = 18;
-var PPM_VERSION = 0.8;
+var PPM_VERSION = 0.82;
 
 // Require modules
 var MODULES = ['ppxkey', 'ppxmes'];
