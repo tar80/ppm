@@ -1,4 +1,5 @@
 ﻿//!*script
+// deno-lint-ignore-file no-var
 /**
  * test module linecust
  *

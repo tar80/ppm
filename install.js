@@ -40,7 +40,7 @@ var quitMsg = function (msg) {
 };
 
 var getc = function (item) {
-  return PPx.Execute('%*getcust(' + item + ')');
+  return PPx.Extract('%*getcust(' + item + ')');
 };
 
 var setc = function (item) {
@@ -93,9 +93,9 @@ var install = (function (args) {
 })(PPx.Arguments);
 
 var use_js = (function () {
-  var num = getc('_others:usejs9') | 0;
+  var num = getc('_others:usejs9');
 
-  return num === 4 ? 'ecma' : 'jscript';
+  return num === '4' ? 'ecma' : 'jscript';
 })();
 
 var home_dir = (function () {
