@@ -98,10 +98,10 @@ var g_patches = (function (path, source, unsets) {
   var thisLine;
 
   var regProp = {
-    rep: /^[@|$]([^ =,]+)\s*([=,])\s*(.*)/,
-    conv: /^(\?[^ =,]+)\s*([=,])\s*(.*)/
+    rep: /^[@|$]([^\s=,]+)\s*([=,])\s*(.*)/,
+    conv: /^(\?[^\s=,]+)\s*([=,])\s*(.*)/
   };
-  var repEx = /^\$([^\s=]+)[\s=]+(.)j\s*/i;
+  var repEx = /^\$([^\s=]+)[\s=]+(.+)j\s*/i;
   var getProp = function (form) {
     skip = false;
 
@@ -122,11 +122,11 @@ var g_patches = (function (path, source, unsets) {
 
     skip = true;
     result[form][thisProp.key] =
-      thisLine.indexOf('@') === 0 ? ' ' + thisProp.sep + ' ' + thisProp.value : thisProp.value;
+      thisLine.indexOf('@') === 0 ? '\t' + thisProp.sep + ' ' + thisProp.value : thisProp.value;
     return result;
   };
 
-  var regSect = /^([^ -=,]+)\s*[=,]\s*(.*)$/;
+  var regSect = /^([^\s-=,]+)\s*[=,]\s*(.*)$/;
   var getSect = function (i, l) {
     var prop = {key: '', value: ''};
     var skip = false;
@@ -190,7 +190,7 @@ var g_patches = (function (path, source, unsets) {
         continue;
       }
 
-      result.section.push(thisLine);
+      result.section.push(thisLine.replace(/^(\S+)\s*([,=])\s*(.*)/, '$1\t$2 $3'));
       !skip && unsets.push('-|' + prop.key + ' =');
     }
 
@@ -310,10 +310,11 @@ var mergeLines = (function (name, source, lines, patches, unsets, linecustpath) 
           unsetLines[table].push('-|' + key + ' =');
         },
         '$': function (table, key, sep, value) {
-          setLines.push(patches.rep[key] + ' ' + sep + ' ' + value);
+          setLines.push(patches.rep[key] + '\t' + sep + ' ' + value);
           unsetLines[table].push('-|' + patches.rep[key] + ' =');
         }
       }[prefix];
+
       var thisKey, thisSep, thisValue;
 
       for (var item in patches.rep) {
@@ -328,7 +329,7 @@ var mergeLines = (function (name, source, lines, patches, unsets, linecustpath) 
           });
 
           if (patches.rep[thisKey] === null) {
-            setLines.push(thisKey + ' ' + thisSep + ' ' + thisValue);
+            setLines.push(thisKey + '\t' + thisSep + ' ' + thisValue);
             unsetLines[thisTable.key].push('-|' + thisKey + ' =');
             delete patches.rep[thisKey];
             return;
@@ -343,7 +344,7 @@ var mergeLines = (function (name, source, lines, patches, unsets, linecustpath) 
       }
 
       if (prefix !== '$') {
-        setLines.push(thisKey + ' ' + thisSep + ' ' + thisValue);
+        setLines.push(thisKey + '\t' + thisSep + ' ' + thisValue);
         unsetLines[thisTable.key].push('-|' + thisKey + ' =');
         return;
       }
@@ -352,8 +353,8 @@ var mergeLines = (function (name, source, lines, patches, unsets, linecustpath) 
     };
 
     // Main loop of the build
-    var regTable = /^(?:-\|)?([^ =-]+)\s*([=,])\s*(.*)$/;
-    var regProp = /^([^ =,-]+)\s*([=,]\s*.*)$/;
+    var regTable = /^(?:-\|)?([^\s=-]+)\s*([=,])\s*(.*)$/;
+    var regProp = /^([^\s=,-]+)\s*([=,]\s*.*)$/;
 
     for (var i = 0, l = lines.length; i < l; i++) {
       thisLine = lines[i];
@@ -417,7 +418,7 @@ var mergeLines = (function (name, source, lines, patches, unsets, linecustpath) 
           });
 
           if (typeof thisProp.value !== 'undefined') {
-            setLines.push(thisProp.key + ' ' + thisProp.value);
+            setLines.push(thisProp.key + '\t' + thisProp.value);
             unsetLines[thisTable.key].push('-|' + thisProp.key + ' =');
             skip = true;
           }
