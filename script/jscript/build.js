@@ -88,6 +88,8 @@ var g_cfg = (function (args) {
 var g_unsetLines = [];
 
 /* Extract patches from the patch file */
+var regStype = /%\*getcust\(S_ppm#global:scripttype\)/g;
+var Stype = util.getc('S_ppm#global:scripttype');
 var g_patches = (function (path, source, unsets) {
   var result = {rep: {}, conv: {}, section: [], linecust: [], unset: []};
   var patchLines = util.readLines(path).data;
@@ -95,20 +97,19 @@ var g_patches = (function (path, source, unsets) {
   var thisProp = {};
   var thisLine;
 
+  var regProp = {
+    rep: /^[@|$]([^ =,]+)\s*([=,])\s*(.*)/,
+    conv: /^(\?[^ =,]+)\s*([=,])\s*(.*)/
+  };
+  var repEx = /^\$([^\s=]+)[\s=]+(.)j\s*/i;
   var getProp = function (form) {
-    var reg = {
-      rep: /^[@|$]([^ =,]+)\s*([=,])\s*(.*)/,
-      conv: /^(\?[^ =,]+)\s*([=,])\s*(.*)/
-    }[form];
-    var repEx = /^\$([^\s=]+)[\s=]+(.)j\s*/i;
-
     skip = false;
 
     if (thisLine.indexOf('$') === 0 && repEx.test(thisLine)) {
       thisLine = thisLine.replace(repEx, '$$$1 = $2V_H4A');
     }
 
-    thisLine.replace(reg, function (_p0, p1, p2, p3) {
+    thisLine.replace(regProp[form], function (_p0, p1, p2, p3) {
       thisProp['key'] = p1;
       thisProp['sep'] = p2;
       thisProp['value'] = p3;
@@ -125,9 +126,9 @@ var g_patches = (function (path, source, unsets) {
     return result;
   };
 
+  var regSect = /^([^ -=,]+)\s*[=,]\s*(.*)$/;
   var getSect = function (i, l) {
     var prop = {key: '', value: ''};
-    var reg = /^([^ -=,]+)\s*[=,]\s*(.*)$/;
     var skip = false;
 
     for (i++; i < l; i++) {
@@ -148,6 +149,10 @@ var g_patches = (function (path, source, unsets) {
         continue;
       }
 
+      if (~thisLine.indexOf('%*getcust(S_ppm#global:scripttype)')) {
+        thisLine = thisLine.replace(regStype, Stype);
+      }
+
       if (
         thisLine.indexOf('--') === 0 ||
         thisLine.indexOf(' ') === 0 ||
@@ -158,7 +163,7 @@ var g_patches = (function (path, source, unsets) {
       }
 
       if (thisLine.indexOf('-') === 0) {
-        thisLine.slice(1).replace(reg, function (_p0, p1, p2) {
+        thisLine.slice(1).replace(regSect, function (_p0, p1, p2) {
           prop.key = p1;
           prop.value = p2;
         });
@@ -174,7 +179,7 @@ var g_patches = (function (path, source, unsets) {
         continue;
       }
 
-      thisLine.replace(reg, function (_p0, p1, p2) {
+      thisLine.replace(regSect, function (_p0, p1, p2) {
         prop.key = p1;
         prop.value = p2;
       });
@@ -294,11 +299,11 @@ var mergeLines = (function (name, source, lines, patches, unsets, linecustpath) 
     var thisLine;
 
     //Process merge of lines
+    var regPf = {
+      '@': /^@default:(\S+)\s*([=,])\s*(.*)/,
+      '$': /^\$replace:(\S+)\s*([=,])\s*(.*)/
+    };
     var cleateLines = function (prefix) {
-      var reg = {
-        '@': /^@default:(\S+)\s*([=,])\s*(.*)/,
-        '$': /^\$replace:(\S+)\s*([=,])\s*(.*)/
-      }[prefix];
       var cmdline = {
         '@': function (table, key) {
           setLines.push(key + patches.rep[key]);
@@ -315,7 +320,7 @@ var mergeLines = (function (name, source, lines, patches, unsets, linecustpath) 
         skip = false;
 
         if (Object.prototype.hasOwnProperty.call(patches.rep, item)) {
-          thisLine.replace(reg, function (_p0, p1, p2, p3) {
+          thisLine.replace(regPf[prefix], function (_p0, p1, p2, p3) {
             thisKey = p1;
             thisSep = p2;
             thisValue = p3;
@@ -346,10 +351,10 @@ var mergeLines = (function (name, source, lines, patches, unsets, linecustpath) 
       skip = true;
     };
 
+    // Main loop of the build
     var regTable = /^(?:-\|)?([^ =-]+)\s*([=,])\s*(.*)$/;
     var regProp = /^([^ =,-]+)\s*([=,]\s*.*)$/;
 
-    // Main loop of the build
     for (var i = 0, l = lines.length; i < l; i++) {
       thisLine = lines[i];
 
@@ -379,6 +384,10 @@ var mergeLines = (function (name, source, lines, patches, unsets, linecustpath) 
 
           if (thisLine.indexOf(';') === 0 || thisLine === '') {
             continue;
+          }
+
+          if (~thisLine.indexOf('%*getcust(S_ppm#global:scripttype)')) {
+            thisLine = thisLine.replace(regStype, Stype);
           }
 
           if (

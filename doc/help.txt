@@ -2,14 +2,16 @@ ppx-plugin-manager
 
 Author: tar80 <tar80master@google.com>
 License: MIT License
-Repository: https://github.com/tar80/ppx-plugin-manager
+Repository: https://github.com/tar80/ppm
 ===============================================================================
 
-ppx-plugin-manager(以降ppm)は、TORO氏作のファイル操作ツール集
-Paper Plane xUI用のプラグインマネージャーのベータ版です。
+ppx-plugin-manager(以降ppm)は、TORO氏作のファイル操作ツール集Paper Plane xUI用
+のプラグインマネージャーです。javascriptで構成され、レジストリは使用しません。
+
 プラグインのインストール・アップデート・アンインストールができる他、
 ローカル設定ファイルの読み込みも可能です。
-どんなバグがあるかわらないので最初は別環境のPPxで試してみるのを推めます。
+現在ベータ版でどんなバグがあるかわかりません。最初は別環境のPPxで試してみること
+を推めます。
 
 なおppmはTORO氏とは一切関係ありませんのでPPx公式の掲示板でppmの質問はしないで
 ください。バグや動作不良の報告はgithubにイシューを立ててください。
@@ -49,8 +51,8 @@ Paper Plane xUI用のプラグインマネージャーのベータ版です。
 設定の復元
 
 	PPxの初期化時には当然ながらppmの設定も削除されます。*ppmRestoreRegを
-	実行しておけば、PPXDEF.CFGに*ppmRestoreの設定が自動的に追記され
-	プラグイン設定を復元できます。
+	実行しておけば、PPXDEF.CFGに*ppmRestoreの設定が自動的に追記されます。
+	*ppmRestoreはプラグイン設定を復元します。
 
 ===============================================================================
 構成ファイルの説明
@@ -95,6 +97,11 @@ Paper Plane xUI用のプラグインマネージャーのベータ版です。
 
 ===============================================================================
 ユーザーコマンド
+
+	*ppmUsejs
+		_others:usejs9の設定を変更する場合はこのコマンドを使います。
+		S_ppm#global:module、S_ppm#global:lib、S_ppm#global:scripttype
+		が使用dllに合わせて変更されます。
 
 	*ppmHelp <plugin-name> ; defult:ppx-plugin-manager
 		<plugin-name>のヘルプファイルを開きます。

@@ -4,7 +4,8 @@
  * Setup plugin settings
  *
  * @arg 0 Setup process. reset | set | unset
- * @arg 1 If nonzero dry run
+ * @arg 1 If nonzero no load manageFiles
+ * @arg 2 If nonzero dry run
  */
 
 /* Initial */
@@ -36,7 +37,8 @@ var g_args = (function (args) {
 
   return {
     process: len ? args.Item(0) : 'reset',
-    dryrun: len > 1 ? args.Item(1) | 0 : 0
+    localcfg: len > 1 ? args.Item(1) | 0 : 0,
+    dryrun: len > 2 ? args.Item(2) | 0 : 0
   };
 })(PPx.Arguments);
 
@@ -74,7 +76,7 @@ if (g_args.process !== 'set') {
 
 if (g_args.process !== 'unset') {
   /* Load settings */
-  (function (cache, manageFiles, plugins, linecust, dryrun) {
+  (function (cache, manageFiles, plugins, linecust, ignoreLocalCfg, dryrun) {
     var settings = ['[Load]'];
     var len = manageFiles.length;
     var custOpt = (function () {
@@ -105,8 +107,10 @@ if (g_args.process !== 'unset') {
             );
           };
 
-    for (var i = 0; i < len; i++) {
-      cmdline(manageFiles[i]);
+    if (ignoreLocalCfg === 0) {
+      for (var i = 0; i < len; i++) {
+        cmdline(manageFiles[i]);
+      }
     }
 
     dryrun !== 0 && PPx.Execute('*execute BP,*linemessage ' + settings.join('%%bn'));
@@ -148,7 +152,14 @@ if (g_args.process !== 'unset') {
       thisFile = cache + '\\ppm\\setup\\' + plugins[j] + '.cfg';
       cmdline(thisFile);
     }
-  })(g_ppm.cache, g_ppm.cfgFiles.data, g_ppm.currentSet, g_ppm.linecust, g_args.dryrun);
+  })(
+    g_ppm.cache,
+    g_ppm.cfgFiles.data,
+    g_ppm.currentSet,
+    g_ppm.linecust,
+    g_args.localcfg,
+    g_args.dryrun
+  );
 }
 
 g_args.dryrun && PPx.Quit(1);

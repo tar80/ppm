@@ -153,8 +153,12 @@ var resultMsg = (function () {
   // Check use Jscript version
   (function () {
     var useJs = util.getc('_others:usejs9');
+    var type = useJs === '4' ? 'ecma' : 'jscript';
+    var pwd = util.getc('S_ppm#global:ppm');
 
-    util.setc('S_ppm#global:scripttype=' + useJs  === '4' ? 'ecma' : 'jscript');
+    util.setc('S_ppm#global:scripttype=' + type);
+    util.setc('S_ppm#global:module=' + pwd + '\\module\\' + type);
+    util.setc('S_ppm#global:lib=' + pwd + '\\lib\\' + type);
   })();
 
   /* Main loop */
