@@ -8,6 +8,8 @@
  * @arg 2 If nonzero dry run
  */
 
+var NL_CHAR = '\r\n';
+
 /* Initial */
 var st = PPx.CreateObject('ADODB.stream');
 var module = function (filepath) {
@@ -44,10 +46,22 @@ var g_args = (function (args) {
 
 var g_ppm = (function () {
   var cache = util.getc('S_ppm#global:cache');
+  var plugins = util.getc('S_ppm#plugins').split(NL_CHAR);
+  var enable = [];
+
+  for (var i = 1, l = plugins.length - 2; i < l; i++) {
+    var thisPlugin = plugins[i];
+
+    if (thisPlugin.indexOf('@') === 0) {
+      continue;
+    }
+
+    enable.push(thisPlugin.split(/\s/)[0]);
+  }
 
   return {
     cache: cache,
-    currentSet: util.getc('S_ppm#global:plugins').split(','),
+    currentSet: enable,
     cfgFiles: util.readLines(cache + '\\list\\_managefiles'),
     linecust: cache + '\\ppm\\unset\\linecust.cfg'
   };
@@ -175,10 +189,10 @@ PPx.Execute(
     '*ppcust CD ' +
     g_ppm.cache +
     '\\ppm\\global.cfg' +
-    ' -mask:"S_ppm#global,S_ppm#plugins" %:' +
+    ' -mask:"S_ppm#plugins" %:' +
     '*ppcust CD %so"backupcfg".cfg -nocomment %:' +
     '*ifmatch "o:e,a:d-",%so"noplugincfg" %:' +
-    'copy /Y %so"noplugincfg" %so"backupcfg"_noplugin.cfg'
+    '@copy /Y %so"noplugincfg" %so"backupcfg"_noplugin.cfg>nul'
 );
 
 var postcmd = g_args.process !== 'unset' ? '*focus BP' : '*closeppx BP';

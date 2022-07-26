@@ -8,6 +8,10 @@
 
 var NL_CHAR = '\r\n';
 
+PPx.Execute('*job start');
+PPx.Execute('%Oa *ppb -bootid:p');
+PPx.Execute('*wait 200,2');
+
 /* Initial */
 var st = PPx.CreateObject('ADODB.stream');
 var module = function (filepath) {
@@ -29,20 +33,16 @@ module = null;
 var DEP_TITLE = '>Dependent plugins:';
 var curl_output = PPx.Extract('%*temp()%\\curl_stdout');
 var dry_run = PPx.Arguments.length ? PPx.Arguments.Item(0) | 0 : 0;
-
-PPx.Execute('*job start');
-PPx.Execute('%Oa *ppb -bootid:p');
-PPx.Execute('*wait 200,2');
-
-var fso = PPx.CreateObject('Scripting.FileSystemObject');
 var cache_dir = util.getc('S_ppm#global:cache');
 var ppm_dir = util.getc('S_ppm#global:ppm');
 
+var fso = PPx.CreateObject('Scripting.FileSystemObject');
+
 var resultMsg = (function () {
   var newPlugins = ['ppx-plugin-manager'];
-  var usedPlugins = util.getc('S_ppm#global:plugins').split(',');
+  var disablePlugins = util.getc('S_ppm#plugins').split(NL_CHAR);
   var candidates = util.readLines(cache_dir + '\\list\\_pluginlist');
-  var reg = /^([^ ]+)\s+['"](.+)['"]/;
+  var reg = /^([^\s]+)\s+['"](.+)['"]/;
   var installInfo = {};
   var msg = [];
   var lines = [];
@@ -147,7 +147,14 @@ var resultMsg = (function () {
       fso.CopyFile(path + '\\setting\\patch.cfg', userPatch, false);
     }
 
-    !~usedPlugins.indexOf(name) && util.setc('S_ppm#plugins:' + name + '=' + path);
+    util.setc('S_ppm#plugins:' + name + '=' + path);
+
+    for (var j = 1, k = disablePlugins.length - 2; j < k; j++) {
+      var thisPlugin = disablePlugins[j];
+      if (~thisPlugin.indexOf(name)) {
+        disablePlugins.splice(j, 1);
+      }
+    }
   };
 
   // Check use Jscript version
@@ -162,6 +169,9 @@ var resultMsg = (function () {
   })();
 
   /* Main loop */
+  PPx.Execute('*deletecust "S_ppm#plugins"');
+  PPx.Execute('*setucst S_ppm#plugins:ppx-plugin-manager=' + ppm_dir);
+
   for (var i = 0, l = candidates.data.length; i < l; i++) {
     var depends = '';
     var thisLine = candidates.data[i].replace(reg, '$1,$2').split(',');
@@ -192,7 +202,7 @@ var resultMsg = (function () {
         }
       } else {
         url = 'https://raw.githubusercontent.com/' + thisLine[1] + '/master/install';
-        PPx.Execute('%Os curl -fsL ' + url + '>"' + curl_output + '"');
+        PPx.Execute('%Os @curl -fsL ' + url + '>"' + curl_output + '"');
         lines = util.readLines(curl_output).data;
 
         if (lines[0] === undefined || !~lines[0].indexOf(name)) {
@@ -272,6 +282,7 @@ var resultMsg = (function () {
       );
 
       if (errorMsg !== '') {
+        PPx.Echo(name, errorMsg);
         msg.push('Failed: ' + name + ' ' + errorMsg.replace(',', '%%bn%%bt'));
         continue;
       }
@@ -282,8 +293,24 @@ var resultMsg = (function () {
     }
   }
 
-  if (dry_run === 0) {
+  (function () {
+    if (dry_run !== 0) {
+      return;
+    }
+    //NOTE: dlete
     util.setc('S_ppm#global:plugins=' + newPlugins.toString());
+
+    for (var i = 1, l = disablePlugins.length - 2; i < l; i++) {
+      var thisPlugin = disablePlugins[i].replace(/^@/, '');
+
+      if (thisPlugin.indexOf('ppx-plugin-manager') === 0) {
+        continue;
+      }
+
+      newPlugins.push('@' + thisPlugin.split(/\s/)[0]);
+      util.setc('S_ppm#plugins:@' + thisPlugin.replace(/^@/, ''));
+    }
+
     util.write.apply(
       {
         filepath: cache_dir + '\\list\\enable_plugins.txt',
@@ -291,7 +318,7 @@ var resultMsg = (function () {
       },
       newPlugins
     );
-  }
+  })();
 
   return msg;
 })();

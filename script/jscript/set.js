@@ -31,23 +31,25 @@ module = null;
 var script_dir = util.getc('S_ppm#global:ppm') + '\\script\\jscript';
 var cache_dir = util.getc('S_ppm#global:cache');
 
-var set_cfg = (function (args) {
+var set_plugin = (function (args) {
   var len = args.length;
 
   if (len < 3) {
     util.error('arg');
   }
 
-  var pluginName = args.Item(0);
-  var pluginDir = util.getc('S_ppm#plugins:' + pluginName);
+  var pluginName = args.Item(0).replace(/^@/, '');
+  var disable = util.getc('S_ppm#plugins:@' + pluginName);
+  var pluginDir = disable || util.getc('S_ppm#plugins:' + pluginName);
+  var isBack = disable !== '' ? true : false;
 
   if (pluginDir === '') {
     PPx.Execute(
       '%"ppx-plugin-manager"%I"' +
         util.script.name +
-        ': ( ' +
+        ': *' +
         pluginName +
-        ' ) is not valid.%bn%bnUpdate pluginlist and *ppmInstall first."'
+        '* is not valid.%bn%bnUpdate pluginlist and *ppmInstall first."'
     );
     PPx.Quit(1);
   }
@@ -60,13 +62,14 @@ var set_cfg = (function (args) {
     dir: pluginDir,
     source: source,
     order: order,
+    isBack: isBack,
     dryrun: len > 3 ? args.Item(3) | 0 : 0
   };
 })(PPx.Arguments);
 
 /* Question, continue loading */
-if (set_cfg.dryrun === 0 && set_cfg.order !== 'set') {
-  if (set_cfg.source === 'user') {
+if (set_plugin.dryrun === 0 && set_plugin.order !== 'set') {
+  if (set_plugin.source === 'user') {
     (function (order, name, dir) {
       var path = cache_dir + '\\config\\' + name + '.cfg';
 
@@ -89,11 +92,11 @@ if (set_cfg.dryrun === 0 && set_cfg.order !== 'set') {
       if (exitcode) {
         PPx.Quit(1);
       }
-    })(set_cfg.order, set_cfg.name, set_cfg.dir);
-  } else {
-    if (PPx.Execute('%"ppx-plugin-manager"%Q"Load default ' + set_cfg.name + ' settings?"')) {
-      PPx.Quit(1);
-    }
+    })(set_plugin.order, set_plugin.name, set_plugin.dir);
+  } else if (
+    PPx.Execute('%"ppx-plugin-manager"%Q"Load default ' + set_plugin.name + ' settings?"')
+  ) {
+    PPx.Quit(1);
   }
 }
 
@@ -105,12 +108,12 @@ var cfg = (function (name) {
     unset: cache_dir + '\\ppm\\unset\\' + name + '.cfg',
     linecust: cache_dir + '\\ppm\\unset\\linecust.cfg'
   };
-})(set_cfg.name);
+})(set_plugin.name);
 
 /* Initial plugin */
-var init_result = ppm.unsetLines(set_cfg.name, set_cfg.dryrun);
+var init_result = ppm.unsetLines(set_plugin.name, set_plugin.dryrun);
 
-if (set_cfg.dryrun !== 0) {
+if (set_plugin.dryrun !== 0) {
   PPx.Echo('[Unset]\n\n' + init_result);
 }
 
@@ -120,23 +123,23 @@ if (set_cfg.dryrun !== 0) {
     '%*script("' +
       script_dir +
       '\\build.js",' +
-      set_cfg.name +
+      set_plugin.name +
       ',' +
-      set_cfg.source +
+      set_plugin.source +
       ',' +
-      set_cfg.dryrun +
+      set_plugin.dryrun +
       ')'
   );
 
   if (msg !== '') {
     util.print.call(
       {cmd: 'ppe', title: 'BUILD CONFIG FILE ABORTING'},
-      'Failure: ' + set_cfg.name + ' ' + msg
+      'Failure: ' + set_plugin.name + ' ' + msg
     );
   }
 })();
 
-if (set_cfg.dryrun !== 0) {
+if (set_plugin.dryrun !== 0) {
   PPx.Echo('[Load]\n\n' + cfg.setup);
   PPx.Quit(1);
 }
@@ -144,28 +147,31 @@ if (set_cfg.dryrun !== 0) {
 /* Load settings */
 util.setc('@' + cfg.setup);
 
-var enable_plugin = util.getc('S_ppm#global:plugins').split(',');
+if (set_plugin.isBack) {
+  util.setc('S_ppm#plugins:' + set_plugin.name + '=' + set_plugin.dir);
+  PPx.Execute('*deletecust S_ppm#plugins:@' + set_plugin.name);
 
-if (!~enable_plugin.indexOf(set_cfg.name)) {
-  util.setc('S_ppm#global:plugins=' + util.getc('S_ppm#global:plugins') + ',' + set_cfg.name);
-  (function () {
-    var listpath = cache_dir + '\\list\\_pluginlist';
-    var lines = util.readLines(listpath);
+  var overWrite = function (name, prefix) {
+    var listPath = cache_dir + '\\list\\' + name;
+    var lines = util.readLines(listPath);
 
     for (var i = 0, l = lines.data.length; i < l; i++) {
       var thisLine = lines.data[i];
 
-      if (~thisLine.indexOf(set_cfg.name)) {
-        lines.data[i] = thisLine.indexOf(';') === 0 ? thisLine.slice(1) : thisLine;
-        break;
+      if (~thisLine.indexOf(set_plugin.name)) {
+        lines.data[i] = thisLine.indexOf(prefix) === 0 ? thisLine.slice(1) : thisLine;
+        continue;
       }
     }
 
-    util.write.apply({filepath: listpath, newline: lines.newline}, lines.data);
-  })();
+    util.write.apply({filepath: listPath, newline: lines.newline}, lines.data);
+  };
+
+  overWrite('_pluginList', ';');
+  overWrite('enable_plugins.txt', '@');
 }
 
 /* Output settings to file */
 PPx.Execute('%Obd *ppcust CD ' + global_cfg + ' -mask:"S_ppm#global,S_ppm#plugins"');
 PPx.Execute('%K"@LOADCUST"');
-PPx.SetPopLineMessage('!"Set ' + set_cfg.name);
+PPx.SetPopLineMessage('!"Set ' + set_plugin.name);

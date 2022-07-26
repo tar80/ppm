@@ -214,7 +214,6 @@ setc('S_ppm#global:module=' + module_dir);
 setc('S_ppm#global:cache=' + cache_dir);
 setc('S_ppm#global:scripttype=' + use_js);
 setc('S_ppm#global:dev=' + install.proc);
-setc('S_ppm#global:plugins=' + PLUGIN_NAME);
 
 /* Plugin information */
 setc('S_ppm#plugins:' + PLUGIN_NAME + '=' + ppm_dir);
@@ -231,7 +230,7 @@ PPx.Execute(
   );
 
   if (resultMsg !== '') {
-    print.apply({cmd: 'ppe', title: 'BUILD ERROR'}, resultMsg);
+    print.call({cmd: 'ppe', title: 'BUILD ERROR'}, resultMsg);
     PPx.Quit(1);
   }
 })();

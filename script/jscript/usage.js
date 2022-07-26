@@ -6,6 +6,8 @@
  * @return Tables
  */
 
+var NL_CHAR = '\r\n';
+
 /* Initial */
 // Read module
 var st = PPx.CreateObject('ADODB.stream');
@@ -25,17 +27,26 @@ var module = function (filepath) {
 // Load module
 var util = module(PPx.Extract('%*getcust(S_ppm#global:ppm)\\module\\jscript\\util.js'));
 module = null;
+
 var prop = (function () {
   var result = {};
   var cacheDir = util.getc('S_ppm#global:cache');
   var setupDir = cacheDir + '\\ppm\\setup';
-  var plugins = util.getc('S_ppm#global:plugins').split(',');
+  var plugins = (function () {
+    var result = util.getc('S_ppm#plugins').split(NL_CHAR);
+    result.splice(0, 1, 'ppx-plugin-manager');
+
+    return result;
+  })();
   var linecustCfg = cacheDir + '\\ppm\\unset\\linecust.cfg';
   var reg = /^(\S+)\s*[=,]\s*(.*)$/;
   var del = '@#=#@';
 
-  for (var i = 0, l = plugins.length; i < l; i++) {
-    var thisPlugin = plugins[i];
+  for (var i = 0, l = plugins.length - 2; i < l; i++) {
+    var thisPlugin = plugins[i].split(/\s/)[0];
+
+    if (thisPlugin.indexOf('@') === 0) break;
+
     var lines = util.readLines(setupDir + '\\' + thisPlugin + '.cfg');
 
     if (lines.newline !== '') {

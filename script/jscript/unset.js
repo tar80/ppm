@@ -26,59 +26,69 @@ var util = module(PPx.Extract('%*getcust(S_ppm#global:ppm)\\module\\jscript\\uti
 var ppm = module(PPx.Extract('%*getcust(S_ppm#global:ppm)\\module\\jscript\\ppm.js'));
 module = null;
 
-var unset_cfg = (function (args) {
+var unset_plugin = (function (args) {
   var len = args.length;
 
   if (len < 1) {
     util.error('arg');
   }
 
+  var pluginName = args.Item(0);
+  var pluginDir = util.getc('S_ppm#plugins:' + pluginName);
+
+  if (~pluginName.indexOf('ppx-plugin-manager')) {
+    PPx.Execute('%"ppx-plugin-manager"%I"the ppx-plugin-manager can not unset"');
+    PPx.Quit(1);
+  }
+
   return {
-    name: args.Item(0),
+    name: pluginName.replace(/^@/, ''),
+    dir: pluginDir,
     dryrun: len > 1 ? args.Item(1) | 0 : 0
   };
 })(PPx.Arguments);
 
 var cache_dir = util.getc('S_ppm#global:cache');
 var global_cfg = cache_dir + '\\ppm\\global.cfg';
-var enable_plugin = util.getc('S_ppm#global:plugins').split(',');
 
-if (!~enable_plugin.indexOf(unset_cfg.name)) {
-  PPx.Execute('%"ppx-plugin-manager"%I"' + unset_cfg.name + ' is not installed"');
+if (util.getc('S_ppm#plugins:' + unset_plugin.name) === '') {
+  PPx.Execute('%"ppx-plugin-manager"%I"' + unset_plugin.name + ' is not installed"');
   PPx.Quit(1);
 }
 
 /* Initial plugin */
-var init_result = ppm.unsetLines(unset_cfg.name, unset_cfg.dryrun);
-if (unset_cfg.dryrun !== 0) {
+var init_result = ppm.unsetLines(unset_plugin.name, unset_plugin.dryrun);
+if (unset_plugin.dryrun !== 0) {
   PPx.Echo('[Unset]\n\n' + init_result);
   PPx.Quit(1);
 }
 
 (function () {
-  var hasNumber = enable_plugin.indexOf(unset_cfg.name);
+  util.setc('S_ppm#plugins:@' + unset_plugin.name + '=' + unset_plugin.dir);
+  PPx.Execute('*deletecust S_ppm#plugins:' + unset_plugin.name);
 
-  if (~hasNumber) {
-    enable_plugin.splice(hasNumber, 1);
-    util.setc('S_ppm#global:plugins=' + enable_plugin.join(','));
-
-    var listpath = cache_dir + '\\list\\_pluginlist';
-    var lines = util.readLines(listpath);
+  var overWrite = function (name, prefix) {
+    var listPath = cache_dir + '\\list\\' + name;
+    var lines = util.readLines(listPath);
 
     for (var i = 0, l = lines.data.length; i < l; i++) {
       var thisLine = lines.data[i];
 
-      if (thisLine.indexOf(';') !== 0 && ~thisLine.indexOf(unset_cfg.name)) {
-        lines.data[i] = ';' + thisLine;
+      if (thisLine.indexOf(unset_plugin.name) === 0) {
+        lines.data[i] = prefix + thisLine;
+        continue;
       }
     }
 
-    util.write.apply({filepath: listpath, newline: lines.newline}, lines.data);
-  }
+    util.write.apply({filepath: listPath, newline: lines.newline}, lines.data);
+  };
+
+  overWrite('_pluginlist', ';');
+  overWrite('enable_plugins.txt', '@');
 })();
 
 /* Output settings to file */
-unset_cfg.dryrun === 0 &&
-  PPx.Execute('%Osbd *ppcust CD ' + global_cfg + ' -mask:"S_ppm#global,S_ppm#plugins"');
+unset_plugin.dryrun === 0 &&
+  PPx.Execute('%Osbd *ppcust CD ' + global_cfg + ' -mask:"S_ppm#plugins"');
 
-PPx.SetPopLineMessage('!"Unset ' + unset_cfg.name);
+PPx.SetPopLineMessage('!"Unset ' + unset_plugin.name);

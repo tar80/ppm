@@ -39,11 +39,12 @@ var g_cfg = (function (args) {
     util.error('arg');
   }
 
-  var pluginName = args.Item(0);
-  var pluginDir = util.getc('S_ppm#plugins:' + pluginName);
+  var pluginName = args.Item(0).replace(/^@/, '');
+  var disable = util.getc('S_ppm#plugins:@' + pluginName);
+  var pluginDir = disable || util.getc('S_ppm#plugins:' + pluginName);
 
   if (pluginDir === '') {
-    PPx.result = '[NotInstalled]';
+    PPx.result = 'Not Installed ppx-plugin-manager.';
     PPx.Quit(1);
   }
 

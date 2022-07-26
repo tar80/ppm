@@ -6,6 +6,8 @@
  * @ 0 If nonzero dry run
  */
 
+var NL_CHAR = '\r\n';
+
 /* Initial */
 var st = PPx.CreateObject('ADODB.stream');
 var module = function (filepath) {
@@ -21,60 +23,30 @@ var module = function (filepath) {
   return Function(' return ' + data)();
 };
 
-var util = module(
-  PPx.Extract('%*getcust(S_ppm#global:ppm)\\module\\jscript\\util.js')
-);
+var util = module(PPx.Extract('%*getcust(S_ppm#global:ppm)\\module\\jscript\\util.js'));
 module = null;
 
 var dry_run = PPx.Arguments.length ? PPx.Arguments.Item(0) | 0 : 0;
 
-var plugin_list = (function () {
-  var result = {};
-  var list = PPx.Extract('%*getcust(S_ppm#plugins)');
-  var linefeed = util.linefeedback(list);
-  var listLines = list.split(linefeed);
-  var reg = /^(\S+)[\s=]+(\S+)/;
-  var thisLine;
-
-  for (var i = 1, l = listLines.length; i < l; i++) {
-    thisLine = listLines[i];
-
-    if (thisLine.indexOf('}') === 0) {
-      break;
-    }
-
-    thisLine.replace(reg, function (_p0, p1, p2) {
-      result[p1] = p2;
-    });
-  }
-
-  return result;
-})();
-
 var cleanup_plugins = (function () {
-  var repo = util.getc('S_ppm#global:ppm') + '\\repo';
   var result = [];
-  var enablePlugins = util.getc('S_ppm#global:plugins');
+  var plugins = util.getc('S_ppm#plugins').split(NL_CHAR);
+  var repo = util.getc('S_ppm#global:ppm') + '\\repo';
+  var reg = /^@(\S+)[\s=]+(\S+)/;
 
-  for (var plugin in plugin_list) {
-    if (Object.prototype.hasOwnProperty.call(plugin_list, plugin)) {
-      var thisPath = plugin_list[plugin];
+  for (var i = 1, l = plugins.length - 2; i < l; i++) {
+    var thisLine = plugins[i];
 
-      if (!~enablePlugins.indexOf(plugin) && thisPath.indexOf(repo)) {
-        result.push(thisPath);
+    if (~thisLine.indexOf(repo)) {
+      thisLine.replace(reg, function (_p0, p1, p2) {
+        result.push(p2);
 
-        if (
-          dry_run === 0 &&
-          !PPx.Execute('%"ppx-plugin-manager"%Q"Delete ' + thisPath + '?"')
-        ) {
-          PPx.Execute(
-            '*script %*getcust(S_ppm#global:ppm)\\script\\jscript\\unset.js,' +
-              plugin
-          );
-          PPx.Execute('*deletecust S_ppm#plugins:' + plugin);
-          PPx.Execute('*delete ' + thisPath);
+        if (dry_run === 0 && !PPx.Execute('%"ppx-plugin-manager"%Q"Delete ' + p2 + '?"')) {
+          PPx.Execute('*script %*getcust(S_ppm#global:ppm)\\script\\jscript\\unset.js,' + p1);
+          PPx.Execute('*deletecust S_ppm#plugins:' + p1);
+          PPx.Execute('*delete ' + p2);
         }
-      }
+      });
     }
   }
 
@@ -91,5 +63,5 @@ if (dry_run !== 0) {
 }
 
 if (cleanup_plugins.length === 0) {
-  PPx.SetPopLineMessage('!"No deleted plugin');
+  PPx.SetPopLineMessage('!"No deleted plugins');
 }
