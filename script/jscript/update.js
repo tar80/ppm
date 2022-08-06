@@ -3,7 +3,8 @@
 /**
  * Update remote plugins
  *
- * @arg 0 If nonzero dry run
+ * @arg 0 If the plugin-name is specified, run the update alone
+ * @arg 1 If nonzero dry run
  */
 
 /* Initial */
@@ -29,7 +30,14 @@ PPx.Execute('*job start');
 PPx.Execute('%Oa *ppb -bootid:p');
 PPx.Execute('*wait 200,2');
 
-var dry_run = PPx.Arguments.length && PPx.Arguments.Item(0) | 0;
+var g_args = (function (args) {
+  var len = args.length;
+
+  return {
+    name: len > 0 ? args.Item(0) || '/' : '/',
+    dryrun: len > 1 ? args.Item(1) | 0 : 0
+  };
+})(PPx.Arguments);
 
 var resultMsg = (function () {
   var list = util.readLines(util.getc('S_ppm#global:cache') + '\\list\\_pluginlist');
@@ -59,7 +67,7 @@ var resultMsg = (function () {
     }
 
     if (localHead !== remoteHead[0]) {
-      if (dry_run === 0) {
+      if (g_args.dryrun === 0) {
         PPx.Execute('%Os *cd ' + pwd + ' %: git pull');
         PPx.Execute('%Os *execute BP,*cd ' + pwd + ' %%:git log --oneline head...' + localHead);
       }
@@ -78,7 +86,8 @@ var resultMsg = (function () {
 
   for (var i = 0, l = list.data.length; i < l; i++) {
     thisLine = list.data[i].replace(reg, '$1,$2').split(',');
-    if (thisLine[0] === 'remote') {
+
+    if (thisLine[0] === 'remote' && ~thisLine[1].indexOf(g_args.name)) {
       name = thisLine[1].split('/');
       path = util.getc('S_ppm#plugins:' + name[1]);
 

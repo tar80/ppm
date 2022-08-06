@@ -36,6 +36,7 @@ util.js
 
 プロパティ
 
+	Array.prototype.trim	polyfill (jscriptのみ)
 	Array.prototype.indexOf	polyfill (jscriptのみ)
 
 	(改名) fmt > metaRegexp 22/07/05

@@ -54,6 +54,8 @@ ppx-plugin-manager(以降ppm)は、TORO氏作のファイル操作ツール集Pa
 	実行しておけば、PPXDEF.CFGに*ppmRestoreの設定が自動的に追記されます。
 	*ppmRestoreはプラグイン設定を復元します。
 
+	*ppmRestoreUnregを実行するとPPXDEF.CFGから*ppmRestoreが削除されます。
+
 ===============================================================================
 構成ファイルの説明
 
@@ -110,9 +112,10 @@ ppx-plugin-manager(以降ppm)は、TORO氏作のファイル操作ツール集Pa
 	*ppmInstall
 		_pluginlistに記載したプラグインをppmにインストールします。
 
-	*ppmUpdate
+	*ppmUpdate <plugin-name>
 		設定中のプラグインの更新状態をチェックし、更新があれば
 		アップデートします。
+		引数を指定すると指定したプラグインのみチェックします。
 
 	*ppmUninstall
 		ppmをアンインストールします。

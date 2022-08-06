@@ -111,16 +111,45 @@ var resultMsg = (function () {
 
   var setcPlugins = function () {
     var copyFiles = function (send, dest) {
-      var sendDir = '"' + path + '\\' + send + '\\*"';
+      var tempFile = PPx.Extract('%*temp()%\\copyfiles.txt');
+      var sendDir = path + '\\' + send;
       var destDir = cache_dir + '\\' + dest;
 
-      return PPx.Execute(
-        '*execute C,*ppcfile !copy -min -src:' +
-          sendDir +
-          ' -dest:' +
-          destDir +
-          ' -same:3 -sameall -log:off -nocount -checkexistfirst:off -querycreatedirectory:off -qstart'
-      );
+      if (!fso.FolderExists(destDir)) {
+        fso.CreateFolder(destDir);
+      }
+
+      PPx.Execute('*whereis -name -utf8 -dir -path:"' + sendDir + '" -listfile:"' + tempFile + '"');
+
+      var text = fso.OpenTextFile(tempFile, 1, -1);
+
+      if (text.atEndOfStream) {
+        return;
+      }
+
+      var paths = text.ReadAll().split(NL_CHAR);
+
+      text.Close();
+
+      var copy = function (callback) {
+        for (var i = 0, l = paths.length - 1; i < l; i++) {
+          var sendPath = paths[i];
+          var destPath = fso.BuildPath(destDir, sendPath.slice(sendDir.length));
+
+          callback(sendPath, destPath);
+        }
+      };
+
+      copy(function (source, dest) {
+        if (fso.FolderExists(source) && !fso.FolderExists(dest)) {
+          fso.CreateFolder(dest);
+        }
+      });
+      copy(function (source, dest) {
+        if (fso.FileExists(source) && !fso.FileExists(dest)) {
+          fso.copyFile(source, dest);
+        }
+      });
     };
 
     if (dry_run === 0 && installInfo.COPY_FLAG === 'true') {
@@ -170,7 +199,7 @@ var resultMsg = (function () {
 
   /* Main loop */
   PPx.Execute('*deletecust "S_ppm#plugins"');
-  PPx.Execute('*setucst S_ppm#plugins:ppx-plugin-manager=' + ppm_dir);
+  PPx.Execute('*setcust S_ppm#plugins:ppx-plugin-manager=' + ppm_dir);
 
   for (var i = 0, l = candidates.data.length; i < l; i++) {
     var depends = '';
@@ -297,8 +326,6 @@ var resultMsg = (function () {
     if (dry_run !== 0) {
       return;
     }
-    //NOTE: dlete
-    util.setc('S_ppm#global:plugins=' + newPlugins.toString());
 
     for (var i = 1, l = disablePlugins.length - 2; i < l; i++) {
       var thisPlugin = disablePlugins[i].replace(/^@/, '');
