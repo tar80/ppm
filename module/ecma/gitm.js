@@ -31,6 +31,7 @@
         st.close;
         return ~data.indexOf('ref:') ? data.slice(16, -1) : data.slice(0, -1);
       }
+      return '-';
     },
     head: (root, branch) => {
       const hasHeads = obj.BuildPath(root, '.git\\refs\\heads\\' + branch);
@@ -43,6 +44,7 @@
         st.close;
         return data.slice(0, -1);
       }
+      return 'undefined';
     }
   };
 })();

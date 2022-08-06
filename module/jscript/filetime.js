@@ -1,15 +1,15 @@
 ﻿(function () {
   return {
-    filetimeTo: function (dwHigh, dwLow) {
+    toTime: function (dwHigh, dwLow) {
       var sec = 1e-7 * (dwHigh * Math.pow(2, 32) + dwLow) - 11644473600;
       var date = new Date(0);
       date.setSeconds(sec);
       return date;
     },
-    toFiletime: function (year, month, day) {
+    fromTime: function (year, month, day) {
       var time = [].slice.call(arguments);
       var seconds = (function () {
-        if (time.length === 4) return time;
+        if (time.length === 1) return time;
         var hour = time[4] || 0;
         var min = time[5] || 0;
         var sec = time[6] || 0;
