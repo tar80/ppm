@@ -30,8 +30,8 @@ PPxのプラグインマネージャーβ版です。
 - [ppm-etp](https://github.com/tar80/ppm-etp) Everything Search Moduleの設定サポート
 - [ppm-grep](https://github.com/tar80/ppm-grep) grepの結果を指定した方法で出力
 - [ppm-iconicfont](https://github.com/tar80/ppm-iconicfont) 拡張子アイコンをNerdFontsで描画
+- [ppm-misc](https://github.cim/tar80/ppm-misc) 細々としたカスタマイズの詰め合わせ
 - [ppm-switchmenu](https://github.com/tar80/ppm-switchmenu) 入れ替え可能なプリセットメニュー
 - [ppm-vilikekeys](https://github.com/tar80/ppm-vilikekeys) viキーバインドをエミュレート
-<!-- - [ppm-misc](https://github.cim/tar80/ppm-misc) 細々としたカスタマイズの詰め合わせ -->
 
 
