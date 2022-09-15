@@ -101,7 +101,7 @@ var g_patches = (function (path, source, unsets) {
     rep: /^[@|$]([^\s=,]+)\s*([=,])\s*(.*)/,
     conv: /^(\?[^\s=,]+)\s*([=,])\s*(.*)/
   };
-  var repEx = /^\$([^\s=]+)[\s=]+(.+)j\s*/i;
+  var repEx = /^\$([^\s=]+)[\s=]+(\^|\^\\|\\\^)j\s*/i;
   var getProp = function (form) {
     skip = false;
 
@@ -251,13 +251,13 @@ var g_baseLines = (function (base, patches) {
   var result = [];
   var lines = util.readLines(base).data;
   var reg1 = /\[\?[^:]+:[^\]]*\]/;
-  var reg2 = /\?[^:]+/g;
+  var reg2 = /\[\?[^:]+/g;
   var match = {};
   var thisLine, thisMatch, thisPatch;
 
   var setValue = function (label, value) {
-    var reg2 = RegExp('\\[\\' + label + ':([^\\]]*)]', 'g');
-    var result = thisLine.replace(reg2, value);
+    var reg3 = RegExp('\\[\\' + label + ':([^\\]]*)]', 'g');
+    var result = thisLine.replace(reg3, value);
     return result;
   };
 
@@ -271,7 +271,7 @@ var g_baseLines = (function (base, patches) {
     if (reg1.test(thisLine)) {
       match = thisLine.match(reg2);
       for (var j = 0, k = match.length; j < k; j++) {
-        thisMatch = match[j];
+        thisMatch = match[j].substring(1);
         thisPatch = patches.conv[thisMatch];
         thisLine =
           typeof thisPatch === 'undefined'

@@ -3,10 +3,10 @@
 /**
  *  Edit plugin settings, then setup
  *
- * @arg 0 Plugin name
- * @arg 1 Patch to source, user | def
- * @arg 2 Specification of the method, set | editor | compare
- * @arg 3 If nonzero dry run
+ * @arg 0 {string} Plugin name
+ * @arg 1 {string} Patch to source, user | def
+ * @arg 2 {string} Specification of the method, set | editor | compare
+ * @arg 3 {number} If nonzero dry run
  */
 
 /* Initial */
