@@ -275,7 +275,7 @@ var g_baseLines = (function (base, patches) {
         thisMatch = match[j].substring(1);
         thisPatch = patches.conv[thisMatch];
         thisLine =
-          typeof thisPatch === 'undefined'
+          thisPatch === '' || typeof thisPatch === 'undefined'
             ? setValue(thisMatch, '$1')
             : setValue(thisMatch, thisPatch);
       }
