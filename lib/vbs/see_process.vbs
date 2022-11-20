@@ -5,10 +5,10 @@
 ' @version 1.0
 ' @desc Check every 500 milliseconds to see, whether the process is running
 ' @return {boolean} Running state of the process at script startup
-' @arg 0 Specify process Name
-' @arg 1 Specify waiting time (milliseconds). defalut = 6000
-' @arg 2 Specify process commandline. When the process is not runnning
-' @arg 3 Specify process startup style (WScript.Shell.Run(style)). default = 1
+' @arg {string} 0 Specify process Name
+' @arg {number} 1 Specify waiting time (milliseconds). default = 6000
+' @arg {string} 2 Specify process commandline. When the process is not runnning
+' @arg {number} 3 Specify process startup style (WScript.Shell.Run(style)). default = 1
 ' NOTE:When "0" is specified for the waiting time, simply check the running.
 ' NOTE:Waiting time is not accurate. Set an approximate value.
 
@@ -19,15 +19,15 @@ Const LOOP_MSEC = 500
 Dim sh
 Set sh = PPx.CreateObject("WScript.Shell")
 
-Dim scriptName, aryOrder, blnExist
+Dim scriptName, aryParam, blnExist
 scriptName = PPx.ScriptName
-aryOrder = args_to_array(PPx.Arguments)
-blnExist = process_running(aryOrder(0))
+aryParam = args_to_array(PPx.Arguments)
+blnExist = process_running(aryParam(0))
 
 PPx.Result = blnExist
 
 If not blnExist Then
-  If aryOrder(2) <> "" Then sh.run aryOrder(2), aryOrder(3)
+  If aryParam(2) <> "" Then sh.run aryParam(2), aryParam(3)
 
   Dim i, w, pre, post
   i = 0
@@ -37,13 +37,13 @@ If not blnExist Then
     i = i + LOOP_MSEC
     PPx.Execute("*wait " & w - Fix(50 + 10 * w / 100) & ",2")
 
-    If i >= aryOrder(1) Then
+    If i >= aryParam(1) Then
       PPx.Setpoplinemessage("!""Abort. Waiting time exceeded.")
       PPx.Quit(-1)
     End If
 
     pre = Timer
-    blnExist = process_running(aryOrder(0))
+    blnExist = process_running(aryParam(0))
     post = Timer
 
     If blnExist = true Then Exit Do
