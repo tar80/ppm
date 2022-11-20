@@ -23,121 +23,193 @@
       };
     })(Object, Math.max, Math.min);
   }
-  var obj = {};
+  String.prototype.metaRegexp = function (notation) {
+    return {
+      esc: {
+        '^': '\\^',
+        '$': '\\$',
+        '(': '\\(',
+        ')': '\\)',
+        '[': '\\[',
+        '|': '\\|',
+        '=': '\\=',
+        '*': '\\*',
+        '+': '\\+',
+        '?': '\\?',
+        '.': '\\.',
+        '/': '\\/',
+        '\\': '\\\\'
+      },
+      norm: {
+        '\\^': '^',
+        '\\$': '$',
+        '\\(': '(',
+        '\\)': ')',
+        '\\[': '[',
+        '\\]': ']',
+        '\\|': '|',
+        '\\=': '=',
+        '\\*': '*',
+        '\\+': '+',
+        '\\?': '?',
+        '\\.': '.',
+        '\\/': '/',
+        '\\s': ' ',
+        '\\t': '\t',
+        '\\\\': '\\'
+      }
+    }[notation][this];
+  };
+  String.prototype.metaNewline = function (notation) {
+    return {
+      esc: {
+        lf: '\n',
+        cr: '\r',
+        crlf: '\r\n',
+        unix: '\n',
+        mac: '\r',
+        dos: '\r\n',
+        '%bl': '\n',
+        '%br': '\r',
+        '%bn': '\r\n',
+        '\n': '\n',
+        '\r': '\r',
+        '\r\n': '\r\n'
+      },
+      ppx: {
+        lf: '%bl',
+        cr: '%br',
+        crlf: '%bn',
+        unix: '%bl',
+        mac: '%br',
+        dos: '%bn',
+        '\n': '%bl',
+        '\r': '%br',
+        '\r\n': '%bn'
+      },
+      ansi: {
+        lf: '10',
+        cr: '13',
+        crlf: '-1',
+        unix: '10',
+        mac: '13',
+        dos: '-1',
+        '\n': '10',
+        '\r': '13',
+        '\r\n': '-1'
+      }
+    }[notation][this];
+  };
+  var NL_CHAR = '\r\n';
   var jscript = PPx.Extract('%*getcust(S_ppm#global:ppm)') + '\\lib\\jscript';
-  obj.metaRegexp = {
-    esc: {
-      '^': '\\^',
-      '$': '\\$',
-      '(': '\\(',
-      ')': '\\)',
-      '[': '\\[',
-      '|': '\\|',
-      '=': '\\=',
-      '*': '\\*',
-      '+': '\\+',
-      '?': '\\?',
-      '.': '\\.',
-      '/': '\\/',
-      '\\': '\\\\'
-    },
-    nor: {
-      '\\^': '^',
-      '\\$': '$',
-      '\\(': '(',
-      '\\)': ')',
-      '\\[': '[',
-      '\\]': ']',
-      '\\|': '|',
-      '\\=': '=',
-      '\\*': '*',
-      '\\+': '+',
-      '\\?': '?',
-      '\\.': '.',
-      '\\/': '/',
-      '\\s': ' ',
-      '\\t': '\t',
-      '\\\\': '\\'
+  var processID = PPx.WindowIDName.slice(0, 1);
+  var sort_ppx_process = function (ppxid) {
+    ppxid = ppxid.toUpperCase().slice(0, 1);
+    if (ppxid === processID) {
+      return true;
+    }
+    return /^[^CV]/.test(ppxid);
+  };
+  var path_restrictions = function (path) {
+    if (
+      ~path.indexOf(PPx.Extract("%'temp'")) &&
+      ~path.indexOf(PPx.Extract('%*getcust(S_ppm#global:cache)'))
+    ) {
+      PPx.Execute('%"ppx-plugin-manager"%I"Error: Not ppm management file%bn%bn' + path + '"');
+      PPx.Quit(-1);
     }
   };
-  obj.metaNewline = {
-    esc: {
-      lf: '\n',
-      cr: '\r',
-      crlf: '\r\n',
-      unix: '\n',
-      mac: '\r',
-      dos: '\r\n',
-      '%bl': '\n',
-      '%br': '\r',
-      '%bn': '\r\n',
-      '\n': '\n',
-      '\r': '\r',
-      '\r\n': '\r\n'
-    },
-    ppx: {
-      lf: '%%bl',
-      cr: '%%br',
-      crlf: '%%bn',
-      unix: '%%bl',
-      mac: '%%br',
-      dos: '%%bn',
-      '\n': '%%bl',
-      '\r': '%%br',
-      '\r\n': '%%bn'
-    },
-    ansi: {
-      lf: '10',
-      cr: '13',
-      crlf: '-1',
-      unix: '10',
-      mac: '13',
-      dos: '-1',
-      '\n': '10',
-      '\r': '13',
-      '\r\n': '-1'
-    }
-  };
-  obj.script = (function () {
-    var path = PPx.ScriptName;
+  var util = {};
+  util.script = (function () {
+    var path = PPx.ScriptName.replace(/\//g, '\\');
     return {
       name: PPx.Extract('%*name(C,' + path + ')'),
       path: PPx.Extract('%*name(D,' + path + ')')
     };
   })();
-  obj.quitMsg = function (msg) {
-    PPx.Echo(obj.script.name + '\r\n\r\n' + msg);
+  util.quitMsg = function () {
+    var args = [].slice.call(arguments);
+    var nl = this.newline || NL_CHAR;
+    PPx.Echo(util.script.name + ': ' + args.join(nl));
     PPx.Quit(-1);
   };
-  obj.error = function (method) {
+  util.error = function (method) {
     PPx.Execute('*script "' + jscript + '\\errors.js",' + method + ',' + PPx.ScriptName);
     PPx.Quit(-1);
   };
-  obj.fileexists = function (filepath) {
+  util.log = function (msg, newline) {
+    var testrun = typeof ppm_test_run !== 'undefined' ? ppm_test_run : 0;
+    if (typeof newline !== 'undefined') {
+      newline = '%' + newline.metaNewline('ppx') + (testrun > 0 ? '[Log] ' : '');
+      msg = msg.join(newline);
+    }
+    if (testrun > 0) {
+      return testrun >= 2 && PPx.Execute('*execute B,*linemessage [Log] ' + msg);
+    }
+    var logview = PPx.Extract('%*getcust(X_combos)').slice(28, 29) === '1';
+    var useppb = !logview && PPx.Extract('%NB') !== '' ? '*execute B,' : '*execute ,';
+    return PPx.Execute(useppb + '*linemessage ' + msg);
+  };
+  util.fileexists = function (filepath) {
     return PPx.Execute('*ifmatch "o:e,a:d-",' + filepath + '%:*stop') === 0 ? false : true;
   };
-  obj.setc = function (item) {
+  util.extract = function (ppxid, macro) {
+    return sort_ppx_process(ppxid)
+      ? PPx.Extract('%*extract("' + macro + '")')
+      : PPx.Extract('%*extract(' + ppxid + ',"' + macro + '")');
+  };
+  util.extractJS = function (ppxid, macro) {
+    sort_ppx_process(ppxid)
+      ? PPx[macro]
+      : PPx.Extract('%*extract(' + ppxid + ',"%%*js(PPx.Result=PPx.' + macro + ';)")');
+  };
+  util.expand = function (ppxid, command) {
+    var exitcode;
+    if (typeof ppm_test_run !== 'undefined' && ppm_test_run <= 2) {
+      ppm_test_run === 2 &&
+        PPx.Execute('*execute B,*linemessage %%bx1b[2F[Expand]' + ppxid + ', %(' + command + '%)');
+      return '1';
+    }
+    if (sort_ppx_process(ppxid)) {
+      exitcode = PPx.Extract('%*extract("' + command + '%%&0")');
+    } else {
+      PPx.Execute('*execute ' + ppxid + ',' + command + '%%&*string u,ppm_util_expand=0');
+      PPx.Execute('*wait 0,1');
+      exitcode = PPx.Extract('%su"ppm_util_expand"');
+      PPx.Execute('*deletecust _User:ppm_util_expand');
+    }
+    return exitcode === '0' ? 0 : 1223;
+  };
+  util.execute = function (ppxid, command) {
+    if (typeof ppm_test_run !== 'undefined' && ppm_test_run <= 2) {
+      return (
+        ppm_test_run === 2 &&
+        PPx.Execute('*execute B,*linemessage %%bx1b[2F[Execute]' + ppxid + ', %(' + command + '%)')
+      );
+    }
+    return sort_ppx_process(ppxid)
+      ? PPx.Execute('*execute ,' + command)
+      : PPx.Execute('*execute ' + ppxid + ',' + command);
+  };
+  util.setc = function (item) {
     return PPx.Execute('*setcust ' + item);
   };
-  obj.getc = function (item) {
+  util.getc = function (item) {
     return PPx.Extract('%*getcust(' + item + ')');
   };
-  obj.plugScript = function (plug, scr) {
-    return PPx.Extract('%*getcust(S_ppm#plugins:' + plug + ')') + '\\script\\' + scr + '.js';
-  };
-  obj.lib = function () {
+  util.lib = function () {
     var args = [].slice.call(arguments);
     var path = jscript + '\\' + this.name + '.js';
-    if (!obj.fileexists(path)) return obj.quitMsg('Not exist\n\n' + path);
+    if (!util.fileexists(path)) return util.quitMsg('Not exist ' + path);
     return PPx.Execute('*script "' + path + '",' + args);
   };
-  obj.reply = function () {
+  util.reply = function () {
     var args = [].slice.call(arguments);
     var path = jscript + '\\' + this.name + '.js';
-    if (!obj.fileexists(path)) return 'Not exist: ' + path;
+    if (!util.fileexists(path)) return 'Not exist ' + path;
     return PPx.Extract('%*script("' + path + '",' + args + ')');
   };
-  obj.print = function () {
+  util.print = function () {
     var args = [].slice.call(arguments);
     var linefeed = PPx.Extract('%*getcust(S_ppm#user:newline)');
     var tab = this.tab || 8;
@@ -151,15 +223,15 @@
         ' -k *editmode -modify:silent -modify:readonly %%: *setcaption ' +
         this.title +
         '%%: *insert ' +
-        args.join(obj.metaNewline.ppx[linefeed])
+        args.join(linefeed.metaNewline('ppx'))
     );
   };
-  obj.printw = function () {
+  util.printw = function () {
     var args = [].slice.call(arguments);
     var linefeed = PPx.Extract('%*getcust(S_ppm#user:newline)');
     var tab = this.tab || 8;
     var path = PPx.Extract('%*temp()%\\printw.txt');
-    obj.write.apply({filepath: path, newline: linefeed}, args);
+    util.write.apply({filepath: path, newline: linefeed}, args);
     PPx.Execute(
       '*' +
         this.cmd +
@@ -173,62 +245,100 @@
         this.title
     );
   };
-  obj.esconv = function (format, text) {
+  util.esconv = function (notation, text) {
     var reg = {
       esc: /./g,
       nor: /\\./g
-    }[format];
+    }[notation];
     return text.replace(reg, function (match) {
-      return obj.metaRegexp[format][match] || match;
+      return match.metaRegexp('notation') || match;
     });
   };
-  obj.linefeedback = function (data) {
-    var codes = ['\r\n', '\n', '\r'];
-    for (var i = 0, l = codes.length; i < l; i++) {
-      if (~data.indexOf(codes[i])) return codes[i];
-    }
-    return '';
+  util.linefeedback = function (data) {
+    var r = data.indexOf('\r');
+    var n = data.indexOf('\n');
+    // could not find newline code
+    if (r === n) return '';
+    if (n === -1) return '\r';
+    if (r === -1) return '\n';
+    if (r + 1 == n) return '\r\n';
+    return r < n ? '\r' : '\n';
   };
-  obj.readLines = function (filepath) {
-    var data, data_;
+  util.readLines = function (filepath, newline) {
+    var data, data_, datalines;
     st.Open;
     st.Type = 2;
     st.Charset = 'UTF-8';
     try {
       st.LoadFromFile(filepath);
       data = st.ReadText(-1);
-      data_ = data.slice(0, 120);
+      data_ = data.slice(0, 500);
+      size = st.Size;
     } catch (_err) {
-      return {data: [], newline: ''};
+      return {data: [], newline: '', size: 0};
     } finally {
       st.Close;
     }
-    var linefeed = obj.linefeedback(data_);
-    data_ = data.split(linefeed);
-    if (data_.length === 0) return {data: [], newline: ''};
-    if (data_[data_.length - 1] === '') data_.pop();
-    return {data: data_, newline: linefeed};
+    var linefeed = newline || util.linefeedback(data_) || NL_CHAR;
+    datalines = data.split(linefeed);
+    if (datalines.length === 0) return {data: [], newline: '', size: 0};
+    if (datalines[datalines.length - 1] === '') datalines.pop();
+    return {data: datalines, newline: linefeed, size: size};
   };
-  obj.write = function () {
-    if (
-      ~this.filepath.indexOf(PPx.Extract("%'temp'")) &&
-      ~this.filepath.indexOf(PPx.Extract('%*getcust(S_ppm#global:cache)'))
-    ) {
-      PPx.Execute(
-        '%"ppx-plugin-manager"%I"Error: Not ppm management file%bn%bn' + this.filepath + '"'
-      );
-      PPx.Quit(-1);
-    }
+  util.append = function () {
+    path_restrictions(this.filepath);
+    var lines = util.readLines(this.filepath, this.newline);
     var args = [].slice.call(arguments);
     st.Open;
     st.Type = 2;
     st.Charset = 'UTF-8';
-    st.LineSeparator = obj.metaNewline.ansi[this.newline];
-    st.WriteText(args.join(obj.metaNewline.esc[this.newline]), 1);
-    st.SaveToFile(this.filepath, 2);
-    st.Close;
+    st.LineSeparator = lines.newline.metaNewline('ansi');
+    st.LoadFromFile(this.filepath);
+    if (this.ignoreblank) {
+      var baseByte = lines.newline === '\r\n' ? 2 : 1;
+      var omitByte = 0;
+      for (var i = lines.data.length; i--; ) {
+        if (lines.data[i] !== '') {
+          if (lines.data.length - 1 === i) {
+            omitByte = 0;
+          }
+          break;
+        }
+        omitByte = omitByte + baseByte;
+      }
+      st.Position = lines.size - omitByte;
+    } else {
+      st.Position = lines.size;
+    }
+    st.SetEOS;
+    try {
+      st.WriteText(args.join(lines.newline), 1);
+      st.SaveToFile(this.filepath, 2);
+    } catch (err) {
+      PPx.Echo(err);
+      PPx.Quit(1);
+    } finally {
+      st.Close;
+    }
   };
-  obj.input = function () {
+  util.write = function () {
+    path_restrictions(this.filepath);
+    var args = [].slice.call(arguments);
+    st.Open;
+    st.Type = 2;
+    st.Charset = 'UTF-8';
+    st.LineSeparator = this.newline.metaNewline('ansi');
+    try {
+      st.WriteText(args.join(this.newline.metaNewline('esc')), 1);
+      st.SaveToFile(this.filepath, 2);
+    } catch (err) {
+      PPx.Echo(err);
+      PPx.Quit(1);
+    } finally {
+      st.Close;
+    }
+  };
+  util.input = function () {
     var rep = {
       0: [/"/g, {'"': '""'}],
       1: [/["%]/g, {'"': '""', '%': '%%'}]
@@ -255,23 +365,30 @@
       return rep[1][c];
     });
   };
-  obj.auxlocalpath = function (wd) {
+  util.auxlocalpath = function (wd) {
     return wd.replace(/^aux:([\\/]{2})?[MS]_[^\\/]+[\\/](.*)/, function (_p0, p1, p2) {
       return typeof p1 === 'undefined' ? p2 : '';
     });
   };
-  obj.basepath = function (filepath) {
-    var data;
-    if (!obj.fileexists(filepath)) return '';
+  util.basepath = function (filepath) {
+    if (!util.fileexists(filepath)) return '';
     st.Open;
     st.Type = 2;
     st.Charset = 'UTF-16LE';
     st.LoadFromFile(filepath);
     st.LineSeparator = -1;
     st.SkipLine = 1;
-    data = st.ReadText(-2);
+    var data = st.ReadText(-2);
     st.Close;
     return data.replace(/^;Base=(.*)\|\d*/, '$1');
   };
-  return obj;
+  util.interactive = function (title, msg) {
+    if (typeof ppm_test_run !== 'undefined' && ppm_test_run <= 2) {
+      ppm_test_run === 2 &&
+        PPx.Execute('*execute B, *linemessage [interactive] ' + title + ': ' + msg);
+      return true;
+    }
+    return PPx.Execute('%OC %"' + title + '"%Q"' + msg + '"') === 0;
+  };
+  return util;
 })();

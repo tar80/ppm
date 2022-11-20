@@ -6,7 +6,7 @@
 ' @desc Check every 500 milliseconds to see, whether the process is running
 ' @return {boolean} Running state of the process at script startup
 ' @arg 0 Specify process Name
-' @arg 1 Specify waiting time (milliseconds). defalut = 3000
+' @arg 1 Specify waiting time (milliseconds). defalut = 6000
 ' @arg 2 Specify process commandline. When the process is not runnning
 ' @arg 3 Specify process startup style (WScript.Shell.Run(style)). default = 1
 ' NOTE:When "0" is specified for the waiting time, simply check the running.
@@ -55,7 +55,7 @@ End If
 Function args_to_array(args)
   Dim l, t, s, name, cmdline
   l = args.length
-  t = 3000
+  t = 6000
   s = 1
 
   If l < 1 Then
