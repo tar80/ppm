@@ -1,5 +1,4 @@
 ﻿//!*script
-// deno-lint-ignore-file no-var
 /**
  * Build part of config and write it out
  *
@@ -127,7 +126,7 @@ var g_patches = (function (path, source, unsets) {
     return result;
   };
 
-  var regSect = /^([^\s-=,]+)\s*[=,]\s*(.*)$/;
+  var regSect = /^([^\s=,]+)\s*[=,]\s*(.*)$/;
   var getSect = function (i, l) {
     var prop = {key: '', value: ''};
     var skip = false;
@@ -330,6 +329,10 @@ var mergeLines = (function (name, source, lines, patches, unsets, linecustpath) 
           });
 
           if (patches.rep[thisKey] === null) {
+            if(prefix === '$') {
+              skip = true;
+              return;
+            }
             setLines.push(thisKey + '\t' + thisSep + ' ' + thisValue);
             unsetLines[thisTable.key].push('-|' + thisKey + ' =');
             delete patches.rep[thisKey];
@@ -354,7 +357,7 @@ var mergeLines = (function (name, source, lines, patches, unsets, linecustpath) 
     };
 
     // Main loop of the build
-    var regTable = /^(?:-\|)?([^\s=-]+)\s*([=,])\s*(.*)$/;
+    var regTable = /^(?:-\|)?([^\s=]+)\s*([=,])\s*(.*)$/;
     var regProp = /^([^\s=,-]+)\s*([=,]\s*.*)$/;
 
     for (var i = 0, l = lines.length; i < l; i++) {
