@@ -28,6 +28,7 @@ CONTENTS
 	util.js
 	ppm.js  (改名) 22/07/05 plugin > ppm
 	gitm.js
+	input.js
 
 ===============================================================================
 util.js
@@ -39,13 +40,15 @@ util.js
 	Array.prototype.trim	polyfill (jscriptのみ)
 	Array.prototype.indexOf	polyfill (jscriptのみ)
 
+	(Stringメソッドに変更) 22/11/27
 	(改名) fmt > metaRegexp 22/07/05
-	.metaRegexp	文字エスケープ
-		key: esc | nor
+	String.prototype.metaRegexp	文字エスケープ
+		key: esc | norm
 
+	(Stringメソッドに変更) 22/11/27
 	(改名) newline > metaNewline 22/07/05
 		js > esc, adodb > ansi
-	.metaNewline	改行文字コード変換
+	String.prototype.metaNewline	改行文字コード変換
 		key: esc | ppx | ansi
 
 メソッド
@@ -54,14 +57,37 @@ util.js
 		{name:スクリプトファイル名、path:親ディレクトリパス}
 		arguments:
 
+		(削除)	22/11/27
 	.plugScript	プラグイン固有のスクリプトパスを返す
 		arguments: 0=プラグイン名, 1=スクリプト名
 
-	.quitMsg	メッセージを表示して終了
-		arguments: 0=メッセージ
+	(変更) 改行コードを指定できるようにした
+	.quitMsg	メッセージを表示して終了 .callまたは.apply経由
+		arguments: {newline: "改行コード"}
+		array=一行ごとのメッセージ
 
 	.error	ライブラリerrors.jsを実行して終了
 		arguments: 0=errors.jsのメソッド名
+
+	.log	PPcログ窓 > PPb > PPcステータス行 の優先度でログを表示
+		arguments: 0=メッセージ, 1=改行コード
+
+	.fileexists	ファイルの存在確認をして真偽値を返す
+	 FileSystemObject.FileExistsより低速
+		arguments: 0=ファイルパス
+
+	.extract	指定したPPx上で%変数を展開して返す
+		arguments: 0=PPxID, 1=%%変数
+
+	.extractJS	指定したPPx上でPPx.XXXを展開して戻り値を返す
+		arguments: 0=PPxID, 1=メソッド名(PPx.XXXの部分)
+
+	.expand	指定したPPx上でコマンドを実行し終了コードを返す
+		戻り値:0 or 1223
+		arguments: 0=PPxID, 1=コマンド
+
+	.execute	指定したPPx上でコマンドを実行
+		arguments: 0=PPxID, 1=コマンド
 
 	.setc	PPx.Execute('*setcust prop')の簡略化
 		arguments: 0=プロパティ名
@@ -74,10 +100,6 @@ util.js
 
 	.reply	ライブラリの実行(戻り値あり) .callまたは.apply経由
 		arguments: ライブラリの引数
-
-	.fileexists	ファイルの存在確認をして真偽値を返す
-	 FileSystemObject.FileExistsより遅い
-		arguments: 0=ファイルパス
 
 	.print	PPeでメッセージを表示 .callまたは.apply経由で使用
 		arguments: {cmd=ppe|edit, title=タイトル, tab=タブ数},
@@ -99,15 +121,21 @@ util.js
         (改名) lines > readLines 22/07/05
 	.readLines	UTF-8エンコードのファイルを読み込み一行ごとに配列にして返す
 	 .callまたは.apply経由
-         改行コードが判別できないときは空文字を返す
+	 改行コードが判別できないときは空文字を返す
 		{data:配列データ, newline:ファイルで最初に使用された改行コード}
 		arguments: 0=ファイルパス
 
-	.write	配列を要素ごとに改行してファイルに出力 .callまたは.apply経由
-	 %'temp'およびS_ppm#global:cache以下のファイルのみ対象とします。
+	.append	配列を要素ごとに改行してファイルの末尾に追加 .callまたは.apply経由
+	 %'temp'およびS_ppm#global:cache以下のファイルのみ対象とする
 		{filepath:出力ファイル, newline:改行コード},
-		array=一行ごとのメッセージ
+		array=一行ごとの追加文字列
 
+	.write	配列を要素ごとに改行してファイルに出力 .callまたは.apply経由
+	 %'temp'およびS_ppm#global:cache以下のファイルのみ対象とする
+		{filepath:出力ファイル, newline:改行コード},
+		array=一行ごとの文字列
+
+	(version0.9で削除予定) mod/input.jsに更新
 	.input	%*inputの結果に、["%]のエスケープを追加した文字列を返す
 	 .callまたは.apply経由
 		{
@@ -127,13 +155,16 @@ util.js
 	 Baseパスがないときは空文字を返す
 		arguments: 0=リストファイルのパス
 
+	.interactive	対話形式のダイアログを表示して真偽値を返す
+		戻り値:boolean
+		arguments: 0=ダイアログタイトル, 1=メッセージ
+
 ===============================================================================
 ppm.js
 
 プラグインの設定・削除に共通するコマンド関数
 *linecustで処理できるコマンド内の文字数は凡そ500文字の制限があり、
 これを回避するため*linecust相当の関数を実装
-
 
 メソッド
 
@@ -156,13 +187,14 @@ ppm.js
         (改名) unset > unsetLines, addline > addCmdline, deleteline > delCmdline 22/07/06
 	.unsetLines	PPxからプラグインの設定を削除する
         	arguments: 0=プラグイン名, 1=ドライランのフラグ
+
 	.addCmdline	*linecustコマンドを変換してプロパティに追加
 		arguments: カンマ区切りの*linecustコマンド
 
 	.delCmdline	path(指定なしはppm\unset\linecust.cfg)の内容をプロパティから削除
 		arguments: {
-			path:削除する%mを羅列したファイルのパス,
-			name:削除する%mを限定)
+			path: 削除する%mを羅列したファイルのパス,
+			name: 削除する%mを限定)
                 }
 
 ===============================================================================
@@ -175,10 +207,39 @@ gitのレポジトリ情報を取得する関数を実装
 	.root	リポジトリのルートパスを返す
 		arguments: 0=リポジトリのパス
 
-	.branch	アクティブブランチ名を返す
+	.branch	アクティブブランチ情報を返す
+	 非リポジトリの場合は、{name '-', state: ''}を返す
+		戻り値: {name: ブランチ名, state: ブランチの状態}
 		arguments: 0=リポジトリルートパス
 
 	.head	最新コミットのハッシュを返す
 		arguments: 0=リポジトリルートパス, 1=ブランチ名
+
+===============================================================================
+input.js
+
+一行編集を呼び出す関数を実装
+
+メソッド
+
+	.addkey	一行編集に追加キーバインドを設定する
+		arguments: 0=設定キー, 1=コマンド, 2=キーの説明文
+
+	.lied	一行編集を呼び出し編集した文字列を返す
+	 .addkeyまたは補完リストが設定されていると追加キーが有効になる
+	 - 追加キーは起動ごとにリセットされる
+	 - 補完リストにファイル名のみ指定したときは
+	   S_ppm#global:cache\listが検索される
+		arguments: {
+			esc: 編集後の文字列を補完する
+				0= '"'を補完(デフォルト)
+				1= '"%'を補完
+			text: 編集文字列初期値
+			title: 一行編集タイトル
+			mode: 編集に使用するヒストリ
+			select: 編集開始時の文字列選択状態
+			listname: 補完リストパス
+			k: 一行編集開始時に実行するコマンド
+                }
 
 ===============================================================================
