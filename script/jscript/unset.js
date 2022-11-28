@@ -88,6 +88,6 @@ if (unset_plugin.dryrun !== 0) {
 
 /* Output settings to file */
 unset_plugin.dryrun === 0 &&
-  PPx.Execute('%Osbd *ppcust CD ' + global_cfg + ' -mask:"S_ppm#plugins"');
+  PPx.Execute('%Osbd *ppcust CD ' + global_cfg + ' -mask:"S_ppm#global,S_ppm#plugins"');
 
 PPx.SetPopLineMessage('!"Unset ' + unset_plugin.name);

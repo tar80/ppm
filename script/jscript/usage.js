@@ -38,7 +38,7 @@ var prop = (function () {
     return result;
   })();
   var linecustCfg = cacheDir + '\\ppm\\unset\\linecust.cfg';
-  var reg = /^(\S+)\s*[=,]\s*(.*)$/;
+  var reg = /^([^=,]+)\s*[=,]\s*(.*)$/;
   var del = '@#=#@';
 
   for (var i = 0, l = plugins.length - 2; i < l; i++) {
