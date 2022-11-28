@@ -1,5 +1,4 @@
 ﻿//!*script
-// deno-lint-ignore-file no-var
 /**
  *  Edit plugin settings, then setup
  *
