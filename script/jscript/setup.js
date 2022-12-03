@@ -1,5 +1,4 @@
 ﻿//!*script
-// deno-lint-ignore-file no-var
 /**
  * Setup plugin settings
  *
@@ -189,7 +188,7 @@ PPx.Execute(
     '*ppcust CD ' +
     g_ppm.cache +
     '\\ppm\\global.cfg' +
-    ' -mask:"S_ppm#plugins" %:' +
+    ' -mask:"S_ppm#global,S_ppm#plugins" %:' +
     '*ppcust CD %so"backupcfg".cfg -nocomment %:' +
     '*ifmatch "o:e,a:d-",%so"noplugincfg" %:' +
     '@copy /Y %so"noplugincfg" %so"backupcfg"_noplugin.cfg>nul'
