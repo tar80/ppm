@@ -201,6 +201,8 @@ ppm.js
 gitm.js
 
 gitのレポジトリ情報を取得する関数を実装
+ブランチ名、ブランチ情報の取得はkana氏のvimプラグイン
+vim-g(https://github.com/kana/vim-g)を参考にしています
 
 メソッド
 

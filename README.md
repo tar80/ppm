@@ -29,10 +29,11 @@ PPxのプラグインマネージャーβ版です。
 - [ppm-comppath](https://github.com/tar80/ppm-comppath) パス補完一行編集
 - [ppm-edit](https://github.com/tar80/ppm-edit) PPeや一行編集のキー設定などいろいろ
 - [ppm-etp](https://github.com/tar80/ppm-etp) Everything Search Moduleの設定サポート
+- [ppm-fileoperation](https://github.com/tar80/ppm-fileoperation) ファイル操作全般
 - [ppm-grep](https://github.com/tar80/ppm-grep) grepの結果を指定した方法で出力
 - [ppm-iconicfont](https://github.com/tar80/ppm-iconicfont) 拡張子アイコンをNerdFontsで描画
 - [ppm-misc](https://github.cim/tar80/ppm-misc) 細々としたカスタマイズの詰め合わせ
+- [ppm-translate](https://github.com/tar80/ppm-translate) 日本語/英語の相互翻訳
 - [ppm-switchmenu](https://github.com/tar80/ppm-switchmenu) 入れ替え可能なプリセットメニュー
 - [ppm-vilikekeys](https://github.com/tar80/ppm-vilikekeys) viキーバインドをエミュレート
-
 

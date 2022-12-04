@@ -1,5 +1,4 @@
 ﻿//!*script
-// deno-lint-ignore-file no-var
 /**
  * Uninstall ppx-plugin-manager
  *
