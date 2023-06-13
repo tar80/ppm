@@ -1,4 +1,8 @@
 ﻿(function () {
+  /*
+    This code is written based on kana/vim-g(https://github.com/kana/vim-g)
+    Follow the MIT license kana/vim-g
+    */
   var fso = PPx.CreateObject('Scripting.FileSystemObject');
   var readFile = function (path) {
     if (!fso.FileExists(path)) {

@@ -5,21 +5,16 @@
  * @arg 0 ppm home directory path
  */
 
-/* Initial */
 var fso = PPx.CreateObject('Scripting.FileSystemObject');
-var cache_dir = (function () {
-  var path = fso.BuildPath(
-    PPx.Arguments.Item(0) + '\\cache',
-    PPx.Extract('%0').slice(3).replace(/\\/g, '@')
-  );
+var cache_dir = fso.BuildPath(
+  PPx.Arguments.Item(0) + '\\cache',
+  PPx.Extract('%0').slice(3).replace(/\\/g, '@')
+);
 
-  if (!fso.FolderExists(path)) {
-    PPx.Echo('Configuration directory does not exist.\nCancel ppx-plugin-manager restore');
-    PPx.Quit(-1);
-  }
-
-  return path;
-})();
+if (!fso.FolderExists(cache_dir)) {
+  PPx.Echo('Configuration directory does not exist.\nCancel ppx-plugin-manager restore');
+  PPx.Quit(-1);
+}
 
 PPx.Execute('%Os *setcust @' + cache_dir + '\\ppm\\global.cfg');
 PPx.Execute(

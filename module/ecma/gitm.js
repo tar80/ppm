@@ -1,4 +1,8 @@
 ﻿(() => {
+  /*
+    This code is written based on kana/vim-g(https://github.com/kana/vim-g)
+    Follow the MIT license kana/vim-g
+    */
   'use strict';
   const fso = PPx.CreateObject('Scripting.FileSystemObject');
   const readFile = (path) => {
