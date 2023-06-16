@@ -35,5 +35,6 @@ PPxのプラグインマネージャーβ版です。
 - [ppm-misc](https://github.com/tar80/ppm-misc) 細々としたカスタマイズの詰め合わせ
 - [ppm-translate](https://github.com/tar80/ppm-translate) 日本語/英語の相互翻訳
 - [ppm-switchmenu](https://github.com/tar80/ppm-switchmenu) 入れ替え可能なプリセットメニュー
+- [ppm-view](https://github.com/tar80/ppm-view) PPv設定集
 - [ppm-vilikekeys](https://github.com/tar80/ppm-vilikekeys) viキーバインドをエミュレート
 
