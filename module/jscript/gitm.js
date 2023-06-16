@@ -16,6 +16,7 @@
     st.close;
     return data;
   };
+
   var detect_head = function (root) {
     var affected_rules = [
       {state: 'Rebase', att: 'file', find: '/rabase-apply/rebasing', identify: '/HEAD'},
@@ -41,7 +42,7 @@
     }
     return {state: '', file: '/HEAD'};
   };
-  var detect_logs = (root) => {
+  var detect_logs = function (root) {
     var branch = {name: 'Unknown', state: ''};
     var data = readFile(fso.BuildPath(root, 'logs\\head'));
     var checkout = data.lastIndexOf('checkout: moving from');
