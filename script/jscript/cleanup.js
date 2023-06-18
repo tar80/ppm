@@ -30,7 +30,7 @@ var dry_run = PPx.Arguments.length ? PPx.Arguments.Item(0) | 0 : 0;
 var cleanup_plugins = (function () {
   var result = [];
   var plugins = util.getc('S_ppm#plugins').split(NL_CHAR);
-  var repo = util.getc('S_ppm#global:ppm') + '\\repo';
+  var repo = util.getc('S_ppm#global:home') + '\\repo';
   var reg = /^@(\S+)[\s=]+(\S+)/;
 
   for (var i = 1, l = plugins.length - 2; i < l; i++) {

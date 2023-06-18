@@ -47,7 +47,7 @@ var resultMsg = (function () {
   var reg = /^([^\s]+)\s+['"](.+)['"]/;
 
   var commited = function (pwd) {
-    var branch = git.branch(pwd);
+    var branch = git.branch(pwd).name;
     var localHead = git.head(pwd, branch);
 
     PPx.Execute(

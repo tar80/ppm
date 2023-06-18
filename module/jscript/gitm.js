@@ -74,7 +74,7 @@
     branch: function (root) {
       var gitDir = root + '\\.git';
       var branch = detect_head(gitDir);
-      var hasBranch = fso.BuildPath(root, branch.file);
+      var hasBranch = fso.BuildPath(gitDir, branch.file);
       var data = readFile(hasBranch);
       if (!!data) {
         var branchName = ~data.indexOf('refs')
