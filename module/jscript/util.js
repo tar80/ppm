@@ -131,7 +131,7 @@
     var args = [].slice.call(arguments);
     var nl = this.newline || NL_CHAR;
     PPx.Echo(util.script.name + ': ' + args.join(nl));
-    PPx.Quit(-1);
+    ppm_test_run === 'undefined' && PPx.Quit(exitcode);
   };
   util.error = function (method) {
     PPx.Execute('*script "' + jscript + '\\errors.js",' + method + ',' + PPx.ScriptName);
@@ -220,10 +220,8 @@
         linefeed +
         ' -tab:' +
         tab +
-        ' -k *editmode -modify:silent -modify:readonly %%: *setcaption ' +
-        this.title +
-        '%%: *insert ' +
-        args.join(linefeed.metaNewline('ppx'))
+        ' -k %(*editmode -modify:silent -modify:readonly%:*setcaption ' + this.title +
+        '%: *insert ' + args.join(linefeed.metaNewline('ppx')) + '%)'
     );
   };
   util.printw = function () {
@@ -241,8 +239,8 @@
         tab +
         ' ' +
         path +
-        ' -k *editmode -modify:silent -modify:readonly %%: *setcaption ' +
-        this.title
+        ' -k %(*editmode -modify:silent -modify:readonly%:*setcaption ' +
+        this.title + '%)'
     );
   };
   util.esconv = function (notation, text) {

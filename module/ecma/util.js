@@ -107,7 +107,7 @@
     const args = [].slice.call(arguments);
     const nl = this.newline || NL_CHAR;
     PPx.Echo(`${util.script.name}: ${args.join(nl)}`);
-    PPx.Quit(-1);
+    ppm_test_run === 'undefined' && PPx.Quit(-1);
   };
   util.error = (method) => {
     PPx.Execute(`*script "${ecma}\\errors.js",${method},${PPx.ScriptName}`);
@@ -186,9 +186,8 @@
     const linefeed = PPx.Extract('%*getcust(S_ppm#user:newline)');
     const tab = this.tab || 8;
     PPx.Execute(
-      `*${this.cmd} -utf8bom -${linefeed} -tab:${tab} -k *editmode -modify:silent %%: *setcaption ${
-        this.title
-      }%%: *insert ${args.join(linefeed.metaNewline('ppx'))}`
+      `*${this.cmd} -utf8bom -${linefeed} -tab:${tab} -k ` +
+      `%(*editmode -modify:silent%:*setcaption ${this.title}%:*insert ${args.join(linefeed.metaNewline('ppx'))}%)`
     );
   };
   util.printw = function () {
@@ -198,7 +197,7 @@
     const path = PPx.Extract('%*temp()%\\printw.txt');
     util.write.apply({filepath: path, newline: linefeed}, args);
     PPx.Execute(
-      `*${this.cmd} -utf8bom -${linefeed} -tab:${tab} ${path} -k *editmode -modify:silent %%: *setcaption ${this.title}`
+      `*${this.cmd} -utf8bom -${linefeed} -tab:${tab} ${path} -k %(*editmode -modify:silent%:*setcaption ${this.title}%)`
     );
   };
   util.esconv = (notation, text) => {
