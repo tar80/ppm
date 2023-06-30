@@ -330,5 +330,14 @@
     }
     return PPx.Execute(`%OC %"${title}"%Q"${msg}"`) === 0;
   };
+  util.jobstart = (key) => {
+    if (PPx.getValue(key) === '1') PPx.Quit(1);
+    PPx.setValue(key, '1');
+    PPx.Execute('*job start');
+  };
+  util.jobend = (key) => {
+    PPx.setValue(key, '');
+    PPx.Execute('*job end');
+  };
   return util;
 })();
