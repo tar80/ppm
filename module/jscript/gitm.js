@@ -47,7 +47,8 @@
     var data = readFile(fso.BuildPath(root, 'logs\\head'));
     var checkout = data.lastIndexOf('checkout: moving from');
     if (!!checkout) {
-      branch.name = data.slice(checkout).replace(/.*to\s([^\s]+).*/, '$1');
+      data = data.slice(checkout).split('\n')[0];
+      branch.name = data.replace(/.*to\s([^\s]+).*/, '$1');
       branch.state = '(Detached)';
     }
     return branch;
