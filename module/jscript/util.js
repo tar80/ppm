@@ -131,7 +131,7 @@
     var args = [].slice.call(arguments);
     var nl = this.newline || NL_CHAR;
     PPx.Echo(util.script.name + ': ' + args.join(nl));
-    ppm_test_run === 'undefined' && PPx.Quit(exitcode);
+    PPx.Quit(exitcode);
   };
   util.error = function (method) {
     PPx.Execute('*script "' + jscript + '\\errors.js",' + method + ',' + PPx.ScriptName);

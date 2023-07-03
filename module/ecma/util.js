@@ -107,7 +107,7 @@
     const args = [].slice.call(arguments);
     const nl = this.newline || NL_CHAR;
     PPx.Echo(`${util.script.name}: ${args.join(nl)}`);
-    ppm_test_run === 'undefined' && PPx.Quit(-1);
+    PPx.Quit(-1);
   };
   util.error = (method) => {
     PPx.Execute(`*script "${ecma}\\errors.js",${method},${PPx.ScriptName}`);

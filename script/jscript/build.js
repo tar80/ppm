@@ -358,7 +358,7 @@ var mergeLines = (function (name, source, lines, patches, unsets, linecustpath) 
 
     // Main loop of the build
     var regTable = /^(?:-\|)?([^\s=]+)\s*([=,])\s*(.*)$/;
-    var regProp = /^([^\s=,-]+)\s*([=,]\s*.*)$/;
+    var regProp = /^([^-][^\s=,]+)\s*([=,]\s*.*)$/;
 
     for (var i = 0, l = lines.length; i < l; i++) {
       thisLine = lines[i];
@@ -422,9 +422,12 @@ var mergeLines = (function (name, source, lines, patches, unsets, linecustpath) 
           });
 
           if (typeof thisProp.value !== 'undefined') {
+            // if ( thisLine.indexOf(' ') === 0 || thisLine.indexOf('\t') === 0) {
+            //   PPx.Echo('@'+thisLine,'\nkey:  ',thisProp.key, '\n', 'value:  ', thisProp.value);
+            // }
             setLines.push(thisProp.key + '\t' + thisProp.value);
             unsetLines[thisTable.key].push('-|' + thisProp.key + ' =');
-            skip = true;
+            // skip = true;
           }
         }
 
