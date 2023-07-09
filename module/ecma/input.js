@@ -363,11 +363,8 @@
       }
       postcmd = ` -k ${postcmd.join('%%:')}`;
     }
-    const result =
-      PPx.Extract(
-        `%*input(%("${text}" -title:"${
-          title + posttile
-        }"%) -mode:${mode} -select:${select}${postcmd})`
+    const result = PPx.Extract(
+        `%*input(%("${text}" -title:"${title + posttile}"%) -mode:${mode} -select:${select}${postcmd})`
       ) || delete_keys(true);
     delete_keys();
     return result.replace(rep[0], (c) => rep[1][c]);
