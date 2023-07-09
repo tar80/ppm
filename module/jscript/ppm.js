@@ -48,7 +48,7 @@
     for (var i = 0, l = codes.length; i < l; i++) {
       if (~data.indexOf(codes[i])) return codes[i];
     }
-    return '';
+    return '\r\n';
   };
   obj.readLines = function (filepath) {
     if (typeof util === 'object' && typeof util.readLines === 'function') {
