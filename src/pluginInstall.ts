@@ -210,7 +210,7 @@ const permissionText = tmp().stdout;
 const checkPermissions = (plugin: Source): Error_String => {
   const url = `${uri.rawGithub}/${plugin.autor}/${plugin.name}/master/install`;
   PPx.Execute(`*httpget "${url}","${permissionText}"`);
-  cursorBack(3);
+  // cursorBack(3);
 
   return parseInstall(plugin.name, permissionText);
 };
