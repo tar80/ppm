@@ -1,0 +1,258 @@
+/* @file ppm plugin register
+ * @arg 0 {string} - Registration target. "plugin name"|"all"
+ * @arg 1 {string} - Registration mode. "set"|"unset"|"reset"|"restore"
+ * @arg 2 {string} - Source of patch. "default"|"user"
+ * @arg 3 {number} - If non-zero, do not install and display result
+ */
+
+import '@ppmdev/polyfills/arrayIsArray.ts';
+import '@ppmdev/polyfills/arrayIndexOf.ts';
+import type {Error_String} from '@ppmdev/modules/types.ts';
+import debug from '@ppmdev/modules/debug.ts';
+import {type Source, expandSource, owSource, setSource, sourceNames} from '@ppmdev/modules/source.ts';
+import {isEmptyStr, isError} from '@ppmdev/modules/guard.ts';
+import {info, useLanguage, uniqName, tmp} from '@ppmdev/modules/data.ts';
+import {pathSelf} from '@ppmdev/modules/path.ts';
+import {ppm} from '@ppmdev/modules/ppm.ts';
+import {copyFile} from '@ppmdev/modules/filesystem.ts';
+import {createBackup} from '@ppmdev/modules/ppcust.ts';
+import {writeLines} from '@ppmdev/modules/io.ts';
+import {colorlize} from '@ppmdev/modules/ansi.ts';
+import {runPPb} from '@ppmdev/modules/run.ts';
+import {coloredEcho} from '@ppmdev/modules/echo.ts';
+import {type PatchSource, parseLinecust} from './mod/parser.ts';
+import {conf} from './mod/configuration.ts';
+import {langPluginRegister} from './mod/language.ts';
+import {pluginRegister as core, installer} from './mod/core.ts';
+
+type RegMode = 'set' | 'unset' | 'reset' | 'restore';
+
+const {scriptName} = pathSelf();
+const lang = langPluginRegister[useLanguage()];
+const ppmcache = ppm.global('ppmcache');
+const ppbID = `B${info.ppmID}`;
+
+const main = () => {
+  const jobend: Function = ppm.jobstart('.');
+  const {target, mode, patchCfg, dryRun} = adjustArgs();
+  const multipleSetup = target === 'all';
+
+  debug.log(`target: ${target}, mode: ${mode}, patch: ${patchCfg}, dryrun: ${dryRun}`);
+
+  const sources = getSources(target, multipleSetup);
+
+  if (!sources) {
+    /* error */
+    ppm.echo(scriptName, `${target} ${lang.notRegistered}`);
+    // doReset
+    //   ? ppm.execute(ppbID, `%%OW echo ${target} ${lang.notRegistered}%%:*closeppx %%n`)
+    //   : ppm.echo(scriptName, `${target} ${lang.notRegistered}`);
+  } else if (!dryRun) {
+    /* registration */
+    const reset = mode === 'reset';
+
+    if (reset) {
+      const title = `${info.ppmName} ver${ppm.global('version')}`;
+      runPPb({bootid: info.ppmID, desc: title, fg: 'cyan', x: 0, y: 0, width: 700, height: 500});
+
+      const path = tmp().file;
+      createBackup({path, sort: false, mask: '_User'});
+      // initialize PPx
+      ppm.execute(ppbID, `*ppcust CINIT%%&*setcust @${path}`);
+      ppm.execute(ppbID, `*ppcust CA ${ppmcache}\\ppm\\${uniqName.globalCfg}%%&`);
+    }
+
+    initialState(mode, sources);
+    const date = PPx.Extract('%*now(date)');
+
+    if (reset || multipleSetup) {
+      const nopluginCfg = `${ppmcache}\\ppm\\${uniqName.nopluginCfg}`;
+      createBackup({path: nopluginCfg});
+      copyFile(nopluginCfg, `${ppmcache}\\backup\\${date}_${uniqName.nopluginCfg}`, true);
+    }
+
+    mode !== 'unset' && loadPlugins(reset, patchCfg, sources);
+    PPx.Execute('%K"LOADCUST"');
+
+    if (reset || multipleSetup) {
+      createBackup({path: `${ppmcache}\\backup\\${date}.cfg`});
+    }
+
+    const [_, data] = core.updateLists(sources);
+
+    debug.log(`[write lists]\nerror: ${data}`);
+
+    // reset
+    //   ? ppm.execute(ppbID, `%%OW echo ${lang.completed} %%:*ppc%%:*wait 200%%:*closeppx %%n`)
+    //   : ppm.linemessage('.', lang.completed, true);
+  } else {
+    /* dry run */
+    const TAB_WIDTH = '24';
+    const resultLog = doDryrun(sources, patchCfg);
+    PPx.Execute(`*ppv -esc:on -tab:${TAB_WIDTH} ${resultLog}`);
+  }
+
+  jobend();
+};
+
+const adjustArgs = (args = PPx.Arguments): {target: string; mode: RegMode; patchCfg: PatchSource; dryRun: boolean} => {
+  const arr: [string, RegMode, PatchSource, string] = ['all', 'reset', 'default', '0'];
+  const rgx1 = /^[\!~]/;
+  const rgx2 = /^(set|reset|unset)$/;
+
+  for (let i = 0, k = args.length; i < k; i++) {
+    arr[i] = args.item(i);
+  }
+
+  if (!rgx2.test(arr[1])) {
+    arr[1] = 'reset';
+  }
+
+  if (arr[2] !== 'user') {
+    arr[2] = 'default';
+  }
+
+  return {target: arr[0].replace(rgx1, ''), mode: arr[1], patchCfg: arr[2], dryRun: arr[3] !== '0'};
+};
+
+/** Get installation infomation for plugins */
+const getSources = (name: string, multi: boolean): Source[] | void => {
+  const source: Source[] = [];
+
+  if (multi) {
+    const items = sourceNames();
+
+    for (const item of items) {
+      source.push(expandSource(item) as Source);
+    }
+  } else {
+    const pluginDetail = expandSource(name);
+    pluginDetail && source.push(pluginDetail);
+  }
+
+  return source;
+};
+
+/** Load user settings into PPx, and display the results */
+const loadManageFiles = (): void => {
+  const files = core.getManageFiles(ppmcache);
+  const custMode = files.length === 1 ? 'CS' : 'CA';
+  const rgx = /^.+\\/;
+
+  for (const file of files) {
+    if (!isEmptyStr(file)) {
+      coloredEcho(ppbID, colorlize({message: file.replace(rgx, ''), esc: true}));
+      ppm.execute(ppbID, `%%Oa *ppcust ${custMode} ${file}%%&`);
+    }
+  }
+};
+
+/** Remove plugin settings from PPx. */
+const unsetPlugin = (source: Source): Error_String => {
+  const unsetCfg = `${ppmcache}\\ppm\\unset\\${source.name}.cfg`;
+  let [error, linecusts] = parseLinecust(source.name);
+
+  if (!isError(error, linecusts)) {
+    linecusts = '';
+
+    for (let i = 0, k = linecusts.length; i < k; i++) {
+      PPx.Execute(linecusts[i]);
+    }
+  }
+
+  ppm.setcust(`@${unsetCfg}`);
+
+  return [error, linecusts];
+};
+
+/** Set PPx to the state before plugin installation. */
+const initialState = (mode: RegMode, sources: Source[]): void => {
+  if (mode === 'reset' || mode === 'restore') {
+    /* load user settings into initialized ppx */
+    loadManageFiles();
+    installer.globalPath.set(ppm.global('home'), ppm.global('ppm'));
+  } else {
+    /* unregister plugins */
+    for (let i = 0, k = sources.length; i < k; i++) {
+      const source = sources[i];
+
+      let [error, data] = unsetPlugin(source);
+      [error, data] = !owSource(source.name, {enable: false}) ? [true, lang.failedOverride] : [false, ''];
+
+      error ? debug.log(data) : (sources[i].enable = false);
+    }
+  }
+
+  PPx.Execute('%K"@loadcust"');
+};
+
+/** Load plugin setting into PPx */
+const setPlugin = (source: Source, patch: PatchSource, onPPb: boolean): [boolean, string[]] => {
+  const merged = conf.merge(source.name, source.path, patch);
+  const linecusts = conf.write(source.name, merged);
+  return conf.register(source.name, merged.execute, linecusts, onPPb, onPPb);
+};
+
+/** Load plugins into PPx, and display the results */
+const loadPlugins = (reset: boolean, patch: PatchSource, sources: Source[]): void => {
+  const registered = [];
+  const failed: string[] = ['Failed:'];
+
+  for (let i = 0, k = sources.length; i < k; i++) {
+    const source = sources[i];
+
+    if (~registered.indexOf(source.name)) {
+      continue;
+    }
+
+    registered.push(source.name);
+    sources[i] = {...source, ...{enable: true, setup: true}};
+    let [error, data]: [boolean, string | string[]] = [setSource(sources[i]) !== 0, lang.failedOverride];
+    ppm.setcust(`S_ppm#plugins:${source.name}=${source.path}`);
+
+    if (error) {
+      reset ? coloredEcho(ppbID, colorlize({message: data, esc: true, fg: 'red'})) : failed.push(data);
+    }
+
+    [error, data] = setPlugin(source, patch, reset);
+
+    if (error) {
+      reset ? coloredEcho(ppbID, data.join('\\n')) : failed.push(...data);
+    }
+
+    debug.log(`registered ${JSON.stringify(expandSource(source.name))}`);
+  }
+
+  // error report on PPc
+  !reset && failed.length > 1 && ppm.report(failed.join(info.nlcode));
+};
+
+/** Output plugin settings all at once. */
+const doDryrun = (sources: Source[], patchCfg: PatchSource): typeof path => {
+  const path = tmp().file;
+  const title = colorlize({message: 'Reference of plugin settings', fg: 'cyan'});
+  const linecust = colorlize({message: ' linecust ', fg: 'black', bg: 'yellow'});
+  const execute = colorlize({message: ' execute ', fg: 'black', bg: 'yellow'});
+  const unset = colorlize({message: ' unset ', fg: 'black', bg: 'red'});
+  const data: string[] = [title];
+
+  for (let i = 0, k = sources.length; i < k; i++) {
+    const name = colorlize({message: ` ${sources[i].name} `, fg: 'black', bg: 'green'});
+    const merged = conf.merge(sources[i].name, sources[i].path, patchCfg);
+    const linecusts = conf.mergeLinecust(merged.linecust);
+    data.push(name, ...merged.set);
+    linecusts.length > 0 && data.push(linecust, ...linecusts);
+    merged.execute.length > 0 && data.push(execute, ...merged.execute);
+    data.push(unset, ...merged.unset);
+  }
+
+  const [error, errorMsg] = writeLines({path, data, overwrite: true});
+
+  if (error) {
+    throw new Error(errorMsg);
+  }
+
+  return path;
+};
+
+main();

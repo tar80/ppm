@@ -5,91 +5,93 @@
  * @arg 0 Selection of process. set | unset
  */
 
+PPx.Execute('*script %sgu"ppm"\\dist\\ppmRestoreRegister.js,' + PPx.Arguments.Item(0));
+
 /* Initial */
 // Read module
-var st = PPx.CreateObject('ADODB.stream');
-var module = function (filepath) {
-  var data;
+// var st = PPx.CreateObject('ADODB.stream');
+// var module = function (filepath) {
+//   var data;
 
-  st.Open;
-  st.Type = 2;
-  st.Charset = 'UTF-8';
-  st.LoadFromFile(filepath);
-  data = st.ReadText(-1);
-  st.Close;
+//   st.Open;
+//   st.Type = 2;
+//   st.Charset = 'UTF-8';
+//   st.LoadFromFile(filepath);
+//   data = st.ReadText(-1);
+//   st.Close;
 
-  return Function(' return ' + data)();
-};
+//   return Function(' return ' + data)();
+// };
 
-// Load module
-var util = module(PPx.Extract('%*getcust(S_ppm#global:ppm)\\module\\jscript\\util.js'));
-module = null;
+// // Load module
+// var util = module(PPx.Extract('%*getcust(S_ppm#global:ppm)\\module\\jscript\\util.js'));
+// module = null;
 
-var RANGE_START = ';[ppm]';
-var RANGE_END = ';[endppm]';
-var g_process = PPx.Arguments.length === 0 ? util.error('arg') : PPx.Arguments.Item(0);
-var g_ppxdef = PPx.Extract('%0%\\PPXDEF.CFG');
-var g_lines = util.readLines(g_ppxdef);
+// var RANGE_START = ';[ppm]';
+// var RANGE_END = ';[endppm]';
+// var g_process = PPx.Arguments.length === 0 ? util.error('arg') : PPx.Arguments.Item(0);
+// var g_ppxdef = PPx.Extract('%0%\\PPXDEF.CFG');
+// var g_lines = util.readLines(g_ppxdef);
 
-var write = function (data, newline) {
-  st.Open;
-  st.Type = 2;
-  st.Charset = 'UTF-8';
-  st.LineSeparator = util.metaNewline.ansi[newline];
-  st.WriteText(data.join(newline), 1);
-  st.SaveToFile(g_ppxdef, 2);
-  st.Close;
-};
+// var write = function (data, newline) {
+//   st.Open;
+//   st.Type = 2;
+//   st.Charset = 'UTF-8';
+//   st.LineSeparator = newline.metaNewline('ansi');
+//   st.WriteText(data.join(newline), 1);
+//   st.SaveToFile(g_ppxdef, 2);
+//   st.Close;
+// };
 
-({
-  set: function (lines) {
-    PPx.SetPopLineMessage('!"Registered');
+// ({
+//   set: function (lines) {
+//     PPx.SetPopLineMessage('!"Registered');
 
-    if (~lines.data.indexOf(RANGE_START)) {
-      PPx.Quit(1);
-    }
+//     if (~lines.data.indexOf(RANGE_START)) {
+//       PPx.Quit(1);
+//     }
 
-    var ppm_dir = util.getc('S_ppm#global:ppm');
-    var home_dir = util.getc('S_ppm#global:home');
-    var restoreCmd = [
-      RANGE_START,
-      '_Command = {',
-      'ppmRestore = *script "' + ppm_dir + '\\script\\jscript\\restore.js","' + home_dir + '"',
-      '}',
-      RANGE_END
-    ];
+//     var ppm_dir = util.getc('S_ppm#global:ppm');
+//     var home_dir = util.getc('S_ppm#global:home');
+//     var restoreCmd = [
+//       RANGE_START,
+//       '_Command = {',
+//       'ppmRestore = *script "' + ppm_dir + '\\script\\jscript\\restore.js","' + home_dir + '"',
+//       '}',
+//       RANGE_END
+//     ];
 
-    write(lines.data.concat(restoreCmd), lines.newline);
-  },
-  unset: function (lines) {
-    var result = [];
-    var thisLine;
+//     write(lines.data.concat(restoreCmd), lines.newline);
+//   },
+//   unset: function (lines) {
+//     var result = [];
+//     var thisLine;
 
-    PPx.SetPopLineMessage('!"Un-registered');
+//     PPx.SetPopLineMessage('!"Un-registered');
 
-    if (!~lines.data.indexOf(RANGE_START)) {
-      PPx.Quit(1);
-    }
+//     if (!~lines.data.indexOf(RANGE_START)) {
+//       PPx.Quit(1);
+//     }
 
-    for (var i = 0, l = lines.data.length; i < l; i++) {
-      thisLine = lines.data[i];
+//     for (var i = 0, l = lines.data.length; i < l; i++) {
+//       thisLine = lines.data[i];
 
-      if (~thisLine.indexOf(RANGE_START)) {
-        for (var j = i + 1; j < l; j++) {
-          thisLine = lines.data[j];
-          i = j;
+//       if (~thisLine.indexOf(RANGE_START)) {
+//         for (var j = i + 1; j < l; j++) {
+//           thisLine = lines.data[j];
+//           i = j;
 
-          if (~thisLine.indexOf(RANGE_END)) {
-            break;
-          }
-        }
+//           if (~thisLine.indexOf(RANGE_END)) {
+//             break;
+//           }
+//         }
 
-        continue;
-      }
+//         continue;
+//       }
 
-      result.push(thisLine);
-    }
+//       result.push(thisLine);
+//     }
 
-    write(result, lines.newline);
-  }
-}[g_process](g_lines));
+//     write(result, lines.newline);
+//   }
+// }[g_process](g_lines));

@@ -5,8 +5,8 @@
 ' @version 1.0
 ' @return {string} Comma sepalated entry list
 ' @arg {string} 0 Specify directory path
-' @arg {string} 1 Specify Target attribute. both(default) | dir | file
-' @arg {number} 2 Specify the entry-name to extract
+' @arg {string} 1 Specify target attribute. both(default) | dir | file
+' @arg {number} 2 Specify the entry-name to extract(ignorecase)
 
 Option Explicit
 
@@ -24,7 +24,7 @@ i = 0
 
 If strAtt <> "file" Then
   For Each directory In objDir.SubFolders
-    If InStr(directory.Name, strPattern) > 0 Then
+    If InStr(1, directory.Name, strPattern, 1) > 0 Then
       ReDim PreServe aryEntries(i)
       aryEntries(i) = directory.Name
       i = i + 1
@@ -34,7 +34,7 @@ End If
 
 If strAtt <> "dir" Then
   For Each file In objDir.Files
-    If InStr(file.Name, strPattern) > 0 Then
+    If InStr(1, file.Name, strPattern, 1) > 0 Then
       ReDim PreServe aryEntries(i)
       aryEntries(i) = file.Name
       i = i + 1

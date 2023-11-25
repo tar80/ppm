@@ -3,9 +3,9 @@
 ' Get entries count in specified directory
 '
 ' @version 1.0
-' @return {number} Entries count
+' @return {number} Number of entries
 ' @arg {string} 0 Specify directory path
-' @arg {string} 1 Specify Target attribute. both(default) | dir | file
+' @arg {string} 1 Specify the target attribute. both(default) | dir | file
 ' @arg {number} 2 Specify the limit of count
 
 Option Explicit

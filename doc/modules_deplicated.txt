@@ -2,6 +2,7 @@ Paper Plane xUI Script Module Javascript modules Document
 ===============================================================================
 
 スクリプト内で読み込んで使用する関数群です。
+ppm version 1.0.0で削除されます。
 
 /* 読込み用の処理 */
 var st = PPx.CreateObject('ADODB.stream');

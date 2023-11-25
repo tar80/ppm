@@ -1,0 +1,42 @@
+{
+  "name": "@ppmdev/ppx-plugin-manager",
+  "version": "0.93",
+  "description": "Paper Plane xUI plugin manager",
+  "author": "tar80",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tar80/ppm.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tar80/ppm/issues"
+  },
+  "homepage": "https://github.com/tar80/ppm#readme",
+  "type": "module",
+  "main": "",
+  "directories": {
+    "doc": "doc",
+    "lib": "dist/lib"
+  },
+  "scripts": {
+    "type": "tsc --noEmit true --skipLibCheck true",
+    "deno": "deno run --no-check --allow-all --unstable",
+    "build": "ppmbuild",
+    "build:prod": "set NODE_ENV=Production&&ppmbuild -- src",
+    "version": "ppmversion",
+    "test": "jest"
+  },
+  "jest": {
+    "verbose": true,
+    "coverageProvider": "v8",
+    "preset": "ts-jest",
+    "roots": [
+      "<rootDir>/src"
+    ],
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/__tests__/**/*.ts",
+      "**/?(*.)+test.ts"
+    ]
+  }
+}

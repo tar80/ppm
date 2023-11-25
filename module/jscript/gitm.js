@@ -22,12 +22,7 @@
       {state: 'Rebase', att: 'file', find: '/rabase-apply/rebasing', identify: '/HEAD'},
       {state: 'Am', att: 'file', find: '/rabase-apply/applying', identify: '/HEAD'},
       {state: 'Am/Rebase', att: 'dir', find: '/rebase-apply', identify: '/HEAD'},
-      {
-        state: 'Rebase-i',
-        att: 'file',
-        find: '/rebase-merge/interactive',
-        identify: '/rebase-merge/head-name'
-      },
+      {state: 'Rebase-i', att: 'file', find: '/rebase-merge/interactive', identify: '/rebase-merge/head-name'},
       {state: 'Rebase-m', att: 'dir', find: '/rebase-merge', identify: '/rebase-merge/head-name'},
       {state: 'Merging', att: 'file', find: '/MERGE_HEAD', identify: '/HEAD'}
     ];

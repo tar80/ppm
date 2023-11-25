@@ -1,0 +1,27 @@
+;plugin repositories list
+;-------------------------------------------------------------------------------
+
+;remote 'tar80/ppm-adjacentdir'
+remote 'autor/1_plugin'
+remote 'autor/2_plugin' {branch: 'dev'}
+local 'autor/3_plugin' {branch: 'test', commit: 'abc1234'}
+
+;-------------------------------------------------------------------------------
+;#仕様
+; - 行頭にremote|localがある行を読み込みます
+; - コメントはセミコロン(;)を使います
+;   行内の空白+セミコロン( ;)以降はコメント扱いになります
+; - ブランチ・コミットを指定できます
+;   両方指定したときはコミットが優先されます
+;   *ppmInstall時に実行され、ppm以外からの変更には追従しません
+;
+; ex)remote <plugin-name> [{branch: <branch-name>, commit: <commit-hash>}]
+; 	github上で公開されているプラグインのurl該当箇所
+; 	一行に一つのパスを書く
+; ex)local <plugin-name> [{branch: <branch-name>, commit: <commit-hash>}]
+; 	ppmのプラグインファイルで構成されたローカルリポジトリのパス
+; 	一行に一つのパスを書く
+;
+; ex)remote 'username/plugin-name'
+; ex)remote 'username/plugin-name' {branch: 'dev', commit: 'ABC1234'}
+; ex)local  'path\to\repository' ;{branch: 'feat'}

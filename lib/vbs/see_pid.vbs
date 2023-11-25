@@ -1,10 +1,10 @@
 '!*script
 '
-' Wait until the process is activated
+' Wait until the processID is activated
 '
 ' @version 1.0
 ' @return {boolean} Running state of the process
-' @arg {string} 0 Specify process ID
+' @arg {string} 0 Specify the process ID
 
 Option Explicit
 
