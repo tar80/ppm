@@ -55,7 +55,7 @@ const main = (): void => {
   };
   const {installMode, dryRun} = adjustArgs();
 
-  {
+  if (installMode !== '2') {
     const title = `${ppmName} ver${ppmVersion}`;
     runPPb({bootid: info.ppmID, desc: title, k: '*option terminal', fg: 'cyan', x: 0, y: 0, width: 700, height: 500});
   }
@@ -129,7 +129,10 @@ const main = (): void => {
   {
     const globalCfg = `${globalPaths.cache}\\ppm\\${uniqName.globalCfg}`;
     //TODO: S_ppm#plugins will remove v1.0.0
-    const errorLevel = createBackup({path: globalCfg, mask: ['S_ppm#global', 'S_ppm#sources', 'S_ppm#plugins', 'A_color']});
+    const errorLevel = createBackup({
+      path: globalCfg,
+      mask: ['S_ppm#global', 'S_ppm#sources', 'S_ppm#plugins', 'A_color']
+    });
     errorLevel && debug.exists(globalCfg);
   }
 
