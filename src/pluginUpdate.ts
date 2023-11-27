@@ -78,8 +78,8 @@ const main = (): void => {
     }
   }
 
-  const postCmd = hasUpdate ? `*ppv -utf8 -esc:on ${updateLog}` : `%%OW echo ${lang.noUpdates}%%:*closeppx %%n`;
-  ppm.execute(ppbID, postCmd);
+  hasUpdate && ppm.execute(ppbID, `*ppv -utf8 -esc:on ${updateLog}`);
+  ppm.execute(ppbID, `%%OW echo ${lang.noUpdates}%%:*closeppx %%n`);
 
   jobend();
 };

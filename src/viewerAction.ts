@@ -68,7 +68,7 @@ const doAction = {
 
       if (source) {
         const hash = text.replace(rgx, '$2');
-        PPx.Execute(`*pptray -c %%Obd git -C ${source.path} show ${SHOW_OPTS} ${hash} | %0ppvw`);
+        PPx.Execute(`*pptray -c %%Obd git -C ${source.path} show ${SHOW_OPTS} ${hash} | %0ppvw -utf8 -esc:on -history:off`);
         return;
       }
     }
