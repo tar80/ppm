@@ -1,5 +1,6 @@
 /* @file Restore ppm settings
  * @arg 0 {string} - Specify the path of ppmcache
+ * @arg 1 {string} - Specify the path to the ppm installation directory
  */
 
 import fso from '@ppmdev/modules/filesystem.ts';

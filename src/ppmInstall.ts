@@ -125,7 +125,7 @@ const main = (): void => {
   const isOverwrite = PPx.getValue('ppm_overwrite') === '1';
   isOverwrite && overwriteSettings(globalPaths);
 
-  // output global variables to the _global.cfg
+  // output global variables to _global.cfg
   {
     const globalCfg = `${globalPaths.cache}\\ppm\\${uniqName.globalCfg}`;
     //TODO: S_ppm#plugins will remove v1.0.0

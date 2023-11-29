@@ -9,8 +9,9 @@ import {isEmptyStr, isError} from '@ppmdev/modules/guard.ts';
 import {cursorMove} from '@ppmdev/modules/ansi.ts';
 import {echoExe, coloredEcho} from '@ppmdev/modules/echo.ts';
 import {copyFile, copyFolder} from '@ppmdev/modules/filesystem.ts';
-import {type Source, setSource, owSource} from '@ppmdev/modules/source.ts';
-import {info, uri, tmp} from '@ppmdev/modules/data.ts';
+import {type Source, setSource, owSource, expandSource} from '@ppmdev/modules/source.ts';
+import {info, uniqName, uri, tmp} from '@ppmdev/modules/data.ts';
+import {createBackup} from '@ppmdev/modules/ppcust.ts';
 import {ppm} from '@ppmdev/modules/ppm.ts';
 import {runPPb} from '@ppmdev/modules/run.ts';
 import {readLines, stdout} from '@ppmdev/modules/io.ts';
@@ -122,6 +123,17 @@ const main = (): void => {
 
     // create a list of plugin completion candidates
     core.writeComplist();
+
+    // output global variables to _global.cfg
+    {
+      const globalCfg = `%sgu'ppmcache'\\ppm\\${uniqName.globalCfg}`;
+      //TODO: S_ppm#plugins will remove v1.0.0
+      const errorLevel = createBackup({
+        path: globalCfg,
+        mask: ['S_ppm#global', 'S_ppm#sources', 'S_ppm#plugins', 'A_color']
+      });
+      errorLevel && debug.exists(globalCfg);
+    }
   }
 
   ppm.execute(ppbID, `%%OWsq ${echoExe} -ne "" %%&*closeppx ${ppbID}`);
@@ -173,29 +185,13 @@ const copyToCache = (item: Source): void => {
         error && debug.log(errorMessage);
       }
     }
-
-    // for (const dirname of parsedItem.copySpec) {
-    //   const opts = [
-    //     `-src:"${item.path}\\${dirname}\\*"`,
-    //     `-dest:"${ppmcache}\\${dirname}"`,
-    //     '-min',
-    //     '-error:ignore',
-    //     '-same:skip',
-    //     '-sameall:on',
-    //     '-querycreatedirectory:off',
-    //     '-undolog:off',
-    //     '-nocount'
-    //   ];
-    //   const exitcode = PPx.Execute(`*file !copy ${opts.join(' ')}`);
-    //   error = exitcode !== 0;
-    //   error && debug.log(`Could not create ${dirname}`);
-    // }
   }
 };
 
 const enableSource = (name: string, path?: string): void => {
   ppm.setcust(`S_ppm#sources:${name}=${oldSources[name].value}`);
-  const obj = path ? {enable: true, path} : {enable: true};
+  const version = expandSource(name)?.version;
+  const obj = path ? {enable: true, version, path} : {enable: true, version};
   owSource(name, obj);
   core.setCompItem(name);
   delete oldSources[name];

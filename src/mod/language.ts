@@ -133,7 +133,8 @@ export const langPluginRegister = {
     failedPluginList: 'Failed to update the pluginlist',
     failedCompList: 'Failed to update the plugin CompList',
     cannotUndo: 'There are no configuration files to undo',
-    undo: 'Undo completed. Please restart PPx'
+    undo: 'Undo completed. Please restart PPx',
+    completed: 'Exit with ESC key'
   },
   jp: {
     notRegistered: ' は未登録です',
@@ -141,7 +142,8 @@ export const langPluginRegister = {
     failedPluginList: 'プラグインリストを更新できませんでした',
     failedCompList: 'プラグイン補完リストを更新できませんでした',
     cannotUndo: 'アンドゥ対象の設定ファイルはありません',
-    undo: 'アンドゥが完了しました。PPxを再起動してください'
+    undo: 'アンドゥが完了しました。PPxを再起動してください',
+    completed: 'ESCキーで終了します'
   }
 } as const;
 

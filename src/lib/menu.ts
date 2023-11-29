@@ -4,7 +4,7 @@
  * @arg 2 {number} - Menu number
  * @arg 3 {string} - Menu SubID
  * @arg 4 {string} - Value of SubID
- * @return - "success" or error message
+ * @return - Result message
  */
 
 import '@ppmdev/polyfills/objectKeys.ts';

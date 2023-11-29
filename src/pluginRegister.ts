@@ -44,25 +44,27 @@ const main = () => {
   if (!sources) {
     /* error */
     ppm.echo(scriptName, `${target} ${lang.notRegistered}`);
-    // doReset
-    //   ? ppm.execute(ppbID, `%%OW echo ${target} ${lang.notRegistered}%%:*closeppx %%n`)
-    //   : ppm.echo(scriptName, `${target} ${lang.notRegistered}`);
   } else if (!dryRun) {
     /* registration */
-    const reset = mode === 'reset';
+    const reset = mode === 'reset' || mode === 'restore';
 
     if (reset) {
       const title = `${info.ppmName} ver${ppm.global('version')}`;
-      runPPb({bootid: info.ppmID, desc: title, fg: 'cyan', x: 0, y: 0, width: 700, height: 500});
+      ppm.setkey('ESC', `*deletecust "${uniqName.tempKey}"%%:*ppc%%:*wait 200%%:*closeppx %%n`)
+      runPPb({bootid: info.ppmID, desc: title, fg: 'cyan', x: 0, y: 0, width: 700, height: 500, k: `*closeppx C*%%:*mapkey use,${uniqName.tempKey}`});
 
-      const path = tmp().file;
-      createBackup({path, sort: false, mask: '_User'});
-      // initialize PPx
-      ppm.execute(ppbID, `*ppcust CINIT%%&*setcust @${path}`);
-      ppm.execute(ppbID, `*ppcust CA ${ppmcache}\\ppm\\${uniqName.globalCfg}%%&`);
+      if (mode === 'reset') {
+        const path = tmp().ppmDir();
+        createBackup({path, sort: false, mask: '_User'});
+        // initialize PPx
+        ppm.execute(ppbID, `*ppcust CINIT%%&*setcust @${path}`);
+        ppm.execute(ppbID, `*ppcust CA ${ppmcache}\\ppm\\${uniqName.globalCfg}%%&`);
+      }
     }
 
-    initialState(mode, sources);
+    initialState(reset, sources);
+    PPx.Execute('%K"LOADCUST"');
+
     const date = PPx.Extract('%*now(date)');
 
     if (reset || multipleSetup) {
@@ -82,9 +84,16 @@ const main = () => {
 
     debug.log(`[write lists]\nerror: ${data}`);
 
-    // reset
-    //   ? ppm.execute(ppbID, `%%OW echo ${lang.completed} %%:*ppc%%:*wait 200%%:*closeppx %%n`)
-    //   : ppm.linemessage('.', lang.completed, true);
+    // output global variables to _global.cfg
+    {
+      const globalCfg = `%sgu'ppmcache'\\ppm\\${uniqName.globalCfg}`;
+      //TODO: S_ppm#plugins will remove v1.0.0
+      createBackup({
+        path: globalCfg,
+        mask: ['S_ppm#global', 'S_ppm#sources', 'S_ppm#plugins', 'A_color']
+      });
+    }
+    reset && ppm.linemessage(ppbID, `${lang.completed}`)
   } else {
     /* dry run */
     const TAB_WIDTH = '24';
@@ -98,7 +107,7 @@ const main = () => {
 const adjustArgs = (args = PPx.Arguments): {target: string; mode: RegMode; patchCfg: PatchSource; dryRun: boolean} => {
   const arr: [string, RegMode, PatchSource, string] = ['all', 'reset', 'default', '0'];
   const rgx1 = /^[\!~]/;
-  const rgx2 = /^(set|reset|unset)$/;
+  const rgx2 = /^(set|restore|unset)$/;
 
   for (let i = 0, k = args.length; i < k; i++) {
     arr[i] = args.item(i);
@@ -117,20 +126,20 @@ const adjustArgs = (args = PPx.Arguments): {target: string; mode: RegMode; patch
 
 /** Get installation infomation for plugins */
 const getSources = (name: string, multi: boolean): Source[] | void => {
-  const source: Source[] = [];
+  const sources: Source[] = [];
 
   if (multi) {
     const items = sourceNames();
 
     for (const item of items) {
-      source.push(expandSource(item) as Source);
+      sources.push(expandSource(item) as Source);
     }
   } else {
     const pluginDetail = expandSource(name);
-    pluginDetail && source.push(pluginDetail);
+    pluginDetail && sources.push(pluginDetail);
   }
 
-  return source;
+  return sources;
 };
 
 /** Load user settings into PPx, and display the results */
@@ -166,8 +175,8 @@ const unsetPlugin = (source: Source): Error_String => {
 };
 
 /** Set PPx to the state before plugin installation. */
-const initialState = (mode: RegMode, sources: Source[]): void => {
-  if (mode === 'reset' || mode === 'restore') {
+const initialState = (reset: boolean, sources: Source[]): void => {
+  if (reset) {
     /* load user settings into initialized ppx */
     loadManageFiles();
     installer.globalPath.set(ppm.global('home'), ppm.global('ppm'));
@@ -182,8 +191,6 @@ const initialState = (mode: RegMode, sources: Source[]): void => {
       error ? debug.log(data) : (sources[i].enable = false);
     }
   }
-
-  PPx.Execute('%K"@loadcust"');
 };
 
 /** Load plugin setting into PPx */
@@ -194,7 +201,7 @@ const setPlugin = (source: Source, patch: PatchSource, onPPb: boolean): [boolean
 };
 
 /** Load plugins into PPx, and display the results */
-const loadPlugins = (reset: boolean, patch: PatchSource, sources: Source[]): void => {
+const loadPlugins = (onPPb: boolean, patch: PatchSource, sources: Source[]): void => {
   const registered = [];
   const failed: string[] = ['Failed:'];
 
@@ -208,23 +215,24 @@ const loadPlugins = (reset: boolean, patch: PatchSource, sources: Source[]): voi
     registered.push(source.name);
     sources[i] = {...source, ...{enable: true, setup: true}};
     let [error, data]: [boolean, string | string[]] = [setSource(sources[i]) !== 0, lang.failedOverride];
+    //TODO: S_ppm#plugins will remove v1.0.0
     ppm.setcust(`S_ppm#plugins:${source.name}=${source.path}`);
 
     if (error) {
-      reset ? coloredEcho(ppbID, colorlize({message: data, esc: true, fg: 'red'})) : failed.push(data);
+      onPPb ? coloredEcho(ppbID, colorlize({message: data, esc: true, fg: 'red'})) : failed.push(data);
     }
 
-    [error, data] = setPlugin(source, patch, reset);
+    [error, data] = setPlugin(source, patch, onPPb);
 
     if (error) {
-      reset ? coloredEcho(ppbID, data.join('\\n')) : failed.push(...data);
+      onPPb ? coloredEcho(ppbID, data.join('\\n')) : failed.push(...data);
     }
 
     debug.log(`registered ${JSON.stringify(expandSource(source.name))}`);
   }
 
   // error report on PPc
-  !reset && failed.length > 1 && ppm.report(failed.join(info.nlcode));
+  !onPPb && failed.length > 1 && ppm.report(failed.join(info.nlcode));
 };
 
 /** Output plugin settings all at once. */
