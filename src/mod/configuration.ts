@@ -42,7 +42,7 @@ type Title = 'load' | 'linecust' | 'execute';
  */
 const getLog = (exitcode: number, type: Title, message: string, color: boolean): string => {
   const load = color ? colorlize({message: ' LOAD ', fg: 'black', bg: 'green'}) : 'LOAD: ';
-  const linecust = color ? colorlize({message: ' LINECUST ', fg: 'black', bg: 'yellow'}) : 'LINECUST: ';
+  const linecust = color ? colorlize({message: ' LINECUST ', fg: 'black', bg: 'magenta'}) : 'LINECUST: ';
   const execute = color ? colorlize({message: ' EXECUTE ', fg: 'black', bg: 'yellow'}) : 'EXECUTE: ';
   const error = color ? colorlize({message: ' ERROR ', fg: 'black', bg: 'red'}) : 'ERROR: ';
   const title = {'load': load, 'linecust': linecust, 'execute': execute}[type];
@@ -162,13 +162,13 @@ export const conf = {
     for (const key of Object.keys(linecusts)) {
       const {id, sep, value} = linecusts[key];
       const exitcode = PPx.Execute(`*linecust ${key},${id}${sep}${value}`);
-      result.push(getLog(exitcode, 'linecust', `${key},${id}${sep}${value}`, color));
+      result.push(getLog(exitcode, 'linecust', `${key},${id}${sep}${value}`.replace(/\\/g, '\\\\'), color));
       error = exitcode !== 0;
     }
 
     for (const command of executes) {
       const exitcode = PPx.Execute(command);
-      result.push(getLog(exitcode, 'execute', command, color));
+      result.push(getLog(exitcode, 'execute', command.replace(/\\/g, '\\\\'), color));
       error = exitcode !== 0;
     }
 

@@ -2,6 +2,7 @@
  * @arg 0  {string} - Specify the command
  * @arg 1  {string} - Specify a plugin name
  * @arg 2+ {any}    - Options
+ * @return - Error level for open and opendiff commands
  */
 
 import type {Level_String} from '@ppmdev/modules/types.ts';
@@ -18,6 +19,7 @@ const lang = langCommand[useLanguage()];
 
 const main = (): void => {
   const plugin = adjustArgs();
+  let errorlevel = 0;
 
   switch (plugin.cmd) {
     case 'help':
@@ -41,8 +43,8 @@ const main = (): void => {
 
     case 'pluginUpdate':
       {
-        const [level, name] = pluginSpec('all', '*ppmUpdate');
-        level === 0 && doScript('pluginUpdate', name, true);
+        const [exitcode, name] = pluginSpec('all', '*ppmUpdate');
+        exitcode === 0 && doScript('pluginUpdate', name, true);
       }
       break;
 
@@ -55,10 +57,10 @@ const main = (): void => {
 
     case 'edit':
       {
-        const [level, name] = pluginSpec('', '*ppmEdit', true);
+        const [exitcode, name] = pluginSpec('', '*ppmEdit', true);
         const withShift = ppm.extract('.', '%*shiftkeys')[1] === '1024';
 
-        if (level === 0) {
+        if (exitcode === 0) {
           const path = `%%sgu"ppmcache"\\config\\${name}.cfg`;
           ppm.execute('C', `%*getcust(S_ppm#user:editor) ${path}`);
           withShift && doScript('pluginRegister', `${name},set,user`, true);
@@ -68,10 +70,10 @@ const main = (): void => {
 
     case 'compare':
       {
-        const [level, name] = pluginSpec('', '*ppmCompare', true);
+        const [exitcode, name] = pluginSpec('', '*ppmCompare', true);
         const withShift = PPx.Extract('%*shiftkeys') === '1024';
 
-        if (level === 0) {
+        if (exitcode === 0) {
           const user = `%sgu"ppmcache"\\config\\${name}.cfg`;
           const source = expandSource(name);
 
@@ -116,7 +118,7 @@ const main = (): void => {
 
     case 'load':
       {
-        const [level, path] = ppm.getinput({
+        const [exitcode, path] = ppm.getinput({
           message: '%sgu"ppmcache"\\backup\\',
           title: `*ppmLoadCfg ${lang.loadCfg}`,
           mode: 'c',
@@ -125,7 +127,7 @@ const main = (): void => {
           k: '*completelist'
         });
 
-        level === 0 &&
+        exitcode === 0 &&
           PPx.Execute(
             `*cd %0%:*ppb -k %%OWq *ppcust CS ${path}%%:*closeppx C*%%:*wait 100,2%%:*ppc%%:*wait 500,2%%:*closeppx %%n`
           );
@@ -134,23 +136,35 @@ const main = (): void => {
 
     case 'open':
       {
-        const [exitcode, path] = pathSpec(plugin.opts[0], lang.open);
-        exitcode === 0 && ppm.execute('C', `%*getcust(S_ppm#user:editor) ${path}`);
+        let path: string;
+        [errorlevel, path] = pathSpec(plugin.opts[0], lang.open);
+        if (errorlevel === 0) {
+          if (fso.FileExists(path)) {
+            ppm.execute('C', `%*getcust(S_ppm#user:editor) ${path}`);
+          } else {
+            ppm.echo(scriptName, lang.couldNotGet);
+            errorlevel = 1;
+          }
+        }
       }
       break;
 
     case 'opendiff':
       {
         const paths: string[] = [];
-        let [exitcode, path] = [0, ''];
+        let path: string;
 
         for (let i = 0, k = 2; i < k; i++) {
           if (!fso.FileExists(plugin.opts[i])) {
-            [exitcode, path] = pathSpec(plugin.opts[i], lang.opendiff);
+            [errorlevel, path] = pathSpec(plugin.opts[i], lang.opendiff);
 
-            switch (exitcode) {
+            switch (errorlevel) {
               case 0:
-                fso.FileExists(path) && paths.push(path);
+                if (fso.FileExists(path)) {
+                  paths.push(path);
+                } else {
+                  errorlevel = 1;
+                }
                 break;
               case 13:
                 PPx.Quit(-1);
@@ -160,12 +174,16 @@ const main = (): void => {
           }
         }
 
-        exitcode === 0 && ppm.execute('C', `%*getcust(S_ppm#user:compare) ${paths.join(' ')}`);
+        errorlevel === 0
+          ? ppm.execute('C', `%*getcust(S_ppm#user:compare) ${paths.join(' ')}`)
+          : ppm.echo(scriptName, lang.couldNotGet);
       }
       break;
 
     default:
   }
+
+  PPx.result = errorlevel;
 };
 
 const adjustArgs = (args = PPx.Arguments): {cmd: string; opts: string[]} => {
@@ -179,9 +197,9 @@ const adjustArgs = (args = PPx.Arguments): {cmd: string; opts: string[]} => {
   return {cmd: arr[0], opts};
 };
 
-const pathSpec = (parent: string, cmd: string): Level_String => {
-  let [errorlevel, data] = ppm.getinput({
-    message: parent,
+const pathSpec = (pwd: string, cmd: string): Level_String => {
+  let [exitcode, data] = ppm.getinput({
+    message: pwd,
     title: `ppm${cmd}`,
     mode: 'c',
     select: 'l',
@@ -190,15 +208,15 @@ const pathSpec = (parent: string, cmd: string): Level_String => {
   });
 
   if (isEmptyStr(data)) {
-    errorlevel = 13;
+    exitcode = 13;
   }
 
-  return [errorlevel, data];
+  return [exitcode, data];
 };
 
 const pluginSpec = (name: string, cmd: string, shift?: boolean): Level_String => {
   const dialog = shift ? lang.shiftEnter : '';
-  const [level, name_] = ppm.getinput({
+  const [exitcode, name_] = ppm.getinput({
     message: name,
     title: `${cmd} ${lang.nameSpec} ${dialog}`,
     mode: 'e',
@@ -206,7 +224,7 @@ const pluginSpec = (name: string, cmd: string, shift?: boolean): Level_String =>
     k: `*completelist -module:off -file:"${sourceComplistPath}"`
   });
 
-  return [level, sourceComp.expandName(name_)];
+  return [exitcode, sourceComp.expandName(name_)];
 };
 
 type LangKeys = keyof typeof lang;
