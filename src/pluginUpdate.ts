@@ -5,6 +5,7 @@
 
 import '@ppmdev/polyfills/objectKeys.ts';
 import type {Error_String} from '@ppmdev/modules/types.ts';
+import fso from '@ppmdev/modules/filesystem.ts';
 import {info, useLanguage, uniqName} from '@ppmdev/modules/data.ts';
 import {writeLines} from '@ppmdev/modules/io.ts';
 import {runPPb} from '@ppmdev/modules/run.ts';
@@ -40,7 +41,7 @@ const main = (): void => {
     const [error, data] = updatePpm();
     hasUpdate = !error;
 
-    if (error) {
+    if (error && data !== 'noUpdates') {
       coloredEcho(ppbID, `${errorHeader} ${data}`);
     }
   }
@@ -72,9 +73,14 @@ const main = (): void => {
     hasUpdate = true;
 
     if (dryRun === '0') {
+      const logSize = fso.GetFile(updateLog).Size;
       PPx.Execute(`git -C ${source.path} pull`);
       PPx.Execute(`%Obds git -C ${source.path} log ${GIT_LOG_OPTS} head...${data}>> ${updateLog}`);
       owSource(source.name, {version: core.getVersion(source.path)});
+
+      if (logSize == fso.GetFile(updateLog).Size) {
+        hasUpdate = false;
+      }
     }
   }
 
