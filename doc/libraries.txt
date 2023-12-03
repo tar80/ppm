@@ -8,6 +8,7 @@ CONTENTS
 
 	errors.js
 	exeExists.js
+	lfMetadata.js
 	libExists.js
 	checkPid.js
 	seeProcess.js
@@ -23,7 +24,7 @@ errors.js
 @arg 0 {string} - "arg"|"msg" - 実行するメソッド名を指定
 	arg: ソーススクリプト行頭のコメントから" * @arg"を読み取り引数情報を表示
 	msg: メッッセージを表示
-@arg 1 {string} - 対象となるファイルのパス
+@arg 1 {string} - 対象ファイルのパスを指定
 @arg 2 {string} - arg0で"msg"を指定したときに表示されるメッセージを指定
 
 ===============================================================================
@@ -33,6 +34,14 @@ exeExists.js
 @arg 0+ {string} - 確認する実行ファイル名をカンマ区切りで指定
 @return {string} - JSON形式のリスト
 	{ "1.exe": true, "2.exe": false, ... }
+
+===============================================================================
+lfMetadata.js
+指定したListFileのメタデータを取得して返します。
+
+@arg 0 {string} - リストファイルのパスを指定
+@arg 1 {string} - メタデータのIDを指定
+@arg 2 {"sjis"|"utf16le"|"utf8"(default)} - リストファイルのエンコードを指定
 
 ===============================================================================
 libExists.js
