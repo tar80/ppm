@@ -170,17 +170,3 @@ describe.skip('checkUpdate()', function () {
     expect(pluginUpdate.checkUpdate(path)).toEqual([true, 'noUpdates']);
   });
 });
-
-describe('getVersion()', function () {
-  it('read plugin version from package.json', () => {
-    const path = process.cwd();
-    const version = execSync(
-      `${process.env.PPX_DIR}\\ppbw -c *stdout %*script("%sgu'ppmlib'\\expandSource.js",ppx-plugin-manager,version)`
-    );
-    expect(pluginUpdate.getVersion(path)).toBe(version.toString());
-  });
-  if ('could not read package.json. the return version must be "0.0.0"') {
-    const path = 'not\\exist\\path'
-    expect(pluginUpdate.getVersion(path)).toBe('0.0.0');
-  }
-});

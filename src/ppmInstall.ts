@@ -21,16 +21,16 @@ import {conf} from './mod/configuration.ts';
 import {langPPmInstall} from './mod/language.ts';
 import {parsePluginlist, parseInstall, parsedItem} from './mod/parser.ts';
 import {installer as core, pluginInstall} from './mod/core.ts';
+import {semver} from '@ppmdev/modules/util.ts';
 
 const ppbID = `B${info.ppmID}`;
 const subDirectories = ['backup', 'config', 'userscript', 'list', 'complist', 'ppm\\setup', 'ppm\\unset'] as const;
 const ppmName: string = info.ppmName;
-const ppmVersion: number = info.ppmVersion;
 const cacheDir: string = uniqName.cacheDir();
 const {parentDir} = pathSelf();
 const lang = langPPmInstall[useLanguage()];
 const selfRoot = ((): string => {
-  const rgx = RegExp(`^(.*\\\\${ppmName})\\\\.*`);
+  const rgx = /^(.+)\\(dist|dev)$/;
   return parentDir.replace(rgx, '$1');
 })();
 const globalPaths = (() => {
@@ -45,6 +45,10 @@ const globalPaths = (() => {
     cache: pathJoin(home, cacheDir),
     lib: pathJoin(root, 'dist', 'lib')
   };
+})();
+const ppmVersion: number = (() => {
+  const version = ppm.getVersion(selfRoot);
+  return !version ? info.ppmVersion : semver(version);
 })();
 
 const main = (): void => {

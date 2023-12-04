@@ -278,21 +278,4 @@ const checkUpdate = (path: string): Error_String => {
   return local === remoteHead ? [true, 'noUpdates'] : [false, remoteHead];
 };
 
-const getVersion = (path: string): string => {
-  path = `${path}\\package.json`;
-  const [error, data] = readLines({path});
-
-  if (!isError(error, data)) {
-    const rgx = /^\s+"version":\s*"([0-9\\.]+)",$/;
-
-    for (const line of data.lines) {
-      if (rgx.test(line)) {
-        return line.replace(rgx, '$1');
-      }
-    }
-  }
-
-  return '0.0.0';
-};
-
-export const pluginUpdate = {checkUpdate, getVersion};
+export const pluginUpdate = {checkUpdate};

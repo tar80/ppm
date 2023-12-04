@@ -76,7 +76,7 @@ const main = (): void => {
       const logSize = fso.GetFile(updateLog).Size;
       PPx.Execute(`git -C ${source.path} pull`);
       PPx.Execute(`%Obds git -C ${source.path} log ${GIT_LOG_OPTS} head...${data}>> ${updateLog}`);
-      owSource(source.name, {version: core.getVersion(source.path)});
+      owSource(source.name, {version: ppm.getVersion(source.path) ?? '0.0.0'});
 
       if (logSize == fso.GetFile(updateLog).Size) {
         hasUpdate = false;
@@ -119,7 +119,7 @@ const updatePpm = (): Error_String => {
     writeTitle(info.ppmName, false);
     PPx.Execute(`@git -C ${ppmDir} pull`);
     PPx.Execute(`%Obds git -C ${ppmDir} log ${GIT_LOG_OPTS} head...${data}>> ${updateLog}`);
-    const version = core.getVersion(ppmDir);
+    const version = ppm.getVersion(ppmDir) ?? info.ppmVersion;
     owSource(info.ppmName, {version});
     ppm.setcust(`S_ppm#global:version=${version}`);
     PPx.Execute(`*script %sgu"ppm"\\dist\\ppmInstall.js,2`);
