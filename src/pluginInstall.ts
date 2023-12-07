@@ -35,7 +35,13 @@ const ppmcache = ppm.global('ppmcache');
 const oldSources = properties('S_ppm#sources');
 
 const main = (): void => {
-  const title = `ppx-plugin-manager ver${info.ppmVersion}`;
+  //Note. this function is applied temporarily to fix bugs up to version 0.93.9.
+  (() => {
+    const version = ppm.getVersion(ppm.global('ppm')) ?? ppm.global('version');
+    ppm.setcust(`S_ppm#global:version=${version}`);
+    owSource(info.ppmName, {version});
+  })();
+  const title = `ppx-plugin-manager ver${ppm.global('version')}`;
   runPPb({bootid: info.ppmID, desc: title, fg: 'cyan', x: 0, y: 0, width: 700, height: 800});
 
   let hasUpdate = false;
@@ -50,14 +56,14 @@ const main = (): void => {
     let plugin = pluginList[i];
 
     if (plugin.path && fso.FolderExists(plugin.path)) {
-      debug.log(plugin.name);
       /* installed plugins */
       if (oldSources[plugin.name] != null) {
         hasUpdate = true;
         enableSource(plugin.name, plugin.path);
         coloredEcho(ppbID, core.decorateLog(plugin.name, 'load'));
+        copyToCache(plugin);
 
-        debug.log(`exists: ${plugin.name} = ${ppm.getcust(`S_ppm#sources:${plugin.name}`)[1]}`);
+        debug.log(`already installed: ${plugin.name}}`);
         continue;
       }
 
@@ -83,7 +89,7 @@ const main = (): void => {
         [error, errorMsg] = checkPermissions(plugin);
 
         if (error) {
-          coloredEcho(ppbID, core.decorateLog(plugin.name, 'error', errorMsg));
+          coloredEcho(ppbID, errorMsg);
           continue;
         }
 
@@ -164,7 +170,7 @@ const copyToCache = (item: Source): void => {
     const opts = `-mask:"a:d-" -utf8 -dir:on -subdir:off -listfile:${tempFile} -name`;
 
     for (const dirname of parsedItem.copySpec) {
-      ppm.execute('C', `*whereis -path:"${item.path}\\${dirname}" ${opts}`);
+      ppm.execute('C', `%(*whereis -path:"${item.path}\\${dirname}" ${opts}%)`, true);
       let [error, data] = readLines({path: tempFile});
 
       if (isError(error, data)) {
@@ -178,8 +184,8 @@ const copyToCache = (item: Source): void => {
       }
 
       for (const entry of data.lines) {
-        const send = `${item.path}\\${dirname}\\${entry}`;
-        const dest = `${ppmcache}\\${dirname}\\${entry}`;
+        const send = entry;
+        const dest = `${ppmcache}\\${dirname}\\${fso.GetFileName(entry)}`;
         [error, errorMessage] = copyFile(send, dest);
 
         error && debug.log(errorMessage);

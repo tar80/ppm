@@ -84,8 +84,9 @@ const main = (): void => {
     }
   }
 
-  hasUpdate && ppm.execute(ppbID, `*ppv -utf8 -esc:on ${updateLog}`);
-  ppm.execute(ppbID, `%%OW echo ${lang.noUpdates}%%:*closeppx %%n`);
+  hasUpdate
+    ? ppm.execute(ppbID, `*script %sgu'ppm'\\dist\\ppmLogViewer.js,update%%:*closeppx %%n`)
+    : ppm.execute(ppbID, `%%OW echo ${lang.noUpdates}%%:*closeppx %%n`);
 
   jobend();
 };

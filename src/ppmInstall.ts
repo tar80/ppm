@@ -46,9 +46,9 @@ const globalPaths = (() => {
     lib: pathJoin(root, 'dist', 'lib')
   };
 })();
-const ppmVersion: number = (() => {
+const ppmVersion: string = (() => {
   const version = ppm.getVersion(selfRoot);
-  return !version ? info.ppmVersion : semver(version);
+  return version ?? String(info.ppmVersion);
 })();
 
 const main = (): void => {
@@ -347,7 +347,7 @@ const loadPlugins = (): void => {
 
 /** Items to be deleted when version 1.0.0 is released, etc. */
 const updateFormalEdition = (): void => {
-  if (ppmVersion < 10000) {
+  if (semver(ppmVersion) < 10000) {
     return;
   }
 

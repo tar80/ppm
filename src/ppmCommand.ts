@@ -229,14 +229,16 @@ const pluginSpec = (name: string, cmd: string, shift?: boolean): Level_String =>
 
 type LangKeys = keyof typeof lang;
 const doScript = (name: LangKeys, opts?: string, choice?: boolean) => {
+  const refDir = PPx.Extract('%sgu"dev_mode"') === 'ON' ? 'dev' : 'dist';
+
   if (!choice) {
     const ok = ppm.question(name, lang[name]);
-    ok && PPx.Execute(`*script %sgu"ppm"\\dist\\${name}.js,${opts}`);
+    ok && PPx.Execute(`*script %sgu"ppm"\\${refDir}\\${name}.js,${opts}`);
   } else {
     const answer = ppm.choice('C', `ppm/${name}`, lang[name], 'Ync', undefined, lang.updateTrial);
     const dryrun = answer === 'no' ? '1' : '0';
 
-    answer !== 'cancel' && PPx.Execute(`*script %sgu"ppm"\\dist\\${name}.js,${opts},${dryrun}`);
+    answer !== 'cancel' && PPx.Execute(`*script %sgu"ppm"\\${refDir}\\${name}.js,${opts},${dryrun}`);
     ppm.linemessage('C', lang.finish, true);
   }
 };

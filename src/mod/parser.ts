@@ -119,10 +119,7 @@ export const parseInstall = (name: string, path: string): Error_String => {
 
     if (value != null) {
       if (key === 'copyFlag' || key === 'copyScript') {
-        if (value) {
-          parsedItem[key] = true;
-        }
-
+        parsedItem[key] = value.toLowerCase() === 'true';
         continue;
       } else if (key === 'copySpec') {
         if (!isEmptyStr(value)) {
