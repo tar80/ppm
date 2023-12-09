@@ -9,6 +9,7 @@ CONTENTS
 	errors.js
 	exeExists.js
 	lfMetadata.js
+	lfActions.js
 	libExists.js
 	checkPid.js
 	seeProcess.js
@@ -37,11 +38,24 @@ exeExists.js
 
 ===============================================================================
 lfMetadata.js
-指定したListFileのメタデータを取得して返します。
+指定したListFileのメタデータを取得して返し、同時に%si'meta'にJSON形式で
+メタデータを登録します。%si'meta'はディレクトリの移動時に削除されます。
 
 @arg 0 {string} - リストファイルのパスを指定
 @arg 1 {string} - メタデータのIDを指定
 @arg 2 {"sjis"|"utf16le"|"utf8"(default)} - リストファイルのエンコードを指定
+
+===============================================================================
+lfActions.js
+リストファイル上のマークエントリに対し、コマンドを実行します。
+
+@arg 0 {string} - S_ppm#actionsのコマンドアイリアスを指定します。
+@arg 1 {"ecclose"|"double"|"escape"} - 空白を含むパスの処理方法を指定します。
+	"enclose"	ダブルクォートで括る
+	"double"	ダブルクォート二つで括る
+	"escape"	バックスラッシュでエスケープする
+@arg 2 {number} - If non-zero, allow duplicate paths
+	"0"以外を指定すると、重複したパスを実行対象に含めるようになります。
 
 ===============================================================================
 libExists.js

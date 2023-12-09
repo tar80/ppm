@@ -5,8 +5,10 @@
  * @return - Table of metadata
  */
 
+import '@ppmdev/polyfills/objectKeys.ts';
 import type {FileEncode} from '@ppmdev/modules/types.ts';
 import {getLfMeta} from '@ppmdev/parsers/listfile.ts';
+import {valueReplacer as jsonValue} from '@ppmdev/parsers/json.ts';
 import {isError} from '@ppmdev/modules/guard.ts';
 import {readLines} from '@ppmdev/modules/io.ts';
 import {pathSelf} from '@ppmdev/modules/path.ts';
@@ -21,7 +23,14 @@ const main = (): void => {
     PPx.Quit(-1);
   }
 
-  PPx.result = getLfMeta(data.lines)[args.id];
+  const meta = getLfMeta(data.lines);
+  const labelId = 'ppmlfmetadata,KC_main:LOADEVENT';
+  PPx.setIValue('meta', objToJson(meta));
+  PPx.Execute(
+    `*linecust ${labelId},*if ("%%n"=="%n") && (4!=%%*js("PPx.result=PPx.DirectoryType"))%%:*string i,meta=%%:*linecust ${labelId},`
+  );
+
+  PPx.result = meta[args.id];
 };
 
 const adjustArgs = (args = PPx.Arguments): {path: string; id: string; enc: FileEncode} => {
@@ -36,6 +45,18 @@ const adjustArgs = (args = PPx.Arguments): {path: string; id: string; enc: FileE
   }
 
   return {path: arr[0], id: arr[1], enc: arr[2] as FileEncode};
+};
+
+const objToJson = (items: Record<string, string>): string => {
+  const arr = [];
+
+  for (const item of Object.keys(items)) {
+    arr.push(
+      `"${item}":"${jsonValue(items[item as keyof typeof items])}"`
+    );
+  }
+
+  return `{${arr.join(',')}}`;
 };
 
 main();
