@@ -24,8 +24,8 @@ if (isEmptyStr(cfgdir)) {
 }
 
 const desc: string[] = [
-  `${colorlize({message: 'CTRL+ENTER', esc: true, fg: 'yellow'})}%%bt${lang.save}`,
-  `${colorlize({message: 'ESC', esc: true, fg: 'yellow'})}%%bt%%bt${lang.cancel}`
+  `${colorlize({message: 'CTRL+ENTER', esc: true, fg: 'yellow'})}%bt${lang.save}`,
+  `${colorlize({message: 'ESC', esc: true, fg: 'yellow'})}%bt%bt${lang.cancel}`
 ];
 const keyTbl = ppm.setkey('^ENTER', `*execute B${info.ppmID},*string p,ppm_cfgs=%%#;FDC%%:*closeppx %%n`);
 ppm.setkey('ESC', `*execute B${info.ppmID},*string p,ppm_cfgs=cancel%%:*closeppx %%n`);

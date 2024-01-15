@@ -8,7 +8,7 @@
 import '@ppmdev/polyfills/objectKeys.ts';
 import type {FileEncode} from '@ppmdev/modules/types.ts';
 import {getLfMeta} from '@ppmdev/parsers/listfile.ts';
-import {valueReplacer as jsonValue} from '@ppmdev/parsers/json.ts';
+import {valueEscape as jsonValue} from '@ppmdev/parsers/json.ts';
 import {isError} from '@ppmdev/modules/guard.ts';
 import {readLines} from '@ppmdev/modules/io.ts';
 import {pathSelf} from '@ppmdev/modules/path.ts';

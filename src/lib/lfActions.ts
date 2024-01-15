@@ -137,8 +137,8 @@ const replaceCmdline = ({cmdline, base, dirtype, search, isDup, entry}: CmdParam
   const att = entry.att ?? '';
   const hl = entry.hl ? String(entry.hl) : '';
   const sname = entry.sname ?? '';
-  const data = `base:${base}${DELIM}dirtype:${dirtype}${DELIM}search:${search}${DELIM}dup:${isDup}${DELIM}path:${entry.path}${DELIM}att:${att}${DELIM}hl:${hl}${DELIM}sname:${sname}`;
-  const rgx = `base:(?<base>.*)${DELIM}type:(?<type>.*)${DELIM}search(?<search>.*)${DELIM}dup:(?<dup>.+)${DELIM}path:(?<path>.+)${DELIM}att:(?<att>.*)${DELIM}hl:(?<hl>.*)${DELIM}sname:(?<sname>.*)`;
+  const data = `base:${base}${DELIM}dirtype:${dirtype}${DELIM}search:${search}${DELIM}dup:${isDup}${DELIM}path:${entry.path}${DELIM}att:${att}${DELIM}hl:${hl}${DELIM}option:${sname}`;
+  const rgx = `base:(?<base>.*)${DELIM}type:(?<type>.*)${DELIM}search(?<search>.*)${DELIM}dup:(?<dup>.+)${DELIM}path:(?<path>.+)${DELIM}att:(?<att>.*)${DELIM}hl:(?<hl>.*)${DELIM}option:(?<sname>.*)`;
 
   if (debug.jestRun()) {
     // @ts-ignore
