@@ -49,7 +49,6 @@ const main = () => {
     /* registration */
     if (reset) {
       const title = `${info.ppmName} ver${ppm.global('version')}`;
-      ppm.setkey('ESC', `*deletecust "${uniqName.tempKey}"%%:*ppc%%:*wait 200%%:*closeppx %%n`);
       runPPb({
         bootid: info.ppmID,
         desc: title,
@@ -100,7 +99,11 @@ const main = () => {
         mask: ['S_ppm#global', 'S_ppm#sources', 'S_ppm#plugins', 'A_color']
       });
     }
-    reset && ppm.linemessage(ppbID, `${lang.completed}`);
+
+    if (reset) {
+      ppm.setkey('ESC', `*deletecust "${uniqName.tempKey}"%%:*ppc%%:*wait 200%%:*closeppx %%n`);
+      ppm.linemessage(ppbID, `${lang.completed}`);
+    }
   } else {
     /* dry run */
     const TAB_WIDTH = '24';
@@ -117,7 +120,7 @@ const adjustArgs = (args = PPx.Arguments): {target: string; mode: RegMode; patch
   const rgx2 = /^(set|restore|unset)$/;
 
   for (let i = 0, k = args.length; i < k; i++) {
-    arr[i] = args.item(i);
+    arr[i] = args.Item(i);
   }
 
   if (!rgx2.test(arr[1])) {

@@ -61,9 +61,16 @@ const main = (): void => {
         hasUpdate = true;
         enableSource(plugin.name, plugin.path);
         coloredEcho(ppbID, core.decorateLog(plugin.name, 'load'));
+        [error, errorMsg] = checkPermissions(plugin);
+
+        if (error) {
+          coloredEcho(ppbID, errorMsg);
+          continue;
+        }
+
         copyToCache(plugin);
 
-        debug.log(`already installed: ${plugin.name}}`);
+        debug.log(`already installed: ${plugin.name}`);
         continue;
       }
 
