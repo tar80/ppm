@@ -61,7 +61,7 @@ const main = (): void => {
         hasUpdate = true;
         enableSource(plugin.name, plugin.path);
         coloredEcho(ppbID, core.decorateLog(plugin.name, 'load'));
-        [error, errorMsg] = checkPermissions(plugin);
+        [error, errorMsg] = checkPermissions(plugin, true);
 
         if (error) {
           coloredEcho(ppbID, errorMsg);
@@ -224,12 +224,17 @@ const cursorBack = (n: number = 1): void => {
 };
 
 const permissionText = tmp().stdout;
-const checkPermissions = (plugin: Source): Error_String => {
-  const url = `${uri.rawGithub}/${plugin.autor}/${plugin.name}/master/install`;
-  PPx.Execute(`*httpget "${url}","${permissionText}"`);
-  // cursorBack(3);
+const checkPermissions = (plugin: Source, local: boolean): Error_String => {
+  let data = `${plugin.path}\\install`;
 
-  return parseInstall(plugin.name, permissionText);
+  if (!local) {
+    const url = `${uri.rawGithub}/${plugin.autor}/${plugin.name}/master/install`;
+    PPx.Execute(`*httpget "${url}","${permissionText}"`);
+    data = permissionText
+    // cursorBack(3);
+  }
+
+  return parseInstall(plugin.name, data);
 };
 
 const clonePlugin = (plugin: Source): Level_String => {
