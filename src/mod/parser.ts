@@ -61,12 +61,15 @@ export const parsePluginlist = (path?: string): typeof plugins => {
   return plugins;
 };
 
-export const parsedItem = {
+const item = {
   pluginVersion: '0.0.1',
   copyFlag: false,
   copyScript: false,
   copySpec: [] as string[]
 };
+
+export let parsedItem = {...item};
+export const clearItem = () => (parsedItem = {...item});
 
 type installPermissions = typeof permissions;
 type installPermissionKeys = keyof installPermissions;

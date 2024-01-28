@@ -20,13 +20,13 @@ const checkRegisteredLinecusts = (pluginName: string, linecusts: MergeLines['lin
   const rgx = /^[^=]+=([^,]+),.+,$/;
 
   if (isError(error, data)) {
-    throw new Error(data);
-  }
-
-  for (const line of data.lines) {
-    if (~line.indexOf(pluginName)) {
-      const id = line.replace(rgx, '$1');
-      register[id] && delete register[id];
+    ~data.indexOf('not found') && PPx.Execute(`*makefile ${linecustCfg}`);
+  } else {
+    for (const line of data.lines) {
+      if (~line.indexOf(pluginName)) {
+        const id = line.replace(rgx, '$1');
+        register[id] && delete register[id];
+      }
     }
   }
 

@@ -8,7 +8,7 @@ import fso from '@ppmdev/modules/filesystem.ts';
 import {isEmptyStr, isError} from '@ppmdev/modules/guard.ts';
 import {cursorMove} from '@ppmdev/modules/ansi.ts';
 import {echoExe, coloredEcho} from '@ppmdev/modules/echo.ts';
-import {copyFile, copyFolder} from '@ppmdev/modules/filesystem.ts';
+import {copyFile} from '@ppmdev/modules/filesystem.ts';
 import {type Source, setSource, owSource, expandSource} from '@ppmdev/modules/source.ts';
 import {info, uniqName, uri, tmp} from '@ppmdev/modules/data.ts';
 import {createBackup} from '@ppmdev/modules/ppcust.ts';
@@ -17,7 +17,7 @@ import {runPPb} from '@ppmdev/modules/run.ts';
 import {readLines, stdout} from '@ppmdev/modules/io.ts';
 import {properties} from '@ppmdev/parsers/table.ts';
 import {langPluginInstall} from './mod/language.ts';
-import {parsePluginlist, parseInstall, parsedItem} from './mod/parser.ts';
+import {parsePluginlist, parseInstall, parsedItem, clearItem} from './mod/parser.ts';
 import {conf} from './mod/configuration.ts';
 import {pluginInstall as core} from './mod/core.ts';
 
@@ -69,8 +69,9 @@ const main = (): void => {
         }
 
         copyToCache(plugin);
+        clearItem();
 
-        debug.log(`already installed: ${plugin.name}`);
+        // debug.log(`already installed: ${plugin.name}`);
         continue;
       }
 
@@ -122,6 +123,7 @@ const main = (): void => {
     ppm.setcust(`S_ppm#plugins:${plugin.name}=${plugin.path}`);
 
     conf.init(plugin.name, plugin.path);
+    clearItem();
 
     debug.log(`conf.init: ${plugin.name}`);
   }
@@ -152,51 +154,57 @@ const main = (): void => {
   ppm.execute(ppbID, `%%OWsq ${echoExe} -ne "" %%&*closeppx ${ppbID}`);
 };
 
-/** Cache files used by plugins. */
-const copyToCache = (item: Source): void => {
-  let [error, errorMessage] = [false, ''];
+const getPaths = (() => {
+  const tempFile = tmp().file;
+  const opts = `-utf8 -dir:on -subdir:off -listfile:"${tempFile}" -name`;
 
-  if (parsedItem.copyFlag) {
-    const send = `${item.path}\\sheet`;
-    const dest = `${ppmcache}\\list`;
-    [error, errorMessage] = copyFolder(send, dest);
+  return (source: string) => {
+    ppm.execute('C', `%(*whereis -path:"${source}" -listfile:"${tempFile}" ${opts}%)`, true);
+    return readLines({path: tempFile});
+  };
+})();
+
+const copyDirectory = (source: string, dirname: string): void => {
+  const [error, data] = getPaths(source);
+
+  if (isError(error, data)) {
+    debug.log(data);
+    return;
+  }
+
+  for (const entry of data.lines) {
+    const src = entry;
+    const dest = `${ppmcache}\\${dirname}\\${fso.GetFileName(entry)}`;
+    const [error, errorMessage] = copyFile(src, dest);
+
+    if (error && ~errorMessage.indexOf('is not exist')) {
+      PPx.Execute(`*makedir "${ppmcache}\\${dirname}\\${fso.GetFileName(dest)}"`);
+      debug.log(`create directory: ${dest}`);
+      continue;
+    }
 
     error && debug.log(errorMessage);
+  }
+};
+
+/** Cache files used by plugins. */
+const copyToCache = (item: Source): void => {
+  if (parsedItem.copyFlag) {
+    const src = `${item.path}\\sheet`;
+    const dest = `list`;
+    copyDirectory(src, dest);
   }
 
   if (parsedItem.copyScript) {
-    const send = `${item.path}\\userscript`;
-    const dest = `${ppmcache}\\userscript`;
-    [error, errorMessage] = copyFolder(send, dest);
-
-    error && debug.log(errorMessage);
+    const src = `${item.path}\\userscript`;
+    const dest = `userscript`;
+    copyDirectory(src, dest);
   }
 
   if (parsedItem.copySpec.length > 0) {
-    const tempFile = tmp().file;
-    const opts = `-mask:"a:d-" -utf8 -dir:on -subdir:off -listfile:${tempFile} -name`;
-
     for (const dirname of parsedItem.copySpec) {
-      ppm.execute('C', `%(*whereis -path:"${item.path}\\${dirname}" ${opts}%)`, true);
-      let [error, data] = readLines({path: tempFile});
-
-      if (isError(error, data)) {
-        debug.log(data);
-        continue;
-      }
-
-      if (data.lines.length === 0) {
-        PPx.Execute(`*makedir "${ppmcache}\\${dirname}"`);
-        continue;
-      }
-
-      for (const entry of data.lines) {
-        const send = entry;
-        const dest = `${ppmcache}\\${dirname}\\${fso.GetFileName(entry)}`;
-        [error, errorMessage] = copyFile(send, dest);
-
-        error && debug.log(errorMessage);
-      }
+      const src = `${item.path}\\${dirname}`;
+      copyDirectory(src, dirname);
     }
   }
 };

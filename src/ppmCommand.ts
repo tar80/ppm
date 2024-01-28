@@ -58,7 +58,7 @@ const main = (): void => {
     case 'edit':
       {
         const [exitcode, name] = pluginSpec('', '*ppmEdit', true);
-        const withShift = ppm.extract('.', '%*shiftkeys')[1] === '1024';
+        const withShift = PPx.Extract('%*shiftkeys') === '1024';
 
         if (exitcode === 0) {
           const path = `%%sgu"ppmcache"\\config\\${name}.cfg`;
