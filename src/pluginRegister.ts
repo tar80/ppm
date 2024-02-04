@@ -11,7 +11,7 @@ import type {Error_String} from '@ppmdev/modules/types.ts';
 import debug from '@ppmdev/modules/debug.ts';
 import {type Source, expandSource, owSource, setSource, sourceNames} from '@ppmdev/modules/source.ts';
 import {isEmptyStr, isError} from '@ppmdev/modules/guard.ts';
-import {info, useLanguage, uniqName, tmp} from '@ppmdev/modules/data.ts';
+import {info, useLanguage, uniqName, uniqID, tmp} from '@ppmdev/modules/data.ts';
 import {pathSelf} from '@ppmdev/modules/path.ts';
 import {ppm} from '@ppmdev/modules/ppm.ts';
 import {copyFile} from '@ppmdev/modules/filesystem.ts';
@@ -57,7 +57,7 @@ const main = () => {
         y: 0,
         width: 700,
         height: 500,
-        k: `*mapkey use,${uniqName.tempKey}`
+        k: `*mapkey use,${uniqID.tempKey}`
       });
 
       if (mode === 'reset') {
@@ -101,7 +101,7 @@ const main = () => {
     }
 
     if (reset) {
-      ppm.setkey('ESC', `*deletecust "${uniqName.tempKey}"%%:*ppc%%:*wait 200%%:*closeppx %%n`);
+      ppm.setkey('ESC', `*deletecust "${uniqID.tempKey}"%%:*ppc%%:*wait 200%%:*closeppx %%n`);
       ppm.linemessage(ppbID, `${lang.completed}`);
     }
   } else {

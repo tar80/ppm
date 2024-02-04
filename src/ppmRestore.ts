@@ -6,7 +6,7 @@
 import fso from '@ppmdev/modules/filesystem.ts';
 import {useLanguage, uniqName} from '@ppmdev/modules/data.ts';
 import {pathSelf} from '@ppmdev/modules/path.ts';
-import {ppm} from '@ppmdev/modules/ppm.ts';
+import {msgBox} from '@ppmdev/modules/ppm.ts';
 import {langRestore} from './mod/language.ts';
 
 const {scriptName} = pathSelf();
@@ -32,7 +32,7 @@ const data = ((args = PPx.Arguments): {ppmcache: string; ppmDir: string} | strin
 })();
 
 if (typeof data === 'string') {
-  ppm.echo(scriptName, data);
+  msgBox(scriptName, data);
   PPx.Quit(-1);
 }
 

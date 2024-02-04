@@ -39,7 +39,8 @@ const main = (): void => {
   const optsPostCmd = postOptions(options);
   const [errorlevel, input] = ppm.extract('.', `%*input(${optsInput} ${optsPostCmd})`);
 
-  options.autoselect && ppm.deletekeys();
+  ppm.deletemenu();
+  ppm.deletekeys();
 
   PPx.result = errorlevel !== 0 ? '[error]' : input;
 };
@@ -143,8 +144,7 @@ const postOptions = (arg: Partial<Options>): string => {
   const result: string[] = [arr.join(' ')];
 
   if (arg.autoselect) {
-    const keyTbl = ppm.setkey('ENTER', `%(*if -1==%*sendmessage(%N-L,392,0,0)%:%K"@DOWN"%bn%bt%K"@ENTER"%)`, true)
-    // PPx.Execute(`%OC *setcust ${uniqName.tempKey}:ENTER,*if -1==%%*sendmessage(%%N-L,392,0,0)%%:%%K"@DOWN"%bn%bt%%K"@ENTER"`);
+    const keyTbl = ppm.setkey('ENTER', `*if -1==%%*sendmessage(%%N-L,392,0,0)%%:%%K"@DOWN"%bn%bt%%K"@ENTER"`, true)
     result.push(`*mapkey use,${keyTbl}`);
   }
 
