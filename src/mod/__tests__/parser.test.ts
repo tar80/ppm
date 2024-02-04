@@ -39,10 +39,10 @@ describe('parseInstall()', function () {
     //NOTE: The PPx variables returned by the script are not real values, but dummy values returned by ppx.ts
     expect(data).toEqual([
       false,
-      `\\x1b[41;30m FAIL \\x1b[49;39m ppx-plugin-manager version 9.00 or later\n` +
-        `\\x1b[41;30m FAIL \\x1b[49;39m PPx version 999999 or later\n` +
-        `\\x1b[41;30m FAIL \\x1b[49;39m Required executables: \\x1b[33msomeexe.exe\\x1b[49;39m\n` +
-        `\\x1b[41;30m FAIL \\x1b[49;39m Required modules: \\x1b[33mmod1\\x1b[49;39m, \\x1b[33mmod2\\x1b[49;39m`
+      `\x1b[31m DROP \x1b[49;39m ppx-plugin-manager version 9.00 or later\n` +
+        `\x1b[31m DROP \x1b[49;39m PPx version 999999 or later\n` +
+        `\x1b[31m DROP \x1b[49;39m Required executables: \x1b[33msomeexe.exe\x1b[49;39m\n` +
+        `\x1b[31m DROP \x1b[49;39m Required modules: \x1b[33mmod1\x1b[49;39m, \x1b[33mmod2\x1b[49;39m`
     ]);
   });
 });

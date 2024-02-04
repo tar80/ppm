@@ -20,7 +20,7 @@ describe('blankHandleSpec()', function () {
 });
 
 type BoolStr = '1';
-describe.only('replaceCmdline()', function () {
+describe('replaceCmdline()', function () {
   const DELIM = '@#_#@';
   const cmdline = `*if 0==\${dup}%: *copy \${path},\${path}back%br%bl%Oi sed -i -r \${option}"s#\${search}#prod#" \${path}`;
   const base = 'c:\\path\\to';
@@ -34,7 +34,7 @@ describe.only('replaceCmdline()', function () {
   const resp = {
     cmdline,
     data: `base:${base}${DELIM}dirtype:${dirtype}${DELIM}search:${search}${DELIM}dup:${isDup}${DELIM}path:${entry.path}${DELIM}att:${entry.att}${DELIM}hl:${entry.hl}${DELIM}option:${entry.sname}`,
-    rgx: `base:(?<base>.*)${DELIM}type:(?<type>.*)${DELIM}search(?<search>.*)${DELIM}dup:(?<dup>.+)${DELIM}path:(?<path>.+)${DELIM}att:(?<att>.*)${DELIM}hl:(?<hl>.*)${DELIM}option:(?<sname>.*)`
+    rgx: `base:(?<base>.*)${DELIM}dirtype:(?<type>.*)${DELIM}search(?<search>.*)${DELIM}dup:(?<dup>.+)${DELIM}path:(?<path>.+)${DELIM}att:(?<att>.*)${DELIM}hl:(?<hl>.*)${DELIM}option:(?<option>.*)`
   };
   it('command executed at each path', () => {
     expect(replaceCmdline(obj)).toEqual(resp);

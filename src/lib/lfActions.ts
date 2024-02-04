@@ -2,13 +2,13 @@
  * @arg 0 {string} - Specifies the command-alias
  * @arg 1 {string} - How to deal with paths containing spaces. "enclose" | "double" | "escape"
  * @arg 2 {number} - If non-zero, allow duplicate paths
+ * @arg 3 {string} - Specify the file encoding. "sjis" | "utf8" | "utf16le"(default)
  */
 
 import '@ppmdev/polyfills/json.ts';
 import fso from '@ppmdev/modules/filesystem.ts';
 import {isEmptyStr} from '@ppmdev/modules/guard.ts';
-import {pathSelf} from '@ppmdev/modules/path.ts';
-import {useLanguage} from '@ppmdev/modules/data.ts';
+import {uniqID, useLanguage} from '@ppmdev/modules/data.ts';
 import debug from '@ppmdev/modules/debug.ts';
 
 type BlankHandle = 'enclose' | 'double' | 'escape';
@@ -22,16 +22,22 @@ if (fso.FileExists(PPx.Extract('%OR %FDC'))) {
 const DELIM = '@#_#@';
 
 const main = (): void => {
-  const {scriptName} = pathSelf();
   const args = adjustArgs();
-  const metadata: Record<string, string> = JSON.parse(PPx.getIValue('meta'));
-  const cmdline = PPx.Extract(`%*getcust(S_ppm#actions:${metadata.ppm}_${args.act})`).replace(
-    /[\r\n]/g,
-    (c) => ({'\r': '%br', '\n': '%bl'})[c as '\r' | '\n']
-  );
+  const userData = PPx.Extract(`%*extract(%%su'${uniqID.lfDset}%n')`);
+
+  if (isEmptyStr(userData)) {
+    PPx.Execute('%Obd echo %*comment|%0ppvw.exe');
+    PPx.Quit(-1);
+  }
+
+  const metadata: Record<string, string> = JSON.parse(userData);
+  const cmdline =
+    PPx.Extract(`%*getcust(S_ppm#actions:${metadata.ppm}_${args.act})`) ||
+    PPx.Extract(`%*getcust(S_ppm#actions:all_${args.act})`);
+  // const cmdline = action.replace(/\r\n/g, '%bn');
 
   if (isEmptyStr(cmdline)) {
-    PPx.report(`[ppm/${scriptName}] ${lang.noAction}`);
+    PPx.linemessage(`!"${lang.noAction}`);
     PPx.Quit(-1);
   }
 
@@ -43,7 +49,7 @@ const main = (): void => {
   const doAction = (() => {
     return perPath
       ? ({entry, isDup}: {entry: EntryDetails; isDup: BoolStr}): number =>
-          PPx.Execute(`%OP- *execute ,${replaceCmdline({cmdline, base, dirtype, search, isDup, entry})}`)
+          PPx.Execute(`%OCP- *execute ,%(${replaceCmdline({cmdline, base, dirtype, search, isDup, entry})}%)`)
       : ({entry}: {entry: EntryDetails}): number => entries.push(entry.path);
   })();
   const entries: string[] = [];
@@ -73,13 +79,11 @@ const main = (): void => {
         doAction({entry, isDup});
       }
     }
-
-    break;
   } while (e.NextMark);
 
   if (!perPath) {
-    const data = `search:${search}${DELIM}path:${entries.join(' ')}`;
-    const rgx = `^search:(?<search>.*)${DELIM}path:(?<path>.+)$`;
+    const data = `dup:0${DELIM}search:${search}${DELIM}path:${entries.join(' ')}`;
+    const rgx = `^dup:(?<dup>0)${DELIM}search:(?<search>.*)${DELIM}path:(?<path>.+)$`;
     debug.log(PPx.Extract(`%*regexp("%(${data}%)","%(/${rgx}/${cmdline}/%)")`));
     PPx.Execute(`%OP *execute ,%%OP- %*regexp("%(${data}%)","%(/${rgx}/${cmdline}/%)")`);
   }
@@ -93,7 +97,7 @@ const lang = {
 }[useLanguage()];
 
 const adjustArgs = (args = PPx.Arguments): {act: string; spc: BlankHandle; dup: boolean} => {
-  const arr: string[] = ['*ppv', 'enclose', '0', 'utf8'];
+  const arr: string[] = ['*ppv', 'enclose', '0', 'utf16le'];
 
   for (let i = 0, k = args.length; i < k; i++) {
     arr[i] = args.Item(i);
@@ -103,8 +107,8 @@ const adjustArgs = (args = PPx.Arguments): {act: string; spc: BlankHandle; dup: 
     arr[1] = 'enclose';
   }
 
-  if (!/sjis|utf16le|utf8/.test(arr[3])) {
-    arr[3] = 'utf8';
+  if (!/sjis|utf8|utf16le/.test(arr[3])) {
+    arr[3] = 'utf16le';
   }
 
   return {act: arr[0], spc: arr[1] as BlankHandle, dup: arr[2] !== '0'};
@@ -138,14 +142,14 @@ const replaceCmdline = ({cmdline, base, dirtype, search, isDup, entry}: CmdParam
   const hl = entry.hl ? String(entry.hl) : '';
   const sname = entry.sname ?? '';
   const data = `base:${base}${DELIM}dirtype:${dirtype}${DELIM}search:${search}${DELIM}dup:${isDup}${DELIM}path:${entry.path}${DELIM}att:${att}${DELIM}hl:${hl}${DELIM}option:${sname}`;
-  const rgx = `base:(?<base>.*)${DELIM}type:(?<type>.*)${DELIM}search(?<search>.*)${DELIM}dup:(?<dup>.+)${DELIM}path:(?<path>.+)${DELIM}att:(?<att>.*)${DELIM}hl:(?<hl>.*)${DELIM}option:(?<sname>.*)`;
+  const rgx = `base:(?<base>.*)${DELIM}dirtype:(?<type>.*)${DELIM}search(?<search>.*)${DELIM}dup:(?<dup>.+)${DELIM}path:(?<path>.+)${DELIM}att:(?<att>.*)${DELIM}hl:(?<hl>.*)${DELIM}option:(?<option>.*)`;
 
   if (debug.jestRun()) {
     // @ts-ignore
     return {data, rgx, cmdline};
   }
 
-  return PPx.Extract(`%%OP %*regexp("%(${data}%)","%(/${rgx}/${cmdline}/%)")`);
+  return PPx.Extract(`%OP %*regexp("%(${data}%)","%(/${rgx}/${cmdline}/%)")`);
 };
 
 if (!debug.jestRun()) main();

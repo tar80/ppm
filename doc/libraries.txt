@@ -8,8 +8,9 @@ CONTENTS
 
 	errors.js
 	exeExists.js
-	lfMetadata.js
 	lfActions.js
+	lfDset.js
+	lfMetadata.js
 	libExists.js
 	checkPid.js
 	seeProcess.js
@@ -37,25 +38,36 @@ exeExists.js
 	{ "1.exe": true, "2.exe": false, ... }
 
 ===============================================================================
-lfMetadata.js
-指定したListFileのメタデータを取得して返し、同時に%si'meta'にJSON形式で
-メタデータを登録します。%si'meta'はディレクトリの移動時に削除されます。
-
-@arg 0 {string} - リストファイルのパスを指定
-@arg 1 {string} - メタデータのIDを指定
-@arg 2 {"sjis"|"utf16le"|"utf8"(default)} - リストファイルのエンコードを指定
-
-===============================================================================
 lfActions.js
 リストファイル上のマークエントリに対し、コマンドを実行します。
 
 @arg 0 {string} - S_ppm#actionsのコマンドアイリアスを指定します。
-@arg 1 {"ecclose"|"double"|"escape"} - 空白を含むパスの処理方法を指定します。
-	"enclose"	ダブルクォートで括る
-	"double"	ダブルクォート二つで括る
+@arg 1 {"enclose"|"double"|"escape"} - 空白を含むパスの処理方法を指定します。
+	"enclose"	ダブルクオートで括る
+	"double"	ダブルクオート2つで括る
 	"escape"	バックスラッシュでエスケープする
 @arg 2 {number} - If non-zero, allow duplicate paths
-	"0"以外を指定すると、重複したパスを実行対象に含めるようになります。
+	"0"以外を指定すると重複したパスを実行対象に含めます。
+@arg 3 {"sjis"|"utf8"|"utf16le"(default)} - リストファイルのエンコードを指定
+
+===============================================================================
+lfDset.js
+指定したListFileのメタデータを取得して返し、同時に%su'ppmlfdset%n'にJSON形式で
+メタデータを登録し、メタデータ"cmd"の値を返します。
+また、リストファイルを閉じたときに%su'ppmlfdset%n'、K_ppmTemp、M_ppmTempを
+削除するための一時設定をKC_main:LOADEVENT、KC_main:CLOSEEVENTに登録します。
+
+@arg 0 {string} - リストファイルのパスを指定
+@arg 1 {string} - メタデータのIDを指定
+@arg 2 {"sjis"|"utf8"|"utf16le"(default)} - リストファイルのエンコードを指定
+
+===============================================================================
+lfMetadata.js
+指定したListFileのメタデータを取得して返します
+
+@arg 0 {string} - リストファイルのパスを指定
+@arg 1 {string} - メタデータのIDを指定
+@arg 2 {"sjis"|"utf8"|"utf16le"(default)} - リストファイルのエンコードを指定
 
 ===============================================================================
 libExists.js
