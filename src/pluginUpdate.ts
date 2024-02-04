@@ -34,7 +34,7 @@ const main = (): void => {
   const pluginNames = target !== 'all' ? [target] : sourceNames();
   const errorHeader = colorlize({message: ' ERROR ', esc: true, fg: 'black', bg: 'red'});
   const checkHeader = colorlize({message: ' CHECK ', esc: true, fg: 'black', bg: 'cyan'});
-  let hasUpdate: boolean;
+  let hasUpdate = false;
 
   {
     coloredEcho(ppbID, `${checkHeader} ${info.ppmName}`);
@@ -78,7 +78,7 @@ const main = (): void => {
       PPx.Execute(`%Obds git -C ${source.path} log ${GIT_LOG_OPTS} head...${data}>> ${updateLog}`);
       owSource(source.name, {version: ppm.getVersion(source.path) ?? '0.0.0'});
 
-      if (logSize == fso.GetFile(updateLog).Size) {
+      if (!hasUpdate && logSize == fso.GetFile(updateLog).Size) {
         hasUpdate = false;
       }
     }
