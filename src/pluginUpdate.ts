@@ -74,7 +74,7 @@ const main = (): void => {
 
     if (dryRun === '0') {
       const logSize = fso.GetFile(updateLog).Size;
-      PPx.Execute(`git -C ${source.path} pull`);
+      PPx.Execute(`%Os git -C ${source.path} pull`);
       PPx.Execute(`%Obds git -C ${source.path} log ${GIT_LOG_OPTS} head...${data}>> ${updateLog}`);
       owSource(source.name, {version: ppm.getVersion(source.path) ?? '0.0.0'});
 
