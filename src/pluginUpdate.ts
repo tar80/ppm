@@ -118,7 +118,7 @@ const updatePpm = (): Error_String => {
 
   if (!error) {
     writeTitle(info.ppmName, false);
-    PPx.Execute(`@git -C ${ppmDir} pull`);
+    PPx.Execute(`%Os @git -C ${ppmDir} pull`);
     PPx.Execute(`%Obds git -C ${ppmDir} log ${GIT_LOG_OPTS} head...${data}>> ${updateLog}`);
     const version = ppm.getVersion(ppmDir) ?? info.ppmVersion;
     owSource(info.ppmName, {version});
