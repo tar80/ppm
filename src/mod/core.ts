@@ -255,9 +255,9 @@ export const pluginRegister = {getManageFiles, updateLists};
 
 /** Check for ppm plugin updates. */
 const checkUpdate = (path: string): Error_String => {
-  let [error, local] = branchHead(path);
+  let [error, localHead] = branchHead(path);
 
-  if (isError(error, local)) {
+  if (isError(error, localHead)) {
     return [true, 'failedToGet'];
   }
 
@@ -275,7 +275,7 @@ const checkUpdate = (path: string): Error_String => {
 
   const remoteHead = remote.split('\t')[0];
 
-  return local === remoteHead ? [true, 'noUpdates'] : [false, remoteHead];
+  return localHead === remoteHead ? [true, 'noUpdates'] : [false, localHead];
 };
 
 export const pluginUpdate = {checkUpdate};

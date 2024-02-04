@@ -94,7 +94,7 @@ const main = (): void => {
     } else {
       /* plugins to download */
       if (!fso.FolderExists(`${ppmrepo}\\${plugin.name}`)) {
-        [error, errorMsg] = checkPermissions(plugin);
+        [error, errorMsg] = checkPermissions(plugin, false);
 
         if (error) {
           coloredEcho(ppbID, errorMsg);
