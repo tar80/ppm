@@ -87,8 +87,6 @@ const main = (): void => {
     debug.log(PPx.Extract(`%*regexp("%(${data}%)","%(/${rgx}/${cmdline}/%)")`));
     PPx.Execute(`%OP *execute ,%%OP- %*regexp("%(${data}%)","%(/${rgx}/${cmdline}/%)")`);
   }
-
-  PPx.Quit(-1);
 };
 
 const lang = {

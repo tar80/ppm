@@ -107,7 +107,7 @@ const writeTitle = (name: string, update: boolean): void => {
   const linefeed = '\n';
   const opts = update ? {append: true} : {overwrite: true};
   const title = colorlize({message: name, fg: 'black', bg: 'green'});
-  writeLines({path: updateLog, data: [title, ''], linefeed, ...opts});
+  writeLines({path: updateLog, data: [title], linefeed, ...opts});
 };
 
 /** Update ppm, and start PPb. */

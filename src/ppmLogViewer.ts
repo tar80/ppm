@@ -44,7 +44,7 @@ const main = (): void => {
 
   const resetCaret = setCaret();
   PPx.Execute(
-    `*ppv -r -bootid:${info.ppmID} -utf8 -esc:on -history:off ${log.opts} ${log.path} -k *mapkey use,${keyTbl}`
+    `%Oi *ppv -r -bootid:${info.ppmID} -utf8 -esc:on -history:off ${log.opts} ${log.path} -k *mapkey use,${keyTbl}`
   );
   resetCaret();
 };

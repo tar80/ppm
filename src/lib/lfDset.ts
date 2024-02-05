@@ -47,7 +47,7 @@ const main = (): string => {
     const labelId = `${userID},KC_main`;
     PPx.Execute(
       `*linecust ${labelId}:LOADEVENT,*if ("%%n"=="%n")&&(4!=%%*js("PPx.result=PPx.DirectoryType"))` +
-        `%%:*deletecust _User:${userID}:LOADEVENT` +
+        `%%:*deletecust _User:${userID}` +
         mapkey.delete +
         `%%:*linecust ${labelId}:CLOSEEVENT,` +
         `%%:*linecust ${labelId}:LOADEVENT,`
