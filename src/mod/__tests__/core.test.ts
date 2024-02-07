@@ -93,7 +93,7 @@ describe('createLog()', function () {
   it('message under the heading "load"', () => {
     const header = 'load';
     expect(pluginInstall.decorateLog('test', header, 'message')).toBe(
-      `${o('black', 'green')} ${header.toUpperCase()} ${c} test\\n  ${o('yellow')}Dependencies => message${c}`
+      `${o('black', 'green')} ${header.toUpperCase()} ${c} test\\n ${o('yellow')}Dependencies => message${c}`
     );
   });
   it('message under the heading "install"', () => {
@@ -103,7 +103,7 @@ describe('createLog()', function () {
   it('message under the heading "error"', () => {
     const state = 'error';
     expect(pluginInstall.decorateLog('test', state, 'message')).toBe(
-      `${o('black', 'red')} ${state.toUpperCase()} ${c} ${o('white')}message${c}`
+      `${o('black', 'red')} ${state.toUpperCase()} ${c} ${o('white')}test${c}`
     );
   });
 });

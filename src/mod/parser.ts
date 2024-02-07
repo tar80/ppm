@@ -1,7 +1,6 @@
 import '@ppmdev/polyfills/stringTrim.ts';
 import '@ppmdev/polyfills/stringPrecedes.ts';
 import '@ppmdev/polyfills/arrayIndexOf.ts';
-import type {Error_String} from '@ppmdev/modules/types.ts';
 import {type PermissionItems, permission} from '@ppmdev/modules/permission.ts';
 import {readLines} from '@ppmdev/modules/io.ts';
 import {isEmptyStr, isError} from '@ppmdev/modules/guard.ts';
@@ -88,7 +87,7 @@ const permissions = {
   COPY_SCRIPT: 'copyScript',
   SPECIFIC_COPY_DIR: 'copySpec'
 } as const;
-export const parseInstall = (name: string, path: string): Error_String => {
+export const parseInstall = (name: string, path: string, local: boolean): [boolean, string, string?] => {
   const messages: string[] = [];
   let [key, value]: string[] = [];
   let [error, data] = readLines({path});
@@ -109,6 +108,9 @@ export const parseInstall = (name: string, path: string): Error_String => {
   }
 
   type ItemNames = keyof Required<PermissionItems>;
+  let drop = false;
+  let dep: string | undefined;
+
   for (let i = 1, k = lines.length; i < k; i++) {
     [key, value] = lines[i].split('=');
 
@@ -135,17 +137,24 @@ export const parseInstall = (name: string, path: string): Error_String => {
       if (key === 'pluginVersion') {
         parsedItem[key] = value;
         [error, data] = permission['pluginVersion'](value as never, name);
+      } else if (key === 'dependencies') {
+        [error, data] = [false, ''];
+
+        if (!isEmptyStr(value)) {
+          dep = value;
+        }
       } else {
         [error, data] = permission[key as ItemNames](value as never);
       }
 
       if (error) {
-        messages.push(data);
+        drop = true;
+        !(local && key === 'pluginVersion') && messages.push(data);
       }
     }
   }
 
-  return [error, messages.join('\n')];
+  return [drop, messages.join('\\n'), dep];
 };
 
 export const getProp = (line: string): {key: string; sep: string; value: string} => {

@@ -94,7 +94,7 @@ const homeSpec = (oldhome: string): string => {
 
 export const installer = {extractGitDir, globalPath, homeSpec};
 
-type LogLevel = 'load' | 'install' | 'error' | 'warn';
+export type LogLevel = 'load' | 'install' | 'error' | 'warn';
 type Log = {[key in LogLevel]: AnsiColors};
 /** Decorate the installation result log. */
 const decorateLog = (name: string, state: LogLevel, message?: string): string => {
@@ -111,11 +111,11 @@ const decorateLog = (name: string, state: LogLevel, message?: string): string =>
   switch (state) {
     case 'error':
     case 'warn':
-      message = isString(message) ? colorlize({esc: true, message, fg: 'white'}) : '';
+      message = colorlize({esc: true, message: name, fg: 'white'});
       break;
     default:
       const dep = colorlize({esc: true, message: `Dependencies => ${message}`, fg: 'yellow'});
-      message = isString(message) ? `${name}\\n  ${dep}` : name;
+      message = isString(message) ? `${name}\\n ${dep}` : name;
       break;
   }
 

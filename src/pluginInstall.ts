@@ -2,7 +2,7 @@
 
 import '@ppmdev/polyfills/arrayIndexOf.ts';
 import '@ppmdev/polyfills/objectKeys.ts';
-import {Error_String, Level_String} from '@ppmdev/modules/types.ts';
+import {Level_String} from '@ppmdev/modules/types.ts';
 import debug from '@ppmdev/modules/debug.ts';
 import fso from '@ppmdev/modules/filesystem.ts';
 import {isEmptyStr, isError} from '@ppmdev/modules/guard.ts';
@@ -19,7 +19,7 @@ import {properties} from '@ppmdev/parsers/table.ts';
 import {langPluginInstall} from './mod/language.ts';
 import {parsePluginlist, parseInstall, parsedItem, clearItem} from './mod/parser.ts';
 import {conf} from './mod/configuration.ts';
-import {pluginInstall as core} from './mod/core.ts';
+import {type LogLevel, pluginInstall as core} from './mod/core.ts';
 
 // restart on pptray
 if (PPx.Extract('%n%N') !== '') {
@@ -53,6 +53,7 @@ const main = (): void => {
 
   for (let i = 0, k = pluginList.length; i < k; i++) {
     let [error, errorMsg] = [true, ''];
+    let dep: string | undefined;
     let plugin = pluginList[i];
 
     if (plugin.path && fso.FolderExists(plugin.path)) {
@@ -60,11 +61,11 @@ const main = (): void => {
       if (oldSources[plugin.name] != null) {
         hasUpdate = true;
         enableSource(plugin.name, plugin.path);
-        coloredEcho(ppbID, core.decorateLog(plugin.name, 'load'));
-        [error, errorMsg] = checkPermissions(plugin, true);
+        [error, errorMsg, dep] = parseInstall(plugin.name, `${plugin.path}\\install`, true);
+        coloredEcho(ppbID, core.decorateLog(plugin.name, notify(!!errorMsg), dep));
 
         if (error) {
-          coloredEcho(ppbID, errorMsg);
+          !!errorMsg && coloredEcho(ppbID, errorMsg);
           continue;
         }
 
@@ -75,28 +76,30 @@ const main = (): void => {
         continue;
       }
 
-      [error, errorMsg] = parseInstall(plugin.name, `${plugin.path}\\install`);
+      [error, errorMsg] = parseInstall(plugin.name, `${plugin.path}\\install`, true);
 
       if (error) {
-        coloredEcho(ppbID, core.decorateLog(plugin.name, 'error', errorMsg));
+        coloredEcho(ppbID, core.decorateLog(plugin.name, 'error', plugin.name));
+        coloredEcho(ppbID, errorMsg);
         continue;
       }
 
       hasUpdate = true;
       plugin.version = parsedItem.pluginVersion;
-      coloredEcho(ppbID, core.decorateLog(plugin.name, 'install'));
+      coloredEcho(ppbID, core.decorateLog(plugin.name, 'install', dep));
 
       errorMsg = core.gitSwitch(plugin);
-      !isEmptyStr(errorMsg) && coloredEcho(ppbID, core.decorateLog(plugin.name, 'warn', errorMsg));
+      !isEmptyStr(errorMsg) && coloredEcho(ppbID, errorMsg);
     } else if (plugin.location === 'local') {
       /* local plugin that does not exist */
       coloredEcho(ppbID, core.decorateLog(plugin.name, 'error', `${lang.couldNotGet} ${plugin.path}`));
     } else {
       /* plugins to download */
       if (!fso.FolderExists(`${ppmrepo}\\${plugin.name}`)) {
-        [error, errorMsg] = checkPermissions(plugin, false);
+        [error, errorMsg, dep] = checkPermissions(plugin, false);
 
         if (error) {
+          coloredEcho(ppbID, core.decorateLog(plugin.name, 'error', plugin.name));
           coloredEcho(ppbID, errorMsg);
           continue;
         }
@@ -105,13 +108,14 @@ const main = (): void => {
         const [exitcode] = clonePlugin(plugin);
 
         if (exitcode !== 0) {
-          coloredEcho(ppbID, core.decorateLog(plugin.name, 'error', lang.failedClone));
+          coloredEcho(ppbID, core.decorateLog(plugin.name, 'error', plugin.name));
+          coloredEcho(ppbID, lang.failedClone);
           continue;
         }
       }
 
       hasUpdate = true;
-      coloredEcho(ppbID, core.decorateLog(plugin.name, 'install'));
+      coloredEcho(ppbID, core.decorateLog(plugin.name, 'install', dep));
     }
 
     setSource(core.sourceDetails(plugin));
@@ -153,6 +157,8 @@ const main = (): void => {
 
   ppm.execute(ppbID, `%%OWsq ${echoExe} -ne "" %%&*closeppx ${ppbID}`);
 };
+
+const notify = (hasMsg: boolean): LogLevel => (hasMsg ? 'warn' : 'load');
 
 const getPaths = (() => {
   const tempFile = tmp().file;
@@ -224,17 +230,13 @@ const cursorBack = (n: number = 1): void => {
 };
 
 const permissionText = tmp().stdout;
-const checkPermissions = (plugin: Source, local: boolean): Error_String => {
-  let data = `${plugin.path}\\install`;
+const checkPermissions = (plugin: Source, local: boolean): [boolean, string, string?] => {
+  const url = `${uri.rawGithub}/${plugin.autor}/${plugin.name}/master/install`;
+  PPx.Execute(`*httpget "${url}","${permissionText}"`);
+  const data = permissionText;
+  // cursorBack(3);
 
-  if (!local) {
-    const url = `${uri.rawGithub}/${plugin.autor}/${plugin.name}/master/install`;
-    PPx.Execute(`*httpget "${url}","${permissionText}"`);
-    data = permissionText
-    // cursorBack(3);
-  }
-
-  return parseInstall(plugin.name, data);
+  return parseInstall(plugin.name, data, local);
 };
 
 const clonePlugin = (plugin: Source): Level_String => {
