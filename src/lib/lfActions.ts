@@ -31,9 +31,7 @@ const main = (): void => {
   }
 
   const metadata: Record<string, string> = JSON.parse(userData);
-  const cmdline =
-    PPx.Extract(`%*getcust(S_ppm#actions:${metadata.ppm}_${args.act})`) ||
-    PPx.Extract(`%*getcust(S_ppm#actions:all_${args.act})`);
+  const cmdline = shapeCmdline(metadata.ppm, args.act);
   // const cmdline = action.replace(/\r\n/g, '%bn');
 
   if (isEmptyStr(cmdline)) {
@@ -112,6 +110,14 @@ const adjustArgs = (args = PPx.Arguments): {act: string; spc: BlankHandle; dup: 
   return {act: arr[0], spc: arr[1] as BlankHandle, dup: arr[2] !== '0'};
 };
 
+const shapeCmdline = (plugin: string, command: string): string => {
+  const value =
+    PPx.Extract(`%*getcust(S_ppm#actions:${plugin}_${command})`) ||
+    PPx.Extract(`%*getcust(S_ppm#actions:all_${command})`);
+
+  return value.replace(/\//g, '\\/');
+};
+
 const blankHandleSpec = (spec: BlankHandle): ((path: string) => string) => {
   return {
     enclose(path: string): string {
@@ -140,7 +146,7 @@ const replaceCmdline = ({cmdline, base, dirtype, search, isDup, entry}: CmdParam
   const hl = entry.hl ? String(entry.hl) : '';
   const sname = entry.sname ?? '';
   const data = `base:${base}${DELIM}dirtype:${dirtype}${DELIM}search:${search}${DELIM}dup:${isDup}${DELIM}path:${entry.path}${DELIM}att:${att}${DELIM}hl:${hl}${DELIM}option:${sname}`;
-  const rgx = `base:(?<base>.*)${DELIM}dirtype:(?<type>.*)${DELIM}search(?<search>.*)${DELIM}dup:(?<dup>.+)${DELIM}path:(?<path>.+)${DELIM}att:(?<att>.*)${DELIM}hl:(?<hl>.*)${DELIM}option:(?<option>.*)`;
+  const rgx = `base:(?<base>.*)${DELIM}dirtype:(?<type>.*)${DELIM}search:(?<search>.*)${DELIM}dup:(?<dup>.+)${DELIM}path:(?<path>.+)${DELIM}att:(?<att>.*)${DELIM}hl:(?<hl>.*)${DELIM}option:(?<option>.*)`;
 
   if (debug.jestRun()) {
     // @ts-ignore
