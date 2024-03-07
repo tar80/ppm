@@ -1,5 +1,5 @@
 /* @file Set ListFile metadata
- * @arg 0 {string} - Specify ViewStyle
+ * @arg 0 {string} - Specify the ViewStyle
  * @arg 1 {string} - Specify the file encoding. "sjis" | "utf8" | "utf16le"(default)
  * @return - "cmd" parameter in metadata
  */
@@ -11,10 +11,10 @@ import {getLfMeta} from '@ppmdev/parsers/listfile.ts';
 import {valueEscape as jsonValue} from '@ppmdev/parsers/json.ts';
 import {isEmptyStr, isError} from '@ppmdev/modules/guard.ts';
 import {readLines} from '@ppmdev/modules/io.ts';
-import {pathSelf} from '@ppmdev/modules/path.ts';
 import {uniqID} from '@ppmdev/modules/data.ts';
+import debug from '@ppmdev/modules/debug.ts';
 
-const userID = `${uniqID.lfDset}${PPx.Extract('%n')}`
+const userID = `${uniqID.lfDset}${PPx.Extract('%n')}`;
 
 const main = (): string => {
   const path = PPx.Extract('%FDV');
@@ -28,17 +28,15 @@ const main = (): string => {
   const [error, data] = readLines({path, enc: args.enc});
 
   if (isError(error, data)) {
-    const {scriptName} = pathSelf();
-    PPx.report(`[ppm/${scriptName}] ${data}`);
-    PPx.Quit(-1);
+    return noExecution(args.style, data);
   }
 
   const meta = getLfMeta(data.lines);
 
   if (Object.isEmpty(meta)) {
-    return isEmptyStr(args.style) ? '' : `*viewstyle -temp "${args.style}"`;
+    return noExecution(args.style, 'no metadata');
   } else {
-    const hasMapkey = !!meta.mapkey && !isEmptyStr(meta.mapkey)
+    const hasMapkey = !!meta.mapkey && !isEmptyStr(meta.mapkey);
     const mapkey = {
       true: {use: `%:*mapkey use,${meta.mapkey}`, delete: `%%:*mapkey delete,${meta.mapkey}`},
       false: {use: '', delete: ''}
@@ -70,6 +68,12 @@ const adjustArgs = (args = PPx.Arguments): {style: string; enc: FileEncode} => {
   }
 
   return {style: arr[0], enc: arr[1] as FileEncode};
+};
+
+const noExecution = (style: string, message: string): string => {
+  debug.log(message);
+
+  return isEmptyStr(style) ? '' : `*viewstyle -temp "${style}"`;
 };
 
 const altExecution = (dset: string): string => {

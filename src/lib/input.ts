@@ -33,7 +33,8 @@ import debug from '@ppmdev/modules/debug.ts';
 import {ppm} from '@ppmdev/modules/ppm.ts';
 
 const main = (): void => {
-  const args = PPx.Arguments.length > 0 && PPx.Arguments.Item(0).replace(/'/g, '"');
+  const args =
+    PPx.Arguments.length > 0 && PPx.Arguments.Item(0).replace(/['\\]/g, (c) => ({"'": '"', '\\': '\\\\'})[c] as string);
   const options: Partial<Options> = args ? parseArgs(args) : {};
   const optsInput = inputOptions(options);
   const optsPostCmd = postOptions(options);
@@ -144,7 +145,7 @@ const postOptions = (arg: Partial<Options>): string => {
   const result: string[] = [arr.join(' ')];
 
   if (arg.autoselect) {
-    const keyTbl = ppm.setkey('ENTER', `*if -1==%%*sendmessage(%%N-L,392,0,0)%%:%%K"@DOWN"%bn%bt%%K"@ENTER"`, true)
+    const keyTbl = ppm.setkey('ENTER', `*if -1==%%*sendmessage(%%N-L,392,0,0)%%:%%K"@DOWN"%bn%bt%%K"@ENTER"`, true);
     result.push(`*mapkey use,${keyTbl}`);
   }
 

@@ -1,6 +1,6 @@
 {
   "name": "@ppmdev/ppx-plugin-manager",
-  "version": "0.94.6",
+  "version": "0.94.7",
   "description": "Paper Plane xUI plugin manager",
   "author": "tar80",
   "license": "MIT",
