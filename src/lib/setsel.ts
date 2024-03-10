@@ -18,11 +18,12 @@ const main = (): void => {
 
   const text = PPx.Extract('%*edittext()');
   const param: Param | void = args.multi ? selectMulti(text, args.rgx) : selectSingle(text, args.rgx);
-  const NOTIFICATION = `[Failed] Could not get selection.`;
+  param && param.w !== param.l && PPx.Execute(`*sendmessage %N,177,${param.w},${param.l}`);
 
-  !param || param.w === param.l
-    ? PPx.linemessage(NOTIFICATION)
-    : PPx.Execute(`*sendmessage %N,177,${param.w},${param.l}`);
+  // const NOTIFICATION = `[Failed] Could not get selection.`;
+  // !param || param.w === param.l
+  //   ? PPx.linemessage(NOTIFICATION)
+  //   : PPx.Execute(`*sendmessage %N,177,${param.w},${param.l}`);
 };
 
 const adjustArgs = (args = PPx.Arguments): {rgx: string; multi: boolean} => {
