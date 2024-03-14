@@ -61,7 +61,7 @@ const main = (): void => {
     const entry: EntryDetails = {
       att: e.Attributes,
       hl: e.Highlight,
-      path: `${base}\\${e.Comment}`,
+      path: ~e.Comment.indexOf(':') ? e.Comment : `${base}\\${e.Comment}`,
       sname: e.ShortName
     };
 
