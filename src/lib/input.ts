@@ -34,7 +34,8 @@ import {ppm} from '@ppmdev/modules/ppm.ts';
 
 const main = (): void => {
   const args =
-    PPx.Arguments.length > 0 && PPx.Arguments.Item(0).replace(/['\\]/g, (c) => ({"'": '"', '\\': '\\\\'})[c] as string);
+    PPx.Arguments.length > 0 &&
+    PPx.Arguments.Item(0).replace(/['\\]/g, (c) => ({"'": '"', '\\': '\\\\'})[c] as string);
   const options: Partial<Options> = args ? parseArgs(args) : {};
   const optsInput = inputOptions(options);
   const optsPostCmd = postOptions(options);
@@ -52,28 +53,25 @@ const main = (): void => {
  */
 const parseArgs = (args: string): Partial<Options> => {
   const elements = args.slice(1, -1).split(',');
-  const rgx = /^"(text|title)":\s*"(.*)"$/;
-  let [text, title]: string[] = [];
+  const rgx = /^("[a-z]+"):\s*(.+)$/;
+  const DELIM = '@#delim#@';
 
-  for (let i = 0, j = 0, k = elements.length; i < k; i++) {
-    if (elements[i] == null || j === 2) {
+  for (let i = 0, k = elements.length, key, value; i < k; i++) {
+    if (elements[i] == null) {
       break;
     }
 
-    if (~elements[i].indexOf('"text":')) {
-      text = elements[i].replace(rgx, '$2').replace(/"/g, '""');
-      elements.splice(i, 1);
-      i--;
-      j++;
-    } else if (~elements[i].indexOf('"title"')) {
-      title = elements[i].replace(rgx, '$2').replace(/"/, '""');
-      elements.splice(i, 1);
-      i--;
-      j++;
+    [key, value] = elements[i].replace(rgx, `$1${DELIM}$2`).split(DELIM);
+
+    if (value.indexOf('"') === 0) {
+      value = value.slice(1, -1).replace(/"/g, '""');
+      value = `"${value}"`;
     }
+
+    elements[i] = `${key}:${value}`;
   }
 
-  return {text, title, ...JSON.parse(`{${elements.join(',')}}`)};
+  return JSON.parse(`{${elements.join(',')}}`);
 };
 
 type Options = typeof def;
