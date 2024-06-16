@@ -1,9 +1,11 @@
+import type {Error_Data} from '@ppmdev/modules/types.ts';
 import '@ppmdev/polyfills/stringTrim.ts';
 import '@ppmdev/polyfills/stringPrecedes.ts';
 import '@ppmdev/polyfills/arrayIndexOf.ts';
+import type {ScriptEngine} from '@ppmdev/modules/types.ts';
 import {type PermissionItems, permission} from '@ppmdev/modules/permission.ts';
 import {readLines} from '@ppmdev/modules/io.ts';
-import {isEmptyStr, isError} from '@ppmdev/modules/guard.ts';
+import {isBottom, isEmptyStr} from '@ppmdev/modules/guard.ts';
 import {info, uniqName} from '@ppmdev/modules/data.ts';
 import {ppm} from '@ppmdev/modules/ppm.ts';
 import {langParser} from './language.ts';
@@ -25,7 +27,7 @@ export const parsePluginlist = (path?: string): typeof plugins => {
   const pluginlist = path ?? `${ppm.global('ppmcache')}\\list\\${uniqName.pluginList}`;
   const [error, data] = readLines({path: pluginlist});
 
-  if (isError(error, data)) {
+  if (error) {
     throw new Error(data);
   }
 
@@ -40,20 +42,18 @@ export const parsePluginlist = (path?: string): typeof plugins => {
     }
 
     if (line.indexOf('local') === 0 || line.indexOf('remote') === 0) {
-      line
-        .precedes(' ;')
-        .replace(rgx, function (_: string, location: 'local' | 'remote', path: string, info: string): string {
-          const [autor, name] = path.replace(/^(.+)[\/\\](.+)/, '$1;$2').split(';');
-          const repoInfo: object = Function(`return ${info}`)();
+      line.precedes(' ;').replace(rgx, function (_: string, location: 'local' | 'remote', path: string, info: string): string {
+        const [autor, name] = path.replace(/^(.+)[\/\\](.+)/, '$1;$2').split(';');
+        const repoInfo: object = Function(`return ${info}`)();
 
-          if (location === 'remote') {
-            path = `${ppmrepo}\\${name}`;
-          }
+        if (location === 'remote') {
+          path = `${ppmrepo}\\${name}`;
+        }
 
-          plugins.push({name, autor, enable, setup, version, location, path, ...repoInfo});
+        plugins.push({name, autor, enable, setup, version, location, path, ...repoInfo});
 
-          return '';
-        });
+        return '';
+      });
     }
   }
 
@@ -78,6 +78,7 @@ const permissions = {
   PPX_VERSION: 'ppxVersion',
   SCRIPT_VERSION: 'scriptVersion',
   CV8_VERSION: 'scriptVersion',
+  QJS_VERSION: 'scriptVersion',
   EXECUTABLES: 'useExecutables',
   MODULES: 'useModules',
   DEPENDENCIES: 'dependencies',
@@ -90,9 +91,9 @@ const permissions = {
 export const parseInstall = (name: string, path: string, local: boolean): [boolean, string, string?] => {
   const messages: string[] = [];
   let [key, value]: string[] = [];
-  let [error, data] = readLines({path});
+  const [error, data] = readLines({path});
 
-  if (isError(error, data)) {
+  if (error) {
     return [true, `${lang.failedToGet} ${name}`];
   }
 
@@ -101,9 +102,13 @@ export const parseInstall = (name: string, path: string, local: boolean): [boole
   }
 
   const lines = data.lines;
-  const ignoreItem = PPx.ScriptEngineName === 'JScript' ? 'CV8_VERSION' : 'SCRIPT_VERSION';
+  const ignoreItem = {
+    JScript: ['CV8_VERSION', 'QJS_VERSION'],
+    ClearScriptV8: ['SCRIPT_VERSION', 'QJS_VERSION'],
+    QuickJS: ['SCRIPT_VERSION', 'CV8_VERSION']
+  }[PPx.ScriptEngineName as ScriptEngine];
 
-  if (typeof lines[0] == null || !~lines[0].indexOf(name)) {
+  if (isBottom(lines[0]) || !~lines[0].indexOf(name)) {
     return [true, `${name} ${lang.isNotPlugin}`];
   }
 
@@ -116,13 +121,13 @@ export const parseInstall = (name: string, path: string, local: boolean): [boole
 
     //NOTE: PPMCV8_VERSION is deprecated. User CV8_VERSION instead.
     //PPMCV8_VERSION will be removed. When all plugins are updated.
-    if (isEmptyStr(lines[i]) || key.indexOf('#') === 0 || ~key.indexOf('PPMCV8_VERSION') || ~key.indexOf(ignoreItem)) {
+    if (isEmptyStr(lines[i]) || key.indexOf('#') === 0 || ~key.indexOf('PPMCV8_VERSION') || ~ignoreItem.indexOf(key)) {
       continue;
     }
 
     key = permissions[key as installPermissionKeys];
 
-    if (value != null) {
+    if (!isBottom(value)) {
       if (key === 'copyFlag' || key === 'copyScript') {
         parsedItem[key] = value.toLowerCase() === 'true';
         continue;
@@ -134,22 +139,23 @@ export const parseInstall = (name: string, path: string, local: boolean): [boole
         continue;
       }
 
+      let error2, dataStr;
       if (key === 'pluginVersion') {
         parsedItem[key] = value;
-        [error, data] = permission['pluginVersion'](value as never, name);
+        [error2, dataStr] = permission['pluginVersion'](value as never, name);
       } else if (key === 'dependencies') {
-        [error, data] = [false, ''];
+        [error2, dataStr] = [false, ''];
 
         if (!isEmptyStr(value)) {
           dep = value;
         }
       } else {
-        [error, data] = permission[key as ItemNames](value as never);
+        [error2, dataStr] = permission[key as ItemNames](value as never);
       }
 
-      if (error) {
+      if (error2) {
         drop = true;
-        !(local && key === 'pluginVersion') && messages.push(data);
+        !(local && key === 'pluginVersion') && messages.push(dataStr);
       }
     }
   }
@@ -247,12 +253,7 @@ const replacer = (line: string, replacers: UserReplace): string => {
   return line;
 };
 
-export const sectionItems = (
-  i: number,
-  k: number,
-  lines: string[],
-  parsed: ParsedPatch
-): [string | false, typeof i, ParsedPatch] => {
+export const sectionItems = (i: number, k: number, lines: string[], parsed: ParsedPatch): [string | false, typeof i, ParsedPatch] => {
   const userReplace: UserReplace = [];
   const [section, unset]: string[][] = [[], []];
   let [key, sep, value, line]: string[] = [];
@@ -454,7 +455,7 @@ const patch = (type: PatchSource, lines: string[]): ParsedPatch => {
 export const convertLine = (line: string, repl: SpecValue): string => {
   const matchKeys = line.match(/\[\?[^:]+/g);
 
-  if (matchKeys == null) {
+  if (isBottom(matchKeys)) {
     return line;
   }
 
@@ -465,7 +466,7 @@ export const convertLine = (line: string, repl: SpecValue): string => {
   for (let i = 0, k = matchKeys.length; i < k; i++) {
     key = matchKeys[i].substring(2);
     value = repl[key] ? repl[key].value : '';
-    value = isEmptyStr(value) || value == null ? '$1' : value;
+    value = isEmptyStr(value) || isBottom(value) ? '$1' : value;
     rgxRepl = RegExp(`\\[\\?${key}:([^\\]]*)]`, 'g');
     line_ = line_.replace(rgxRepl, value);
   }
@@ -644,13 +645,13 @@ const merge = (base: string[], patch: ParsedPatch): MergeLines => {
  * @param name Plugin name
  * @return Linecust cmdlines for unregistration
  */
-export const parseLinecust = (name: string): [boolean, string | string[]] => {
+export const parseLinecust = (name: string): Error_Data => {
   const path = `${ppm.global('ppmcache')}\\ppm\\unset\\linecust.cfg`;
   const [error, data] = readLines({path: path});
   const rgx = /^[^=]+=(.+)$/;
   const register: string[] = [];
 
-  if (isError(error, data)) {
+  if (error) {
     return [true, data];
   }
 

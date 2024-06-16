@@ -14,14 +14,14 @@ import {expandSource, setSource, owSource, sourceComp, sourceComplistPath} from 
 import {colorlize} from '@ppmdev/modules/ansi.ts';
 import {type PermissionItems, permission, useSelfLibDir} from '@ppmdev/modules/permission.ts';
 import {coloredEcho} from '@ppmdev/modules/echo.ts';
-import {getDisplaySize} from '@ppmdev/modules/window.ts';
+// import {getDisplaySize} from '@ppmdev/modules/window.ts';
 import {createBackup} from '@ppmdev/modules/ppcust.ts';
-import {isError} from '@ppmdev/modules/guard.ts';
 import {conf} from './mod/configuration.ts';
 import {langPPmInstall} from './mod/language.ts';
 import {parsePluginlist, parseInstall, parsedItem} from './mod/parser.ts';
 import {installer as core, pluginInstall} from './mod/core.ts';
 import {semver} from '@ppmdev/modules/util.ts';
+import {safeArgs} from '@ppmdev/modules/argument.ts';
 
 const ppbID = `B${info.ppmID}`;
 const subDirectories = ['backup', 'config', 'userscript', 'list', 'complist', 'ppm\\setup', 'ppm\\unset'] as const;
@@ -57,7 +57,7 @@ const main = (): void => {
     jobend();
     PPx.Quit(exitcode);
   };
-  const {installMode, dryRun} = adjustArgs();
+  const [installMode, dryRun] = safeArgs(ppm.global('dev'), false);
 
   if (installMode !== '2') {
     const title = `${ppmName} ver${ppmVersion}`;
@@ -77,7 +77,7 @@ const main = (): void => {
     }
 
     // dryrun finish
-    if (dryRun !== '0') {
+    if (!!dryRun) {
       logs.push(`\\n${lang.success}`);
       coloredEcho(ppbID, logs.join('\\n'));
       abort(1);
@@ -200,16 +200,6 @@ const main = (): void => {
   jobend();
 };
 
-const adjustArgs = (args = PPx.Arguments): {installMode: string; dryRun: string} => {
-  const arr: string[] = [ppm.global('dev'), '0'];
-
-  for (let i = 0, k = args.length; i < k; i++) {
-    arr[i] = args.Item(i);
-  }
-
-  return {installMode: arr[0], dryRun: arr[1]};
-};
-
 //TODO: v1.0.0 removes everything except disp_xxx
 type Global = {
   'home': string;
@@ -222,7 +212,7 @@ type Global = {
   'disp_height': number;
 };
 const getGlobalVariables = (): Global => {
-  const [disp_width, disp_height] = getDisplaySize(`${parentDir}\\lib`);
+  // const [disp_width, disp_height] = getDisplaySize(`${parentDir}\\lib`);
 
   //TODO: @deprecated  will remove it v1.0.0
   const scripttype = ppm.getcust('_others:usejs9')[1] === '4' ? 'ecma' : 'jscript';
@@ -242,8 +232,8 @@ const getGlobalVariables = (): Global => {
     lib,
     //TODO: @deprecated  will remove it v1.0.0
     module,
-    disp_width,
-    disp_height
+    disp_width: NaN,
+    disp_height: NaN
   } as const;
 };
 
@@ -293,7 +283,7 @@ const checkPermissions = (): [boolean, string[]] => {
     useExecutables: mandatory.executables
   };
   const result: string[] = [];
-  let [error, msg] = [false, ''];
+  let disallow = false;
 
   type ItemNames = keyof Required<PermissionItems>;
 
@@ -301,11 +291,12 @@ const checkPermissions = (): [boolean, string[]] => {
   useSelfLibDir(`${parentDir}\\lib`);
 
   for (const item of Object.keys(checkItems)) {
-    [error, msg] = permission[item as ItemNames](checkItems[item as ItemNames] as never);
+    const [error, msg] = permission[item as ItemNames](checkItems[item as ItemNames] as never);
     result.push(msg);
+    disallow = disallow || error;
   }
 
-  return [error, result];
+  return [disallow, result];
 };
 
 /**
@@ -327,9 +318,9 @@ const loadPlugins = (): void => {
     let plugin = pluginList[i];
 
     if (plugin.path && fso.FolderExists(plugin.path)) {
-      [error, errorMsg] = parseInstall(plugin.name, `${plugin.path}\\install`);
+      [error, errorMsg] = parseInstall(plugin.name, `${plugin.path}\\install`, false);
 
-      if (isError(error, errorMsg)) {
+      if (error) {
         coloredEcho(ppbID, pluginInstall.decorateLog(plugin.name, 'error', errorMsg));
         continue;
       }

@@ -7,33 +7,22 @@
  */
 
 import {pathSelf} from '@ppmdev/modules/path.ts';
-import {isCV8} from '@ppmdev/modules/util.ts';
+import {validArgs} from '@ppmdev/modules/argument.ts';
 import debug from '@ppmdev/modules/debug.ts';
 
 const {scriptName, parentDir} = pathSelf();
 
-const main = (): void => {
-  if (PPx.Arguments.length === 0) {
-    errors('arg');
+const main = (): string => {
+  const args = validArgs();
+
+  if (args.length === 0) {
+    PPx.Execute(`*script "${parentDir}\\errors.js",arg,${scriptName}`);
     PPx.Quit(-1);
   }
 
-  const args = adjustArgs();
-  const ext = isCV8() ? 'js' : 'vbs';
-  const libs = PPx.Extract(`%*script("${parentDir}\\getEntries.${ext}",%0,file,.dll)`);
+  const libs = PPx.Extract(`%*script("${parentDir}\\getEntries.js",%0,file,.dll)`);
 
-  PPx.result = getLibs(libs, args);
-};
-
-const errors = (method: string): number => PPx.Execute(`*script "${parentDir}\\errors.js",${method},${scriptName}`);
-const adjustArgs = (args = PPx.Arguments): string[] => {
-  const arr: string[] = [];
-
-  for (let i = 0, k = args.length; i < k; i++) {
-    arr[i] = args.Item(i);
-  }
-
-  return arr;
+  return getLibs(libs, args);
 };
 
 const getLibs = (libs: string, args: string[]): string => {
@@ -51,5 +40,5 @@ const getLibs = (libs: string, args: string[]): string => {
   return `{${result.join(',')}}`;
 };
 
-if (!debug.jestRun()) main();
+if (!debug.jestRun()) PPx.result = main();
 // export {getLibs}

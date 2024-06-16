@@ -8,24 +8,23 @@ import {info, tmp, uniqName, useLanguage} from '@ppmdev/modules/data.ts';
 import {pathSelf} from '@ppmdev/modules/path.ts';
 import {ppm} from '@ppmdev/modules/ppm.ts';
 import {langLogViewer} from './mod/language.ts';
-
-type LogType = 'update' | 'customize';
+import {safeArgs} from '@ppmdev/modules/argument.ts';
 
 const {scriptName, parentDir} = pathSelf();
 const lang = langLogViewer[useLanguage()];
 
 const main = (): void => {
-  const args = adjustArgs();
+  const [logType, tabWidth] = safeArgs('customize', 32);
 
-  if (!args) {
+  if (!isLogType(logType)) {
     PPx.Execute(`*script "${parentDir}\\errors.js",arg,${scriptName}`);
     PPx.Quit(-1);
   }
 
   const log = {
     update: {path: `${ppm.global('ppmcache')}\\ppm\\${uniqName.updateLog}`, opts: ''},
-    customize: {path: tmp().file, opts: `-tab:${args[1]}`}
-  }[args[0]];
+    customize: {path: tmp().file, opts: `-tab:${tabWidth}`}
+  }[logType];
 
   if (!fso.FileExists(log.path)) {
     ppm.linemessage('.', lang.notExist, true);
@@ -49,18 +48,8 @@ const main = (): void => {
   resetCaret();
 };
 
-const adjustArgs = (args = PPx.Arguments): [LogType, number] | void => {
-  const arr: [string, number] = ['', 32];
-  const isLogType = (arg: string): arg is LogType => /update|customize/.test(arg);
-
-  for (let i = 0, k = args.length; i < k; i++) {
-    arr[i] = args.Item(i);
-  }
-
-  if (isLogType(arr[0])) {
-    return [arr[0], arr[1]];
-  }
-};
+type LogType = 'update' | 'customize';
+const isLogType = (arg: string): arg is LogType => /update|customize/.test(arg);
 
 const setCaret = (): Function => {
   const FIELD_ID = 'XV_tmod';

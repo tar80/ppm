@@ -4,30 +4,21 @@
  * @return - The value of the specified field
  */
 
+import {safeArgs} from '@ppmdev/modules/argument.ts';
 import {expandSource} from '@ppmdev/modules/source.ts';
 
 const main = (): string | number | boolean => {
-  const plugin = adjustArgs();
-  const source = expandSource(plugin.name);
+  const [name, field] = safeArgs('', 'path');
+  const source = expandSource(name);
 
   if (!!source) {
     type Key = keyof typeof source;
-    const value = source[plugin.field as Key];
+    const value = source[field as Key];
 
     return value ?? '';
   } else {
     return '[error]';
   }
-};
-
-const adjustArgs = (args = PPx.Arguments): {name: string; field: string} => {
-  const arr: string[] = ['', 'path'];
-
-  for (let i = 0, k = args.length; i < k; i++) {
-    arr[i] = args.Item(i);
-  }
-
-  return {name: arr[0], field: arr[1]};
 };
 
 PPx.result = main();

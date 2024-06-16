@@ -8,7 +8,6 @@ import {useLanguage} from '@ppmdev/modules/data.ts';
 import {pathSelf} from '@ppmdev/modules/path.ts';
 import {ppm} from '@ppmdev/modules/ppm.ts';
 import {readLines, writeLines} from '@ppmdev/modules/io.ts';
-import {isError} from '@ppmdev/modules/guard.ts';
 import {langRestoreRegister} from './mod/language.ts';
 
 const RANGE_START = ';[ppm]';
@@ -18,7 +17,7 @@ const lang = langRestoreRegister[useLanguage()];
 
 type RegisterMethod = 'set' | 'unset' | 'reset';
 const main = (): void => {
-  const proc = PPx.Arguments.length !== 0 ? PPx.Arguments.Item(0) : '';
+  const proc = PPx.Arguments.length !== 0 ? PPx.Argument(0) : '';
   const rgx = /^(un|re)?set$/;
 
   if (!rgx.test(proc)) {
@@ -26,17 +25,17 @@ const main = (): void => {
   }
 
   const path = PPx.Extract('%0%\\PPXDEF.CFG');
-  let [error, errorMsg] = readLines({path});
+  const [error, errorMsg] = readLines({path});
 
-  if (isError(error, errorMsg)) {
+  if (error) {
     ppm.echo(scriptName, errorMsg);
     PPx.Quit(-1);
   }
 
   const {lines, nl} = errorMsg;
 
-  [error, errorMsg] = register[proc as RegisterMethod](path, lines, nl);
-  const msg = error ? errorMsg : proc !== 'unset' ? lang.reg : lang.unreg;
+  const [error2, errorMsg2] = register[proc as RegisterMethod](path, lines, nl);
+  const msg = error2 ? errorMsg2 : proc !== 'unset' ? lang.reg : lang.unreg;
   ppm.linemessage('.', msg, true);
 };
 

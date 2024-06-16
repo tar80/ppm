@@ -1,6 +1,6 @@
-import PPx from '@ppmdev/modules/ppx';
+import PPx from '@ppmdev/modules/ppx.ts';
 global.PPx = Object.create(PPx)
-import {getExists} from '../exeExists'
+import {getExists} from '../exeExists.ts'
 
 describe('getExists()', function () {
   it('not exist executable', () => {

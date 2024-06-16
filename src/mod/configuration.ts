@@ -1,7 +1,7 @@
 ﻿import '@ppmdev/polyfills/objectKeys.ts';
 import '@ppmdev/polyfills/json.ts';
 import type {Error_String} from '@ppmdev/modules/types.ts';
-import {isError, isEmptyObj} from '@ppmdev/modules/guard.ts';
+import {isEmptyObj, isError} from '@ppmdev/modules/guard.ts';
 import {colorlize} from '@ppmdev/modules/ansi.ts';
 import {copyFile} from '@ppmdev/modules/filesystem.ts';
 import {ppm} from '@ppmdev/modules/ppm.ts';
@@ -19,7 +19,7 @@ const checkRegisteredLinecusts = (pluginName: string, linecusts: MergeLines['lin
   const [error, data] = readLines({path: linecustCfg});
   const rgx = /^[^=]+=([^,]+),.+,$/;
 
-  if (isError(error, data)) {
+  if (error) {
     ~data.indexOf('not found') && PPx.Execute(`*makefile ${linecustCfg}`);
   } else {
     for (const line of data.lines) {
@@ -71,20 +71,20 @@ export const conf = {
       base: `${pluginDir}\\setting\\base.cfg`
     };
 
-    let [error, data] = readLines({path: cfg.patch});
+    const [error, data] = readLines({path: cfg.patch});
 
-    if (isError(error, data)) {
+    if (error) {
       throw new Error(data);
     }
 
     const patchLines = parseConfig.patch(source, data.lines);
-    [error, data] = readLines({path: cfg.base});
+    const [error2, data2] = readLines({path: cfg.base});
 
-    if (isError(error, data)) {
-      throw new Error(data);
+    if (error2) {
+      throw new Error(data2);
     }
 
-    return parseConfig.merge(data.lines, patchLines);
+    return parseConfig.merge(data2.lines, patchLines);
   },
 
   /** Restore linecusts from patch */
@@ -124,9 +124,9 @@ export const conf = {
     }
 
     if (data.length > 0) {
-      [error, errMsg] = writeLines({path: linecustCfg, data, append: true});
+      const [error, errMsg] = writeLines({path: linecustCfg, data, append: true});
 
-      if (isError(error, errMsg)) {
+      if (error) {
         throw new Error(errMsg);
       }
     }

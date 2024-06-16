@@ -13,15 +13,16 @@ import {pathSelf} from '@ppmdev/modules/path.ts';
 import {ppm} from '@ppmdev/modules/ppm.ts';
 import {isEmptyStr} from '@ppmdev/modules/guard.ts';
 import {langCommand} from './mod/language.ts';
+import {validArgs} from '@ppmdev/modules/argument.ts';
 
 const {scriptName} = pathSelf();
 const lang = langCommand[useLanguage()];
 
-const main = (): void => {
-  const plugin = adjustArgs();
+const main = (): number => {
+  const [cmd, ...opts] = validArgs();
   let errorlevel = 0;
 
-  switch (plugin.cmd) {
+  switch (cmd) {
     case 'help':
       {
         const [exitcode, name] = pluginSpec('', '*ppmHelp');
@@ -128,16 +129,14 @@ const main = (): void => {
         });
 
         exitcode === 0 &&
-          PPx.Execute(
-            `*cd %0%:*ppb -k %%OWq *ppcust CS ${path}%%:*closeppx C*%%:*wait 100,2%%:*ppc%%:*wait 500,2%%:*closeppx %%n`
-          );
+          PPx.Execute(`*cd %0%:*ppb -k %%OWq *ppcust CS ${path}%%:*closeppx C*%%:*wait 100,2%%:*ppc%%:*wait 500,2%%:*closeppx %%n`);
       }
       break;
 
     case 'open':
       {
         let path: string;
-        [errorlevel, path] = pathSpec(plugin.opts[0], lang.open);
+        [errorlevel, path] = pathSpec(opts[0], lang.open);
         if (errorlevel === 0) {
           if (fso.FileExists(path)) {
             ppm.execute('C', `%*getcust(S_ppm#user:editor) ${path}`);
@@ -155,8 +154,8 @@ const main = (): void => {
         let path: string;
 
         for (let i = 0, k = 2; i < k; i++) {
-          if (!fso.FileExists(plugin.opts[i])) {
-            [errorlevel, path] = pathSpec(plugin.opts[i], lang.opendiff);
+          if (!fso.FileExists(opts[i])) {
+            [errorlevel, path] = pathSpec(opts[i], lang.opendiff);
 
             switch (errorlevel) {
               case 0:
@@ -170,31 +169,18 @@ const main = (): void => {
                 PPx.Quit(-1);
             }
           } else {
-            paths.push(plugin.opts[i]);
+            paths.push(opts[i]);
           }
         }
 
-        errorlevel === 0
-          ? ppm.execute('C', `%*getcust(S_ppm#user:compare) ${paths.join(' ')}`)
-          : ppm.echo(scriptName, lang.couldNotGet);
+        errorlevel === 0 ? ppm.execute('C', `%*getcust(S_ppm#user:compare) ${paths.join(' ')}`) : ppm.echo(scriptName, lang.couldNotGet);
       }
       break;
 
     default:
   }
 
-  PPx.result = errorlevel;
-};
-
-const adjustArgs = (args = PPx.Arguments): {cmd: string; opts: string[]} => {
-  const arr: string[] = ['', ''];
-
-  for (let i = 0, k = args.length; i < k; i++) {
-    arr[i] = args.Item(i);
-  }
-
-  const [, ...opts] = arr;
-  return {cmd: arr[0], opts};
+  return errorlevel;
 };
 
 const pathSpec = (pwd: string, cmd: string): Level_String => {
@@ -243,4 +229,4 @@ const doScript = (name: LangKeys, opts?: string, choice?: boolean) => {
   }
 };
 
-main();
+PPx.result = main();

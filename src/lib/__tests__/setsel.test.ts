@@ -1,6 +1,6 @@
-import PPx from '@ppmdev/modules/ppx';
+import PPx from '@ppmdev/modules/ppx.ts';
 global.PPx = Object.create(PPx);
-import {selectSingle, selectMulti} from '../setsel';
+import {selectSingle, selectMulti} from '../setsel.ts';
 
 describe('selectSingle()', function () {
   it('pass an empty string. the return value must be {w:0, l:0}', () => {

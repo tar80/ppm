@@ -1,4 +1,4 @@
-import PPx from '@ppmdev/modules/ppx';
+import PPx from '@ppmdev/modules/ppx.ts';
 global.PPx = Object.create(PPx);
 import {
   type ParsedPatch,
@@ -10,10 +10,10 @@ import {
   linecustItems,
   convertLine,
   mergeProp
-} from '../parser';
+} from '../parser.ts';
 import {useLanguage} from '@ppmdev/modules/data.ts';
 import {ppm} from '@ppmdev/modules/ppm.ts';
-import {langParser} from '../language';
+import {langParser} from '../language.ts';
 
 jest.mock('@ppmdev/modules/io');
 
@@ -26,23 +26,24 @@ describe('parseInstall()', function () {
 
   it('read not exist path', () => {
     const path = 'nox/exist/path';
-    expect(parseInstall(name, path)).toEqual([true, `${lang.failedToGet} ${name}`]);
+    expect(parseInstall(name, path, false)).toEqual([true, `${lang.failedToGet} ${name}`]);
   });
   it('read dummy_install and different plugin-name', () => {
     const path = `${process.cwd()}\\src\\mod\\__tests__\\dummy_install`;
-    expect(parseInstall(name, path)).toEqual([true, `${name} ${lang.isNotPlugin}`]);
+    expect(parseInstall(name, path, false)).toEqual([true, `${name} ${lang.isNotPlugin}`]);
   });
   it('read dummy_install', () => {
     const name = 'someplugin';
     const path = `${process.cwd()}\\src\\mod\\__tests__\\dummy_install`;
-    const data = parseInstall(name, path);
+    const data = parseInstall(name, path, false);
     //NOTE: The PPx variables returned by the script are not real values, but dummy values returned by ppx.ts
     expect(data).toEqual([
-      false,
-      `\x1b[31m DROP \x1b[49;39m ppx-plugin-manager version 9.00 or later\n` +
-        `\x1b[31m DROP \x1b[49;39m PPx version 999999 or later\n` +
-        `\x1b[31m DROP \x1b[49;39m Required executables: \x1b[33msomeexe.exe\x1b[49;39m\n` +
-        `\x1b[31m DROP \x1b[49;39m Required modules: \x1b[33mmod1\x1b[49;39m, \x1b[33mmod2\x1b[49;39m`
+      true,
+      `\x1b[31m DROP \x1b[49;39m ppx-plugin-manager version 9.00 or later\\n` +
+        `\x1b[31m DROP \x1b[49;39m PPx version 999999 or later\\n` +
+        `\x1b[31m DROP \x1b[49;39m Required executables: \x1b[33msomeexe.exe\x1b[49;39m\\n` +
+        `\x1b[31m DROP \x1b[49;39m Required modules: \x1b[33mmod1\x1b[49;39m, \x1b[33mmod2\x1b[49;39m`,
+      'somedepend'
     ]);
   });
 });
@@ -192,16 +193,7 @@ describe('sectionItems()', function () {
     expect(sectionItems(0, lines.length, lines, parsed)).toEqual([false, 3, receive]);
   });
   it('pattern deletion properties', () => {
-    lines = [
-      'section',
-      'M_remain = {',
-      'key =	value',
-      '}',
-      '-|X_ignore =',
-      '-|M_delete1=',
-      '-1.90|M_delete2=',
-      '-K_normal=value'
-    ];
+    lines = ['section', 'M_remain = {', 'key =	value', '}', '-|X_ignore =', '-|M_delete1=', '-1.90|M_delete2=', '-K_normal=value'];
     receive = {...parsed};
     receive.section = ['M_remain	= {', 'key	= value', '}', '-|X_ignore	= ', '-|M_delete1	= ', '-1.90|M_delete2	= '];
     receive.unset = ['M_remain	= {', '-|key	=', '}', '-|K_normal	='];

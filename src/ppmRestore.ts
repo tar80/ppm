@@ -12,16 +12,16 @@ import {langRestore} from './mod/language.ts';
 const {scriptName} = pathSelf();
 const lang = langRestore[useLanguage()];
 
-const data = ((args = PPx.Arguments): {ppmcache: string; ppmDir: string} | string => {
+const data = ((): {ppmcache: string; ppmDir: string} | string => {
   const arr: string[] = ['', ''];
-  const len = args.length;
+  const len = PPx.Arguments.length;
 
   if (len < 2) {
     return lang.notEnoughArgument;
   }
 
   for (let i = 0; i < len; i++) {
-    arr[i] = args.Item(i);
+    arr[i] = PPx.Argument(i);
 
     if (!fso.FolderExists(arr[i])) {
       return `${arr[i]} ${lang.notExist}`;

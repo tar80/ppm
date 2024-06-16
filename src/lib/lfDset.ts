@@ -9,10 +9,11 @@ import '@ppmdev/polyfills/objectIsEmpty.ts';
 import type {FileEncode} from '@ppmdev/modules/types.ts';
 import {getLfMeta} from '@ppmdev/parsers/listfile.ts';
 import {valueEscape as jsonValue} from '@ppmdev/parsers/json.ts';
-import {isEmptyStr, isError} from '@ppmdev/modules/guard.ts';
+import {isEmptyStr} from '@ppmdev/modules/guard.ts';
 import {readLines} from '@ppmdev/modules/io.ts';
 import {uniqID} from '@ppmdev/modules/data.ts';
 import debug from '@ppmdev/modules/debug.ts';
+import {validArgs} from '@ppmdev/modules/argument.ts';
 
 const userID = `${uniqID.lfDset}${PPx.Extract('%n')}`;
 
@@ -24,17 +25,18 @@ const main = (): string => {
     return altExecution(dset);
   }
 
-  const args = adjustArgs();
-  const [error, data] = readLines({path, enc: args.enc});
+  const args = validArgs();
+  const fileEncode = /sjis|utf8|utf16le/.test(args[1]) ? (args[1] as FileEncode) : 'utf16le';
+  const [error, data] = readLines({path, enc: fileEncode});
 
-  if (isError(error, data)) {
-    return noExecution(args.style, data);
+  if (error) {
+    return noExecution(args[0], data);
   }
 
   const meta = getLfMeta(data.lines);
 
   if (Object.isEmpty(meta)) {
-    return noExecution(args.style, 'no metadata');
+    return noExecution(args[0], 'no metadata');
   } else {
     const hasMapkey = !!meta.mapkey && !isEmptyStr(meta.mapkey);
     const mapkey = {
@@ -54,20 +56,6 @@ const main = (): string => {
 
     return meta.cmd;
   }
-};
-
-const adjustArgs = (args = PPx.Arguments): {style: string; enc: FileEncode} => {
-  const arr: string[] = ['', 'utf16le'];
-
-  for (let i = 0, k = args.length; i < k; i++) {
-    arr[i] = args.Item(i);
-  }
-
-  if (!/sjis|utf8|utf16le/.test(arr[1])) {
-    arr[1] = 'utf16le';
-  }
-
-  return {style: arr[0], enc: arr[1] as FileEncode};
 };
 
 const noExecution = (style: string, message: string): string => {

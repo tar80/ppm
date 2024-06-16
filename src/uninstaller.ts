@@ -15,7 +15,7 @@ const ppmVersion = ppm.global('version');
 const {scriptName} = pathSelf();
 const lang = langUninstaller[useLanguage()];
 const ppbID = `B${info.ppmID}`;
-const restart = PPx.Arguments.length !== 0 && PPx.Arguments.Item(0) === 'restart';
+const restart = PPx.Arguments.length !== 0 && PPx.Argument(0) === 'restart';
 
 if (!restart) {
   if (isEmptyStr(ppmVersion)) {

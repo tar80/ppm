@@ -3,7 +3,7 @@
 import {tmp, uniqName, useLanguage} from '@ppmdev/modules/data.ts';
 import {ppm} from '@ppmdev/modules/ppm.ts';
 import {readLines} from '@ppmdev/modules/io.ts';
-import {isEmptyStr, isError} from '@ppmdev/modules/guard.ts';
+import {isEmptyStr} from '@ppmdev/modules/guard.ts';
 import {expandSource} from '@ppmdev/modules/source.ts';
 import {langViewerAction} from './mod/language.ts';
 
@@ -28,7 +28,7 @@ const main = (): void => {
 
   const [error, data] = readLines({path});
 
-  if (isError(error, data)) {
+  if (error) {
     ppm.linemessage('.', lang.couldNotGet);
     PPx.Quit(-1);
   }

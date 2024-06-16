@@ -1,6 +1,6 @@
-import PPx from '@ppmdev/modules/ppx';
+import PPx from '@ppmdev/modules/ppx.ts';
 global.PPx = Object.create(PPx);
-import {parseArgs, inputOptions, postOptions} from '../input';
+import {parseArgs, inputOptions, postOptions} from '../input.ts';
 
 describe('parseArgs()', function () {
   it('pass unicode strings', () => {
@@ -15,7 +15,7 @@ describe('parseArgs()', function () {
   });
   it('pass a string containing quotes', () => {
     const input = `test "test" 'test'`;
-    const resp = `test ""test"" 'test'`;
+    const resp = `test "test" 'test'`;
     const args = `{"text": "${input}"}`;
     expect(parseArgs(args)).toEqual({text: resp});
   });

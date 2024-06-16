@@ -3,9 +3,8 @@
 import '@ppmdev/polyfills/arrayIndexOf.ts';
 import '@ppmdev/polyfills/objectKeys.ts';
 import {Level_String} from '@ppmdev/modules/types.ts';
-import debug from '@ppmdev/modules/debug.ts';
 import fso from '@ppmdev/modules/filesystem.ts';
-import {isEmptyStr, isError} from '@ppmdev/modules/guard.ts';
+import {isEmptyStr} from '@ppmdev/modules/guard.ts';
 import {cursorMove} from '@ppmdev/modules/ansi.ts';
 import {echoExe, coloredEcho} from '@ppmdev/modules/echo.ts';
 import {copyFile} from '@ppmdev/modules/filesystem.ts';
@@ -20,6 +19,7 @@ import {langPluginInstall} from './mod/language.ts';
 import {parsePluginlist, parseInstall, parsedItem, clearItem} from './mod/parser.ts';
 import {conf} from './mod/configuration.ts';
 import {type LogLevel, pluginInstall as core} from './mod/core.ts';
+import debug from '@ppmdev/modules/debug.ts';
 
 // restart on pptray
 if (PPx.Extract('%n%N') !== '') {
@@ -173,7 +173,7 @@ const getPaths = (() => {
 const copyDirectory = (source: string, dirname: string): void => {
   const [error, data] = getPaths(source);
 
-  if (isError(error, data)) {
+  if (error) {
     debug.log(data);
     return;
   }

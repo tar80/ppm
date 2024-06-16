@@ -1,4 +1,4 @@
-import PPx from '@ppmdev/modules/ppx';
+import PPx from '@ppmdev/modules/ppx.ts';
 global.PPx = Object.create(PPx);
 import type {AnsiColors} from '@ppmdev/modules/types.ts';
 import {type Source} from '@ppmdev/modules/source.ts';
@@ -13,31 +13,6 @@ const tempDir = `${os.tmpdir()}\\ppmdevtest`;
 
 const ppxe = PPx.Execute;
 jest.mock('@ppmdev/modules/io');
-// jest.mock('@ppmdev/modules/ppm', () => {
-//   const ppmActual = jest.requireActual('@ppmdev/modules/ppm');
-//   return {
-//     ...Object.assign({}, ppmActual),
-//     getinput({
-//       message = '',
-//       title = '',
-//       mode = 'g',
-//       select = 'a',
-//       multi = false,
-//       leavecancel = false,
-//       forpath = false,
-//       fordijit = false,
-//       k = ''
-//     }): string {
-//       const m = multi ? ' -multi' : '';
-//       const l = leavecancel ? ' -leavecancel' : '';
-//       const fp = forpath ? ' -forpath' : '';
-//       const fd = fordijit ? ' -fordijit' : '';
-//       const k_ = k !== '' ? ` -k ${k}` : '';
-
-//       return `%*input("${message}" -title:"${title}" -mode:${mode} -select:${select}${m}${l}${fp}${fd}${k_})`;
-//     }
-//   };
-// });
 
 describe('extractGitDir()', function () {
   it('install with scoop', () => {

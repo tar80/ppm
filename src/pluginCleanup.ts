@@ -1,23 +1,24 @@
 /* @file Clean up disabled plugins */
 
-import debug from '@ppmdev/modules/debug.ts';
+import type {Error_Data} from '@ppmdev/modules/types.ts';
 import {info, useLanguage} from '@ppmdev/modules/data.ts';
 import {pathSelf} from '@ppmdev/modules/path.ts';
 import {ppm} from '@ppmdev/modules/ppm.ts';
 import {type Source, expandSource} from '@ppmdev/modules/source.ts';
-import {isEmptyStr, isError} from '@ppmdev/modules/guard.ts';
+import {isEmptyStr} from '@ppmdev/modules/guard.ts';
 import {langPluginCleanup} from './mod/language.ts';
+import debug from '@ppmdev/modules/debug.ts';
 
 /* main */
 const {scriptName} = pathSelf();
 const lang = langPluginCleanup[useLanguage()];
-const [error, sources] = ((): [boolean, string | string[]] => {
+const [error, sources] = ((): Error_Data => {
   const [errorlevel, data] = ppm.getcust('S_ppm#sources');
 
   return errorlevel === 0 ? [false, data.split(info.nlcode)] : [true, lang.clean];
 })();
 
-if (isError(error, sources)) {
+if (error) {
   ppm.echo(scriptName, sources);
   PPx.Quit(1);
 }
@@ -45,7 +46,7 @@ if (isEmptyStr(cleanupPlugins.name)) {
   !ppm.question(scriptName, msg) && PPx.Quit(1);
 }
 
-debug.log(`source: ${cleanupPlugins.source}\nrepo:${cleanupPlugins.repo}`)
+debug.log(`source: ${cleanupPlugins.source}\nrepo:${cleanupPlugins.repo}`);
 
 let code = PPx.Execute(cleanupPlugins.source) == 0;
 code = code && PPx.Execute(cleanupPlugins.repo) == 0;

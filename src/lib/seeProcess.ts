@@ -9,20 +9,30 @@
  *  If you set the wait time to 0, the process will be checked only once and then terminated.
  */
 
+import {safeArgs} from '@ppmdev/modules/argument.ts';
+import {pathSelf} from '@ppmdev/modules/path.ts';
 import {isEmptyStr} from '@ppmdev/modules/guard.ts';
 
-const WAIT_MSEC = '6000';
+const WAIT_MSEC = 6000;
 const LOOP_MSEC = 500;
 
 const main = (): void => {
   const sh = PPx.CreateObject('WScript.Shell');
-  const target = adjustArgs();
-  let isRun = processRunning(target.name);
+  const [proc, limit, cmdline, style] = safeArgs(undefined, WAIT_MSEC, '', 1);
+
+  if (proc == null) {
+    const {scriptName, parentDir} = pathSelf();
+    PPx.Execute(`*script ${parentDir}\\errors.js",arg,${scriptName}`);
+    PPx.Quit(-1);
+  }
+
+  const processName = /.+\.exe$/i.test(proc) ? proc : `${proc}.exe`;
+  let isRun = processRunning(processName);
   PPx.result = isRun;
 
-  if (target.limit > 0 && isRun === '0') {
-    const cmd = isEmptyStr(target.cmdline) ? target.name : target.cmdline;
-    sh.Run(cmd, target.style);
+  if (limit > 0 && !isRun) {
+    const cmd = isEmptyStr(cmdline) ? processName : cmdline;
+    sh.Run(cmd, style as IWshRuntimeLibrary.WindowStyle);
 
     let [i, s, e, w] = [0, 0, 0, LOOP_MSEC];
 
@@ -30,16 +40,16 @@ const main = (): void => {
       i = i + LOOP_MSEC;
       PPx.Execute(`*wait ${w - Math.floor(w / 10)},2`);
 
-      if (i >= target.limit) {
+      if (i >= limit) {
         PPx.linemessage('!"Abort. Waiting time exceeded');
         break;
       }
 
       s = Date.now();
-      isRun = processRunning(target.name);
+      isRun = processRunning(processName);
       e = Date.now();
 
-      if (isRun === '-1') {
+      if (isRun) {
         break;
       }
 
@@ -48,27 +58,11 @@ const main = (): void => {
   }
 };
 
-const adjustArgs = (
-  args = PPx.Arguments
-): {name: string; limit: number; cmdline: string; style: IWshRuntimeLibrary.WindowStyle} => {
-  const arr: string[] = ['', WAIT_MSEC, '', '1'];
-
-  for (let i = 0, k = args.length; i < k; i++) {
-    arr[i] = args.Item(i);
-  }
-
-  const name = /.+\.exe$/i.test(arr[0]) ? arr[0] : `${arr[0]}.exe`;
-  const msec = Number(arr[1]);
-  const style = Number(arr[3]) as IWshRuntimeLibrary.WindowStyle;
-
-  return {name, limit: msec, cmdline: arr[2], style};
-};
-
 const wmi = PPx.CreateObject('WbemScripting.SWbemLocator' as any).ConnectServer();
-const processRunning = (procName: string): string => {
+const processRunning = (procName: string): boolean => {
   const process = wmi.ExecQuery(`SELECT Name FROM Win32_Process WHERE Name = "${procName}"`);
 
-  return process.Count > 0 ? '-1' : '0';
+  return process.Count > 0;
 };
 
 main();

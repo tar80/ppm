@@ -4,20 +4,21 @@
  */
 
 import type {Level_String} from '@ppmdev/modules/types.ts';
-import debug from '@ppmdev/modules/debug.ts';
 import {isEmptyStr} from '@ppmdev/modules/guard.ts';
 import {info, useLanguage, uniqName, tmp} from '@ppmdev/modules/data.ts';
 import {pathSelf, pathNormalize} from '@ppmdev/modules/path.ts';
 import {ppm} from '@ppmdev/modules/ppm.ts';
+import {safeArgs} from '@ppmdev/modules/argument.ts';
 import {createBackup} from '@ppmdev/modules/ppcust.ts';
 import {langInstaller} from './mod/language.ts';
 import {installer as core} from './mod/core.ts';
+import debug from '@ppmdev/modules/debug.ts';
 
 const {scriptName, parentDir} = pathSelf();
 const lang = langInstaller[useLanguage()];
 
 const main = () => {
-  const {installMode, dryRun} = adjustArgs();
+  const [installMode, dryRun] = safeArgs('0', '0');
   const isDev = Number(installMode) + Number(ppm.global('dev')) !== 0;
   const runInstall = `*script ${parentDir}\\ppmInstall.js,${installMode},${dryRun}`;
 
@@ -88,16 +89,6 @@ const main = () => {
 const abort = (exitcode: number): void => {
   ppm.linemessage('.', lang.abort, true);
   PPx.Quit(exitcode);
-};
-
-const adjustArgs = (args = PPx.Arguments): {installMode: string; dryRun: string} => {
-  const arr: string[] = ['0', '0'];
-
-  for (let i = 0, k = args.length; i < k; i++) {
-    arr[i] = args.Item(i);
-  }
-
-  return {installMode: arr[0], dryRun: arr[1]};
 };
 
 /** Get the path of the ppm root directory. */

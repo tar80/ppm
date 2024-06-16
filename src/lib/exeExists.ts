@@ -4,28 +4,19 @@
  */
 
 import {pathSelf} from '@ppmdev/modules/path.ts';
+import {validArgs} from '@ppmdev/modules/argument.ts';
 import debug from '@ppmdev/modules/debug.ts';
 
-const {scriptName, parentDir} = pathSelf();
+const main = (): string => {
+  const args = validArgs();
 
-const main = (): void => {
-  if (PPx.Arguments.length === 0) {
-    PPx.Execute(`*script ${parentDir}\\errors.js",arg,${scriptName}`);
+  if (args.length === 0) {
+    const {scriptName, parentDir} = pathSelf();
+    PPx.Execute(`*script ${parentDir}\\errors.js",arg,${scriptName}`) === 0 && PPx.Quit(-1);
     PPx.Quit(-1);
   }
 
-  const args = adjustArgs();
-  PPx.result = getExists(args);
-};
-
-const adjustArgs = (args = PPx.Arguments): typeof arr => {
-  const arr: string[] = [];
-
-  for (let i = 0, k = args.length; i < k; i++) {
-    arr[i] = args.Item(i);
-  }
-
-  return arr;
+  return getExists(args);
 };
 
 const getExists = (executables: string[]): string => {
@@ -57,5 +48,5 @@ const getExists = (executables: string[]): string => {
   return `{${result.join(',')}}`;
 };
 
-if (!debug.jestRun()) main();
+if (!debug.jestRun()) PPx.result = main();
 // export {getExists};

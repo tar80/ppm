@@ -9,42 +9,42 @@
 
 import '@ppmdev/polyfills/objectKeys.ts';
 import {properties} from '@ppmdev/parsers/table.ts';
-import {isEmptyObj, isEmptyStr} from '@ppmdev/modules/guard.ts';
+import {isEmptyObj} from '@ppmdev/modules/guard.ts';
 import {info, useLanguage, tmp} from '@ppmdev/modules/data.ts';
 import {pathSelf} from '@ppmdev/modules/path.ts';
 import {writeLines} from '@ppmdev/modules/io.ts';
+import {safeArgs} from '@ppmdev/modules/argument.ts';
 import debug from '@ppmdev/modules/debug.ts';
 
-const {scriptName, parentDir} = pathSelf();
-
 const main = (): string => {
-  const args = adjustArgs();
+  const [order, menuId, itemNum, subId, itemValue] = safeArgs('insert', '', -1, undefined, '');
 
-  if (isEmptyStr(args.subid) || isEmptyStr(args.value)) {
+  if (subId == null) {
+    const {scriptName, parentDir} = pathSelf();
     PPx.Execute(`*script "${parentDir}\\errors.js",args,${scriptName}`);
     PPx.Quit(1);
   }
 
-  const props = properties(args.id);
+  const props = properties(menuId);
 
   if (isEmptyObj(props)) {
     return lang.noProps;
   }
 
-  const hasId = props[args.subid] != null;
+  const hasId = props[subId] != null;
 
   if (hasId) {
-    if (args.order === 'insert') {
+    if (order === 'insert') {
       return lang.hasProp;
     }
-  } else if (args.order !== 'insert') {
-    return `${args.id} ${lang.notHasProp}`;
+  } else if (order !== 'insert') {
+    return `${menuId} ${lang.notHasProp}`;
   }
 
-  const items = rebuildMenu(args, props);
-  const numSpec = Math.max(1, args.num < 0 ? items.length + args.num : args.num);
-  const newProp = `${args.subid}\t= ${args.value}`;
-  const newTbl = adjustTable[args.order](items, numSpec, newProp);
+  const items = rebuildMenu(menuId, props);
+  const numSpec = Math.max(1, itemNum < 0 ? items.length + itemNum : Math.floor(itemNum));
+  const newProp = `${subId}\t= ${itemValue}`;
+  const newTbl = adjustTable[order as Order](items, numSpec, newProp);
 
   debug.log(newTbl.join(info.nlcode));
   const tmpFile = tmp().file;
@@ -66,7 +66,7 @@ const lang = {
     notHasProp: 'is missing',
     finish: 'Menu has been regenerated. Please restart PPx'
   },
-  jp: {
+  ja: {
     noProps: '項目がありません',
     hasProp: 'すでに項目があります',
     notHasProp: 'はありません',
@@ -75,20 +75,9 @@ const lang = {
 }[useLanguage()];
 
 type Order = 'insert' | 'replace' | 'delete';
-type Args = {order: Order; id: string; num: number; subid: string; value: string};
 
-const adjustArgs = (args = PPx.Arguments): Args => {
-  const arr: string[] = ['insert', '-1', '', ''];
-
-  for (let i = 0, k = args.length; i < k; i++) {
-    arr[i] = args.Item(i);
-  }
-
-  return {order: arr[0] as Order, id: arr[1], num: Math.floor(Number(arr[2])), subid: arr[3], value: arr[4]};
-};
-
-const rebuildMenu = (args: Args, props: properties): typeof items => {
-  const items = [`-|${args.id} =${info.nlcode}${args.id}\t= {`];
+const rebuildMenu = (id: string, props: properties): typeof items => {
+  const items = [`-|${id} =${info.nlcode}${id}\t= {`];
 
   for (const subid of Object.keys(props)) {
     items.push(`${subid}\t${props[subid].sep} ${props[subid].value.join(info.nlcode)}`);
@@ -117,6 +106,4 @@ const adjustTable: {[key in Order]: Function} = {
   }
 };
 
-if (!debug.jestRun()) {
-  PPx.result = main();
-}
+if (!debug.jestRun()) PPx.result = main();

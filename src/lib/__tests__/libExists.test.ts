@@ -1,6 +1,6 @@
-import PPx from '@ppmdev/modules/ppx';
+import PPx from '@ppmdev/modules/ppx.ts';
 global.PPx = Object.create(PPx);
-import {getLibs} from '../libExists';
+import {getLibs} from '../libExists.ts';
 
 describe('getLibs()', function () {
   const libs =

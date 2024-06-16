@@ -2,13 +2,13 @@
  * @arg 0 {string} - Specifies the command-alias
  * @arg 1 {string} - How to deal with paths containing spaces. "enclose" | "double" | "escape"
  * @arg 2 {number} - If non-zero, allow duplicate paths
- * @arg 3 {string} - Specify the file encoding. "sjis" | "utf8" | "utf16le"(default)
  */
 
 import '@ppmdev/polyfills/json.ts';
 import fso from '@ppmdev/modules/filesystem.ts';
 import {isEmptyStr} from '@ppmdev/modules/guard.ts';
 import {uniqID, useLanguage} from '@ppmdev/modules/data.ts';
+import {safeArgs} from '@ppmdev/modules/argument.ts';
 import debug from '@ppmdev/modules/debug.ts';
 
 type BlankHandle = 'enclose' | 'double' | 'escape';
@@ -22,7 +22,7 @@ if (fso.FileExists(PPx.Extract('%OR %FDC'))) {
 const DELIM = '@#_#@';
 
 const main = (): void => {
-  const args = adjustArgs();
+  let [action, blank, duplicate] = safeArgs('*ppv', 'enclose', false);
   const userData = PPx.Extract(`%*extract(%%su'${uniqID.lfDset}%n')`);
 
   if (isEmptyStr(userData)) {
@@ -31,8 +31,7 @@ const main = (): void => {
   }
 
   const metadata: Record<string, string> = JSON.parse(userData);
-  const cmdline = shapeCmdline(metadata.ppm, args.act);
-  // const cmdline = action.replace(/\r\n/g, '%bn');
+  const cmdline = shapeCmdline(metadata.ppm, action);
 
   if (isEmptyStr(cmdline)) {
     PPx.linemessage(`!"${lang.noAction}`);
@@ -43,7 +42,8 @@ const main = (): void => {
   const base = metadata.base ?? '';
   const dirtype = metadata.dirtype ?? '';
   const search = metadata.search ?? '';
-  const blankReplacer = blankHandleSpec(args.spc);
+  const blankHandle = (/enclose|escape|double/.test(blank) ? blank : 'enclose') as BlankHandle;
+  const blankReplacer = blankHandleSpec(blankHandle);
   const doAction = (() => {
     return perPath
       ? ({entry, isDup}: {entry: EntryDetails; isDup: BoolStr}): number =>
@@ -72,7 +72,7 @@ const main = (): void => {
 
       isDup = duplicates[entry.path] || '0';
 
-      if (args.dup || isDup === '0') {
+      if (!!duplicate || isDup === '0') {
         duplicates[entry.path] = '1';
         doAction({entry, isDup});
       }
@@ -89,26 +89,8 @@ const main = (): void => {
 
 const lang = {
   en: {noAction: 'No action registered'},
-  jp: {noAction: '対応するコマンドが登録されていません'}
+  ja: {noAction: '対応するコマンドが登録されていません'}
 }[useLanguage()];
-
-const adjustArgs = (args = PPx.Arguments): {act: string; spc: BlankHandle; dup: boolean} => {
-  const arr: string[] = ['*ppv', 'enclose', '0', 'utf16le'];
-
-  for (let i = 0, k = args.length; i < k; i++) {
-    arr[i] = args.Item(i);
-  }
-
-  if (!/enclose|escape|double/.test(arr[1])) {
-    arr[1] = 'enclose';
-  }
-
-  if (!/sjis|utf8|utf16le/.test(arr[3])) {
-    arr[3] = 'utf16le';
-  }
-
-  return {act: arr[0], spc: arr[1] as BlankHandle, dup: arr[2] !== '0'};
-};
 
 const shapeCmdline = (plugin: string, command: string): string => {
   const value =

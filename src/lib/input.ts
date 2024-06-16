@@ -32,10 +32,8 @@ import '@ppmdev/polyfills/json.ts';
 import debug from '@ppmdev/modules/debug.ts';
 import {ppm} from '@ppmdev/modules/ppm.ts';
 
-const main = (): void => {
-  const args =
-    PPx.Arguments.length > 0 &&
-    PPx.Arguments.Item(0).replace(/['\\]/g, (c) => ({"'": '"', '\\': '\\\\'})[c] as string);
+const main = (): string => {
+  const args = PPx.Arguments.length > 0 && PPx.Argument(0).replace(/['\\]/g, (c) => ({"'": '"', '\\': '\\\\'})[c] as string);
   const options: Partial<Options> = args ? parseArgs(args) : {};
   const optsInput = inputOptions(options);
   const optsPostCmd = postOptions(options);
@@ -44,7 +42,7 @@ const main = (): void => {
   ppm.deletemenu();
   ppm.deletekeys();
 
-  PPx.result = errorlevel !== 0 ? '[error]' : input;
+  return errorlevel !== 0 ? '[error]' : input;
 };
 
 /**
@@ -64,7 +62,7 @@ const parseArgs = (args: string): Partial<Options> => {
     [key, value] = elements[i].replace(rgx, `$1${DELIM}$2`).split(DELIM);
 
     if (value.indexOf('"') === 0) {
-      value = value.slice(1, -1).replace(/"/g, '""');
+      value = value.slice(1, -1).replace(/["\\]/g, (m) => ({'"': '\\"', '\\': '\\\\'})[m as '"' | '\\']);
       value = `"${value}"`;
     }
 
@@ -101,8 +99,12 @@ const parseOptions = (arr: string[], arg: Partial<Options>, post?: boolean) => {
    * @param bool  - Whether the value is a Boolean value
    */
   return (value: OptKeys, quote?: boolean, bool?: boolean): void => {
-    const v = arg[value] ?? def[value];
+    let v = arg[value] ?? def[value];
     const q = quote ? '"' : '';
+
+    if (typeof v === 'string') {
+      v.replace(/\\"/g, '""');
+    }
 
     if (post) {
       v !== '' && arr.push(`-${value}:${q}${v}${q}`);
@@ -154,5 +156,5 @@ const postOptions = (arg: Partial<Options>): string => {
   return result.join('%%:');
 };
 
-!debug.jestRun() && main();
-// export {parseArgs, inputOptions, postOptions}
+if (!debug.jestRun()) PPx.result = main();
+// export {parseArgs, inputOptions, postOptions};

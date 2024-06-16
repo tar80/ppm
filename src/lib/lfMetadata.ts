@@ -8,35 +8,22 @@
 import '@ppmdev/polyfills/objectKeys.ts';
 import type {FileEncode} from '@ppmdev/modules/types.ts';
 import {getLfMeta} from '@ppmdev/parsers/listfile.ts';
-import {isError} from '@ppmdev/modules/guard.ts';
 import {readLines} from '@ppmdev/modules/io.ts';
 import {pathSelf} from '@ppmdev/modules/path.ts';
+import {safeArgs} from '@ppmdev/modules/argument.ts';
 
 const main = (): string => {
-  const args = adjustArgs();
-  const [error, data] = readLines({path: args.path, enc: args.enc});
+  const [path, id, enc] = safeArgs('', 'Base', 'utf16le');
+  const fileEncode = /sjis|utf8|utf16le/.test(enc) ? (enc as FileEncode) : 'utf16le';
+  const [error, data] = readLines({path: path, enc: fileEncode});
 
-  if (isError(error, data)) {
+  if (error) {
     const {scriptName} = pathSelf();
     PPx.report(`[ppm/${scriptName}] ${data}`);
     PPx.Quit(-1);
   }
 
-  return getLfMeta(data.lines)[args.id];
-};
-
-const adjustArgs = (args = PPx.Arguments): {path: string; id: string; enc: FileEncode} => {
-  const arr: string[] = ['', 'Base', 'utf16le'];
-
-  for (let i = 0, k = args.length; i < k; i++) {
-    arr[i] = args.Item(i);
-  }
-
-  if (!/sjis|utf8|utf16le/.test(arr[2])) {
-    arr[2] = 'utf16le';
-  }
-
-  return {path: arr[0], id: arr[1], enc: arr[2] as FileEncode};
+  return getLfMeta(data.lines)[id];
 };
 
 PPx.result = main();

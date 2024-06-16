@@ -23,6 +23,7 @@ import {coloredEcho} from '@ppmdev/modules/echo.ts';
 import {type PatchSource, parseLinecust} from './mod/parser.ts';
 import {conf} from './mod/configuration.ts';
 import {langPluginRegister} from './mod/language.ts';
+import {safeArgs} from '@ppmdev/modules/argument.ts';
 import {pluginRegister as core, installer} from './mod/core.ts';
 
 type RegMode = 'set' | 'unset' | 'reset' | 'restore';
@@ -33,7 +34,11 @@ const ppbID = `B${info.ppmID}`;
 
 const main = () => {
   const jobend: Function = ppm.jobstart('.');
-  const {target, mode, patchCfg, dryRun} = adjustArgs();
+  const args = safeArgs('all', 'reset', 'default', false);
+  const target = args[0].replace(/^[\!~]/, '');
+  const mode = /^(set|restore|unset)$/.test(args[1]) ? args[1] : 'reset';
+  const patchCfg = args[2] === 'default' ? args[2] : 'user';
+  const dryRun = args[3]
   const reset = mode === 'reset' || mode === 'restore';
   const multipleSetup = target === 'all';
 
@@ -112,26 +117,6 @@ const main = () => {
   }
 
   jobend();
-};
-
-const adjustArgs = (args = PPx.Arguments): {target: string; mode: RegMode; patchCfg: PatchSource; dryRun: boolean} => {
-  const arr: [string, RegMode, PatchSource, string] = ['all', 'reset', 'default', '0'];
-  const rgx1 = /^[\!~]/;
-  const rgx2 = /^(set|restore|unset)$/;
-
-  for (let i = 0, k = args.length; i < k; i++) {
-    arr[i] = args.Item(i);
-  }
-
-  if (!rgx2.test(arr[1])) {
-    arr[1] = 'reset';
-  }
-
-  if (arr[2] !== 'user') {
-    arr[2] = 'default';
-  }
-
-  return {target: arr[0].replace(rgx1, ''), mode: arr[1], patchCfg: arr[2], dryRun: arr[3] !== '0'};
 };
 
 /** Get installation infomation for plugins */

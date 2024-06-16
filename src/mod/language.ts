@@ -8,7 +8,7 @@
     start: 'Start installing ppm',
     devmode: 'Install in developer mode'
   },
-  jp: {
+  ja: {
     abort: '中止しました',
     failedToMove: 'ppmディレクトリを移動できませんでした',
     gitspec: 'gitのインストールディレクトリを指定してください',
@@ -29,7 +29,7 @@ export const langPPmInstall = {
     afterMsg: 'and set up ppx-plugin-manager!',
     choice: 'Chose an action'
   },
-  jp: {
+  ja: {
     abort: 'インストールを中止しました',
     success: 'インストール可能です',
     complete: 'インストールが完了しました',
@@ -49,7 +49,7 @@ export const langParser = {
     failedToGet: 'Failed to get installation information for',
     isNotPlugin: ' is not a ppm-plugin repository'
   },
-  jp: {
+  ja: {
     badGrammar: '書式が間違っています',
     isEarlier: 'の開始が宣言されていません',
     badDeletion: '削除設定には値を指定できません',
@@ -63,7 +63,7 @@ export const langConfiguration = {
   en: {
     notInstalled: 'ppm is not installed'
   },
-  jp: {
+  ja: {
     notInstalled: 'ppmがインストールされていません'
   }
 } as const;
@@ -74,7 +74,7 @@ export const langPluginInstall = {
     notFound: 'URL does not exist, or is not a ppm-plugin repository',
     couldNotGet: 'Could not get'
   },
-  jp: {
+  ja: {
     failedClone: 'git clone に失敗しました',
     notFound: '指定したURLが間違っているか、ppmのプラグインではありません',
     couldNotGet: '取得できませんでした'
@@ -88,7 +88,7 @@ export const langPluginCleanup = {
     success: 'Cleaning completed',
     failed: 'Cleaning failed'
   },
-  jp: {
+  ja: {
     clean: '削除できるプラグインはありません',
     askContinue: 'これらのプラグインを削除しますか？',
     success: '未使用のプラグインを削除しました',
@@ -104,7 +104,7 @@ export const langRestoreRegister = {
     unreg: '*ppmRestore unregistered',
     failed: '*ppmRestore registration failed'
   },
-  jp: {
+  ja: {
     registered: '*ppmRestoreは登録済みです',
     notRegistered: '*ppmRestoreは未登録です',
     reg: '*ppmRestoreを登録しました',
@@ -119,7 +119,7 @@ export const langRestore = {
     notExist: ' is not exists',
     restart: 'Restart PPc'
   },
-  jp: {
+  ja: {
     notEnoughArgument: '引数が足りません',
     notExist: ' はありません',
     restart: '再起動します'
@@ -136,7 +136,7 @@ export const langPluginRegister = {
     undo: 'Undo completed. Please restart PPx',
     completed: 'Exit with ESC key'
   },
-  jp: {
+  ja: {
     notRegistered: ' は未登録です',
     failedOverride: 'S_ppm#sourcesを更新できませんでした',
     failedPluginList: 'プラグインリストを更新できませんでした',
@@ -154,7 +154,7 @@ export const langPluginUpdate = {
     noUpdates: 'No updates',
     updates: 'Update has been completed'
   },
-  jp: {
+  ja: {
     detached: 'ブランチはデタッチ状態です',
     failedToGet: 'ブランチの取得に失敗しました',
     noUpdates: '更新はありません',
@@ -170,7 +170,7 @@ export const langManageConfig = {
     cancel: 'Cancel',
     success: 'Saved'
   },
-  jp: {
+  ja: {
     emptyCfgdir: 'S_ppm#user:cfgdir の値が不正です',
     desc: '読み込みたい順番にマークしてください\\n""ESC""以外で終了すると指定なしになります',
     save: '選択したエントリを保存',
@@ -196,7 +196,7 @@ export const langCommand = {
     finish: 'completed',
     updateTrial: '&Trial'
   },
-  jp: {
+  ja: {
     nameSpec: 'プラグインを指定',
     shiftEnter: '([補助ダイアログ]: shit + enter)',
     invalidCmd: '無効なコマンドが指定されました',
@@ -220,7 +220,7 @@ export const langUninstaller = {
     start: 'Start uninstalling ppm',
     finish: 'Uninstallation completed. Restart PPc'
   },
-  jp: {
+  ja: {
     notRegistered: 'インストールされていません',
     start: 'ppmのアンインストールを開始します',
     finish: 'アンインストールが完了しました。PPcを再起動します'
@@ -231,7 +231,7 @@ export const langLogViewer = {
   en: {
     notExist: 'No data'
   },
-  jp: {
+  ja: {
     notExist: 'ログはありません'
   }
 } as const;
@@ -242,7 +242,7 @@ export const langViewerAction = {
     notFind: 'Could not find plugin name',
     customize: 'Do you want to edit the configuration file?'
   },
-  jp: {
+  ja: {
     couldNotGet: '取得できませんでした',
     notFind: 'プラグイン名が見つかりませんでした',
     customize: '設定ファイルを編集しますか?'

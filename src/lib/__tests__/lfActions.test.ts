@@ -1,6 +1,6 @@
-import PPx from '@ppmdev/modules/ppx';
+import PPx from '@ppmdev/modules/ppx.ts';
 global.PPx = Object.create(PPx);
-import {blankHandleSpec, replaceCmdline} from '../lfActions';
+import {blankHandleSpec, replaceCmdline} from '../lfActions.ts';
 
 describe('blankHandleSpec()', function () {
   const path = 'test test test';
@@ -34,7 +34,7 @@ describe('replaceCmdline()', function () {
   const resp = {
     cmdline,
     data: `base:${base}${DELIM}dirtype:${dirtype}${DELIM}search:${search}${DELIM}dup:${isDup}${DELIM}path:${entry.path}${DELIM}att:${entry.att}${DELIM}hl:${entry.hl}${DELIM}option:${entry.sname}`,
-    rgx: `base:(?<base>.*)${DELIM}dirtype:(?<type>.*)${DELIM}search(?<search>.*)${DELIM}dup:(?<dup>.+)${DELIM}path:(?<path>.+)${DELIM}att:(?<att>.*)${DELIM}hl:(?<hl>.*)${DELIM}option:(?<option>.*)`
+    rgx: `base:(?<base>.*)${DELIM}dirtype:(?<type>.*)${DELIM}search:(?<search>.*)${DELIM}dup:(?<dup>.+)${DELIM}path:(?<path>.+)${DELIM}att:(?<att>.*)${DELIM}hl:(?<hl>.*)${DELIM}option:(?<option>.*)`
   };
   it('command executed at each path', () => {
     expect(replaceCmdline(obj)).toEqual(resp);

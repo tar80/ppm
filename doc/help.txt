@@ -21,19 +21,19 @@ ppx-plugin-manager(ppm)は、TORO氏作のファイル操作ツール集Paper Pl
 
 UNICODE版、64bit版のPPxが対象。MultiByte版は動作対象外となります。
 その他の条件として、
-	・PPx Script Module、PPx Key Module、 PPx Text Moduleの導入
+	・いずれかのScript Module(WSH,CV8,QuickJS)
+	・PPx Message Module、PPx Key Module、 PPx Text Moduleの導入
 	・正規表現ライブラリbregonig.dllの導入
 	・gitのインストール
 が必要になります。
-ClearScriptV8は限定的な対応となっています。とりあえず動く程度と考えてください。
+ClearScriptV8・QuickJSはインストール可能ですが、プラグイン側の対応が
+追いついていません。
 
 ===============================================================================
 インストール
 
 "*script ppx-plugin-manager\dist\installer.js"を実行します。
 いくつかの確認のあと、動作条件を満たしていればインストールを開始します。
-途中、ディスプレイサイズを取得する処理でIEを起動しているため、時間が係る
-場合があります。
 インストールに成功すると必要なファイル類が最初に指定したパス以下へ作成されます。
 git cloneしたppx-plugin-managerリポジトリは使用しませんのでインストール後に
 削除してください。

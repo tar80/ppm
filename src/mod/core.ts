@@ -4,7 +4,7 @@ import type {AnsiColors, Level_String, Error_String} from '@ppmdev/modules/types
 import {type Source, sourceComp} from '@ppmdev/modules/source.ts';
 import fso from '@ppmdev/modules/filesystem.ts';
 import {info, uniqName} from '@ppmdev/modules/data.ts';
-import {isEmptyStr, isError, isString} from '@ppmdev/modules/guard.ts';
+import {isEmptyStr, isString} from '@ppmdev/modules/guard.ts';
 import {pathJoin} from '@ppmdev/modules/path.ts';
 import {ppm} from '@ppmdev/modules/ppm.ts';
 import {colorlize} from '@ppmdev/modules/ansi.ts';
@@ -164,7 +164,7 @@ const setCompItem = (name: string): void => {
 };
 
 const writeComplist = (): void => {
-  sourceComp.write(completeItems);
+  completeItems.length > 0 && sourceComp.write(completeItems);
 };
 
 export const pluginInstall = {decorateLog, gitSwitch, sourceDetails, setCompItem, writeComplist};
@@ -176,7 +176,7 @@ const getManageFiles = (ppmcache: string): string[] => {
   if (fso.FileExists(path)) {
     const [error, files] = readLines({path: path});
 
-    if (!isError(error, files)) {
+    if (!error) {
       return files.lines;
     }
   }
@@ -188,9 +188,9 @@ const getManageFiles = (ppmcache: string): string[] => {
 
 const updateLists = (sources: Source[]): Error_String => {
   const pluginlistPath = `${ppm.global('ppmcache')}\\list\\${uniqName.pluginList}`;
-  let [error, data] = readLines({path: pluginlistPath});
+  const [error, data] = readLines({path: pluginlistPath});
 
-  if (isError(error, data)) {
+  if (error) {
     return [true, data];
   }
 
@@ -241,23 +241,23 @@ const updateLists = (sources: Source[]): Error_String => {
   }
 
   if (writeFlag) {
-    [error, data] = writeLines({path: pluginlistPath, data: data.lines, overwrite: true, linefeed: data.nl});
-    error && failed.push(data);
+    const [error2, data2] = writeLines({path: pluginlistPath, data: data.lines, overwrite: true, linefeed: data.nl});
+    error2 && failed.push(data2);
   }
 
-  [error, data] = sourceComp.fix(compItems);
-  error && failed.push(data);
+  const [error3, data3] = sourceComp.fix(compItems);
+  error3 && failed.push(data3);
 
-  return [error, failed.join('\\n')];
+  return [error3, failed.join('\\n')];
 };
 
 export const pluginRegister = {getManageFiles, updateLists};
 
 /** Check for ppm plugin updates. */
 const checkUpdate = (path: string): Error_String => {
-  let [error, localHead] = branchHead(path);
+  const [error, localHead] = branchHead(path);
 
-  if (isError(error, localHead)) {
+  if (error) {
     return [true, 'failedToGet'];
   }
 

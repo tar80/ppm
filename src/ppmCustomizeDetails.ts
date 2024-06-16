@@ -3,7 +3,7 @@
 import '@ppmdev/polyfills/arrayIsArray.ts';
 import {sourceNames, expandSource} from '@ppmdev/modules/source.ts';
 import {info, tmp} from '@ppmdev/modules/data.ts';
-import {isEmptyStr, isError} from '@ppmdev/modules/guard.ts';
+import {isEmptyStr} from '@ppmdev/modules/guard.ts';
 import {ppm} from '@ppmdev/modules/ppm.ts';
 import {readLines, writeLines} from '@ppmdev/modules/io.ts';
 import {colorlize} from '@ppmdev/modules/ansi.ts';
@@ -65,7 +65,7 @@ const getUseIds = (names: string[]): typeof lines => {
 
     const [error, resp] = readLines({path: `${setupDir}\\${name}.cfg`});
 
-    if (isError(error, resp)) {
+    if (error) {
       lines.push(`${readError} ${name}`);
       continue;
     }

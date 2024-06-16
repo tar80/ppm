@@ -14,6 +14,7 @@ import {type Source, sourceNames, expandSource, owSource} from '@ppmdev/modules/
 import {colorlize} from '@ppmdev/modules/ansi.ts';
 import {coloredEcho} from '@ppmdev/modules/echo.ts';
 import {langPluginUpdate} from './mod/language.ts';
+import {safeArgs} from '@ppmdev/modules/argument.ts';
 import {pluginUpdate as core} from './mod/core.ts';
 
 const GIT_LOG_OPTS = '--oneline --color=always';
@@ -30,7 +31,7 @@ const main = (): void => {
     runPPb({bootid: info.ppmID, desc: title, k: '*option terminal', fg: 'cyan', x: 0, y: 0, width: 700, height: 500});
   }
 
-  const {target, dryRun} = adjustArgs();
+  const [target, dryRun] = safeArgs('all', 0);
   const pluginNames = target !== 'all' ? [target] : sourceNames();
   const errorHeader = colorlize({message: ' ERROR ', esc: true, fg: 'black', bg: 'red'});
   const checkHeader = colorlize({message: ' CHECK ', esc: true, fg: 'black', bg: 'cyan'});
@@ -72,7 +73,7 @@ const main = (): void => {
     writeTitle(source.name, hasUpdate);
     hasUpdate = true;
 
-    if (dryRun === '0') {
+    if (!!dryRun) {
       const logSize = fso.GetFile(updateLog).Size;
       PPx.Execute(`%Os git -C ${source.path} pull`);
       PPx.Execute(`%Obds git -C ${source.path} log ${GIT_LOG_OPTS} head...${data}>> ${updateLog}`);
@@ -89,16 +90,6 @@ const main = (): void => {
     : ppm.execute(ppbID, `%%OW echo ${lang.noUpdates}%%:*closeppx %%n`);
 
   jobend();
-};
-
-const adjustArgs = (args = PPx.Arguments): {target: string; dryRun: string} => {
-  const arr: string[] = ['all', '0'];
-
-  for (let i = 0, k = args.length; i < k; i++) {
-    arr[i] = args.Item(i);
-  }
-
-  return {target: arr[0], dryRun: arr[1]};
 };
 
 /** Write plugin name to the update log */

@@ -6,27 +6,24 @@
 
 import {useLanguage} from '@ppmdev/modules/data.ts';
 import {pathSelf} from '@ppmdev/modules/path.ts';
-import {isError} from '@ppmdev/modules/guard.ts';
 import {readLines} from '@ppmdev/modules/io.ts';
+import {safeArgs} from '@ppmdev/modules/argument.ts';
 import debug from '@ppmdev/modules/debug.ts';
 
 const {scriptName, parentDir} = pathSelf();
 
 const main = (): void => {
-  if (PPx.Arguments.length < 2) {
+  const [method, path, message] = safeArgs('arg', undefined, '');
+
+  if (!path) {
     errorMsg(`${lang.notEnough}\n${lang.error}`);
     PPx.Quit(1);
   }
 
-  const args: Args = adjustArgs();
-
-  if (args.method !== 'arg' && args.method !== 'msg') {
-    errorMsg(lang.error);
-    PPx.Quit(1);
-  }
+  const file = fileDetails(path);
 
   type Method = keyof typeof errorMethod;
-  PPx.Echo(errorMethod[args.method as Method](args));
+  PPx.Echo(errorMethod[method as Method](file.path, file.name, message));
 };
 
 const lang = {
@@ -40,8 +37,8 @@ const lang = {
  Mothod "arg" displays argument details.
         "msg" displays the error message`
   },
-  jp: {
-    notEnough: '引数が足りません',
+  ja: {
+    notEnough: '引数が間違っています',
     error: `
  @arg 0 {string} - 実行するメソッド: "arg | "msg"
  @arg 1 {string} - 対象とするスクリプトのパス
@@ -54,33 +51,26 @@ const lang = {
 
 const errorMsg = (msg: string): void => PPx.Echo(`${scriptName}: ${msg}`);
 
-type Args = {method: string; message: string; name: string; path: string};
-const adjustArgs = (args = PPx.Arguments): Args => {
-  const arr: string[] = ['arg', '', ''];
+const fileDetails = (path: string): {path: string; name: string} => {
+  const [parent, name] = !~path.indexOf('\\') ? [parentDir, path] : path.replace(/^(.+)\\(.+)$/, '$1;$2').split(';');
+  path = `${parent}\\${name}`;
 
-  for (let i = 0, k = args.length; i < k; i++) {
-    arr[i] = args(i);
-  }
-
-  const [parent, name] = !~arr[1].indexOf('\\') ? [parentDir, arr[1]] : arr[1].replace(/^(.+)\\(.+)$/, '$1;$2').split(';');
-  let path = `${parent}\\${name}`;
-
-  if (/\.js$/.test(path)) {
+  if (/^.*[\/\\]dist[\/\\].*\.js$/.test(path)) {
     path = path.replace(/(dist|\.js$)/g, (_, match: 'dist' | '.js') => {
       return {dist: 'src', '.js': '.ts'}[match];
     });
   }
 
-  return {method: arr[0], message: arr[2], name, path};
+  return {path, name};
 };
 
 const errorMethod = {
-  arg: (args: Args): string => {
-    const arr: string[] = [`${args.name}: ${lang.notEnough}`, ''];
+  arg: (path: string, name: string, _: string): string => {
+    const arr: string[] = [`${name}: ${lang.notEnough}`, ''];
     const rgx = /^\s\*\s(@args?\s.+)$/;
-    const [error, data] = readLines({path: args.path});
+    const [error, data] = readLines({path: path});
 
-    if (isError(error, data)) {
+    if (error) {
       throw new Error(data);
     }
 
@@ -95,7 +85,7 @@ const errorMethod = {
     return arr.join(data.nl);
   },
 
-  msg: (args: Args): string => `${args.name}: ${args.message}`
+  msg: (_: string, name: string, message: string): string => `${name}: ${message}`
 } as const;
 
 if (!debug.jestRun()) main();

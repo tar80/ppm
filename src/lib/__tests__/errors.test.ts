@@ -1,6 +1,6 @@
-import PPx from '@ppmdev/modules/ppx';
+import PPx from '@ppmdev/modules/ppx.ts';
 global.PPx = Object.create(PPx);
-import {lang, errorMethod} from '../errors';
+import {lang, errorMethod} from '../errors.ts';
 
 jest.mock('@ppmdev/modules/io');
 
@@ -9,18 +9,16 @@ const path = `src/lib/__tests__/${name}`;
 
 describe('exportMethod()', function () {
   it('pass wrong path', () => {
-    const args = {method: 'arg', message: '', name, path: 'not/exist/path'};
-    expect(() => errorMethod['arg'](args)).toThrow();
+    const path = 'not/exits/path';
+    expect(() => errorMethod['arg'](path, name, '')).toThrow();
   });
   it('method "arg"', () => {
-    const args = {method: 'arg', message: '', name, path};
     const resp = `${name}: ${lang.notEnough}\n\n@arg 0 {string} - abc\n@arg 1 {number} - 123`;
-    expect(errorMethod['arg'](args)).toBe(resp);
+    expect(errorMethod['arg'](path, name, '')).toBe(resp);
   });
   it('method "msg"', () => {
     const message = 'test "test"\ntest';
-    const args = {method: 'msg', message, name, path};
     const resp = `${name}: ${message}`;
-    expect(errorMethod['msg'](args)).toBe(resp);
+    expect(errorMethod['msg'](path, name, message)).toBe(resp);
   });
 });
