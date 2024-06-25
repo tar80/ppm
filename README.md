@@ -14,26 +14,28 @@ TORO氏作のファイル操作ツール集Paper Plane xUIのプラグイン(設
 
   が必要になります。
 
-### TODO
+### ToDo
 
 - プラグインの新仕様への対応
 - バグ取り
 
 ## PLUGINS
 
-- [ppm-adjacentdir](https://github.com/tar80/ppm-adjacentdir) 隣接するディレクトリへ移動
-- [ppm-comment](https://github.com/tar80/ppm-comment) コメント回りの設定
-- [ppm-comppath](https://github.com/tar80/ppm-comppath) パス補完一行編集
-- [ppm-edit](https://github.com/tar80/ppm-edit) PPeや一行編集のキー設定などいろいろ
-- [ppm-etp](https://github.com/tar80/ppm-etp) Everything Search Moduleの設定サポート
-- [ppm-fileoperation](https://github.com/tar80/ppm-fileoperation) ファイル操作全般
-- [ppm-grep](https://github.com/tar80/ppm-grep) grepの結果を指定した方法で出力
-- [ppm-iconicfont](https://github.com/tar80/ppm-iconicfont) 拡張子アイコンをNerdFontsで描画
-- [ppm-listfile](https://github.com/tar80/ppm-misc) リストファイル上の操作を補強
-- [ppm-misc](https://github.com/tar80/ppm-misc) 細々としたカスタマイズの詰め合わせ
-- [ppm-rclone](https://github.com/tar80/ppm-rclone) オンラインストレージを仮想ドライブとして展開
-- [ppm-theme](https://github.com/tar80/ppm-theme) mbadolato/iTerm2-Color-Schemesから配色設定を参照
-- [ppm-translate](https://github.com/tar80/ppm-translate) 日本語/英語の相互翻訳
-- [ppm-switchmenu](https://github.com/tar80/ppm-switchmenu) 入れ替え可能なプリセットメニュー
-- [ppm-view](https://github.com/tar80/ppm-view) PPv設定集
-- [ppm-vilikekeys](https://github.com/tar80/ppm-vilikekeys) viキーバインドをエミュレート
+新仕様対応状況
+
+- [x] [ppm-adjacentdir](https://github.com/tar80/ppm-adjacentdir) 隣接するディレクトリへ移動
+- [x] [ppm-comment](https://github.com/tar80/ppm-comment) コメント回りの設定
+- [x] [ppm-comppath](https://github.com/tar80/ppm-comppath) パス補完一行編集
+- [x] [ppm-edit](https://github.com/tar80/ppm-edit) PPeや一行編集のキー設定などいろいろ
+- [x] [ppm-etp](https://github.com/tar80/ppm-etp) Everything Search Moduleの設定サポート
+- [x] [ppm-fileoperation](https://github.com/tar80/ppm-fileoperation) ファイル操作全般
+- [x] [ppm-grep](https://github.com/tar80/ppm-grep) grepの結果を指定した方法で出力
+- [x] [ppm-iconicfont](https://github.com/tar80/ppm-iconicfont) 拡張子アイコン絵文字設定のサポート
+- [x] [ppm-listfile](https://github.com/tar80/ppm-misc) リストファイルの操作を補強
+- [ ] [ppm-misc](https://github.com/tar80/ppm-misc) 細々としたカスタマイズの詰め合わせ
+- [ ] [ppm-rclone](https://github.com/tar80/ppm-rclone) オンラインストレージを仮想ドライブとして展開
+- [x] [ppm-theme](https://github.com/tar80/ppm-theme) mbadolato/iTerm2-Color-Schemesから配色設定を参照
+- [ ] [ppm-translate](https://github.com/tar80/ppm-translate) 日本語/英語の相互翻訳
+- [x] [ppm-switchmenu](https://github.com/tar80/ppm-switchmenu) 入れ替え可能なプリセットメニュー
+- [ ] [ppm-view](https://github.com/tar80/ppm-view) PPv設定集
+- [ ] [ppm-vilikekeys](https://github.com/tar80/ppm-vilikekeys) viキーバインドをエミュレート

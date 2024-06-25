@@ -6,6 +6,7 @@ Paper Plane xUI Script Module JavaScript Libraries
 ===============================================================================
 CONTENTS
 
+	discardStayMode.js
 	errors.js
 	exeExists.js
 	lfActions.js
@@ -20,8 +21,19 @@ CONTENTS
 	getEntries.vbs
 
 ===============================================================================
+discardStayMode.js
+ppmdev/modules/staymode.tsから実行される前提のスクリプトです。
+指定されたインスタンスのPPx.StayMode=0(破棄)します。
+
+@arg 0 {string} - _Userに一時的に登録するプロパティ名を指定
+@arg 1 {number} - PPx.StatModeが返すスクリプトのインスタンス番号を指定
+@arg 2 {string} - "DEBUG"を指定すると、破棄時にデバッグメッセージを表示します
+
+===============================================================================
 errors.js
 エラー情報を表示します。
+distディレクトリ配下(dist/xxx.js)のスクリプトから実行されたときは、
+ソース側(src/xxx.ts)のコメントを参照します。
 
 @arg 0 {string} - "arg"|"msg" - 実行するメソッド名を指定
 	arg: ソーススクリプト行頭のコメントから" * @arg"を読み取り引数情報を表示
