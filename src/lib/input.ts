@@ -29,12 +29,19 @@
  */
 
 import '@ppmdev/polyfills/json.ts';
+import {argParse} from '@ppmdev/parsers/json.ts';
 import debug from '@ppmdev/modules/debug.ts';
 import {ppm} from '@ppmdev/modules/ppm.ts';
 
 const main = (): string => {
-  const args = PPx.Arguments.length > 0 && PPx.Argument(0).replace(/['\\]/g, (c) => ({"'": '"', '\\': '\\\\'})[c] as string);
-  const options: Partial<Options> = args ? parseArgs(args) : {};
+  const arg: false | string = argParse();
+
+  if (!arg) {
+    PPx.Echo('[wrong argument]: invalid JSON format.');
+    PPx.Quit(-1);
+  }
+
+  const options: Partial<Options> = JSON.parse(arg);
   const optsInput = inputOptions(options);
   const optsPostCmd = postOptions(options);
   const [errorlevel, input] = ppm.extract('.', `%*input(${optsInput} ${optsPostCmd})`);
@@ -43,33 +50,6 @@ const main = (): string => {
   ppm.deletekeys();
 
   return errorlevel !== 0 ? '[error]' : input;
-};
-
-/**
- * Fills in the missing processing in JSON.parse().
- * NOTE: JSON.parse() cannot handle Unicode. It also requires escaping backslashes.
- */
-const parseArgs = (args: string): Partial<Options> => {
-  const elements = args.slice(1, -1).split(',');
-  const rgx = /^("[a-z]+"):\s*(.+)$/;
-  const DELIM = '@#delim#@';
-
-  for (let i = 0, k = elements.length, key, value; i < k; i++) {
-    if (elements[i] == null) {
-      break;
-    }
-
-    [key, value] = elements[i].replace(rgx, `$1${DELIM}$2`).split(DELIM);
-
-    if (value.indexOf('"') === 0) {
-      value = value.slice(1, -1).replace(/["\\]/g, (m) => ({'"': '\\"', '\\': '\\\\'})[m as '"' | '\\']);
-      value = `"${value}"`;
-    }
-
-    elements[i] = `${key}:${value}`;
-  }
-
-  return JSON.parse(`{${elements.join(',')}}`);
 };
 
 type Options = typeof def;
@@ -156,5 +136,7 @@ const postOptions = (arg: Partial<Options>): string => {
   return result.join('%%:');
 };
 
-if (!debug.jestRun()) PPx.result = main();
+if (!debug.jestRun()) {
+  PPx.result = main();
+}
 // export {parseArgs, inputOptions, postOptions};

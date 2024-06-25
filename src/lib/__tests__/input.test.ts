@@ -1,25 +1,6 @@
 import PPx from '@ppmdev/modules/ppx.ts';
 global.PPx = Object.create(PPx);
-import {parseArgs, inputOptions, postOptions} from '../input.ts';
-
-describe('parseArgs()', function () {
-  it('pass unicode strings', () => {
-    const title = 'テスト';
-    const args = `{"title":"${title}"}`;
-    expect(parseArgs(args)).toEqual({title});
-  });
-  it('pass a path with backslash', () => {
-    const text = 'c:\\a\\b\\c.txt';
-    const args = `{"text": "${text}"}`;
-    expect(parseArgs(args)).toEqual({text});
-  });
-  it('pass a string containing quotes', () => {
-    const input = `test "test" 'test'`;
-    const resp = `test "test" 'test'`;
-    const args = `{"text": "${input}"}`;
-    expect(parseArgs(args)).toEqual({text: resp});
-  });
-});
+import {inputOptions, postOptions} from '../input.ts';
 
 describe('inputOptions()', function () {
   it('default options', () => {

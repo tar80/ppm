@@ -106,4 +106,6 @@ const adjustTable: {[key in Order]: Function} = {
   }
 };
 
-if (!debug.jestRun()) PPx.result = main();
+if (!debug.jestRun()) {
+  PPx.result = main();
+}

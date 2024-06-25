@@ -312,6 +312,7 @@ const loadPlugins = (): void => {
   }
 
   const pluginList = parsePluginlist();
+  pluginInstall.setCompItem(info.ppmName);
 
   for (let i = 0, k = pluginList.length; i < k; i++) {
     let [error, errorMsg] = [true, ''];

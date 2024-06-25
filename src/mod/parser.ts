@@ -386,6 +386,10 @@ export const executeItems = (i: number, k: number, lines: string[], parsed: Pars
       break;
     }
 
+    if (line.indexOf(';') === 0) {
+      continue;
+    }
+
     exec.push(line);
   }
 

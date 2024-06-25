@@ -31,7 +31,7 @@ const main = (): void => {
     runPPb({bootid: info.ppmID, desc: title, k: '*option terminal', fg: 'cyan', x: 0, y: 0, width: 700, height: 500});
   }
 
-  const [target, dryRun] = safeArgs('all', 0);
+  const [target, dryRun] = safeArgs('all', false);
   const pluginNames = target !== 'all' ? [target] : sourceNames();
   const errorHeader = colorlize({message: ' ERROR ', esc: true, fg: 'black', bg: 'red'});
   const checkHeader = colorlize({message: ' CHECK ', esc: true, fg: 'black', bg: 'cyan'});

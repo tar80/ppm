@@ -4,11 +4,12 @@
  */
 
 import {validArgs} from '@ppmdev/modules/argument.ts';
+import {isBottom} from '@ppmdev/modules/guard.ts';
 import {pathSelf} from '@ppmdev/modules/path.ts';
 
 const [pid] = validArgs();
 
-if (pid == null) {
+if (isBottom(pid)) {
   const {scriptName, parentDir} = pathSelf();
   PPx.Execute(`*script "${parentDir}\\errors.js",arg,${scriptName}`);
   PPx.Quit(-1);

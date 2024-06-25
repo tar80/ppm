@@ -48,5 +48,7 @@ const getExists = (executables: string[]): string => {
   return `{${result.join(',')}}`;
 };
 
-if (!debug.jestRun()) PPx.result = main();
+if (!debug.jestRun()) {
+  PPx.result = main();
+}
 // export {getExists};

@@ -21,7 +21,7 @@ const main = (): void => {
     PPx.Execute(`*string u,${propName}=0`);
     PPx.Execute(`%Od *ppb -c *wait ${count}%%:*script ${PPx.ScriptName},${propName},${instance},${debug}`);
   } else {
-    PPx.Execute(`*execute C,*script ":${instance},ppx_Discard",${debug}`);
+    PPx.Execute(`*execute C,*script ":${instance},ppx_Discard",${debug},${instance}`);
     PPx.Execute(`*deletecust _User:${propName}`);
   }
 };
