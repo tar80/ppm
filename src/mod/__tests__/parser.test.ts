@@ -177,11 +177,18 @@ describe('sectionItems()', function () {
 
     expect(sectionItems(0, lines.length, lines, parsed)).toEqual([false, 6, receive]);
   });
-  it('properties that ignore unset', () => {
+  it.only('properties that ignore unset', () => {
     lines = ['section', '-A_exec = {', 'key =	value', '}'];
     receive = {...parsed};
     receive.section = ['A_exec	= {', 'key	= value', '}'];
-    receive.unset = [];
+    receive.unset = ['A_exec	= {', '-|key	=', '}'];
+
+    expect(sectionItems(0, lines.length, lines, parsed)).toEqual([false, 4, receive]);
+
+    lines = ['section', 'A_exec = {', 'key =	value', '}'];
+    receive = {...parsed};
+    receive.section = ['A_exec	= {', 'key	= value', '}'];
+    receive.unset = ['A_exec	= {', '-|key	=', '}'];
 
     expect(sectionItems(0, lines.length, lines, parsed)).toEqual([false, 4, receive]);
 

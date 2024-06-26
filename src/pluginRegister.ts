@@ -36,8 +36,8 @@ const main = () => {
   const jobend: Function = ppm.jobstart('.');
   const args = safeArgs('all', 'reset', 'default', false);
   const target = args[0].replace(/^[\!~]/, '');
-  const mode = /^(set|restore|unset)$/.test(args[1]) ? args[1] : 'reset';
-  const patchCfg = args[2] === 'default' ? args[2] : 'user';
+  const mode = /^(set|restore|unset)$/.test(args[1]) ? args[1] as RegMode : 'reset';
+  const patchCfg = args[2] === 'default' ? 'default' : 'user';
   const dryRun = args[3]
   const reset = mode === 'reset' || mode === 'restore';
   const multipleSetup = target === 'all';
@@ -239,7 +239,7 @@ const loadPlugins = (reset: boolean, patch: PatchSource, sources: Source[]): voi
   if (reset) {
     PPx.Execute('%K"LOADCUST"');
   } else if (failed.length > 1) {
-    ppm.report(`%(${failed.join(info.nlcode)}%)`);
+    ppm.report(`${failed.join(info.nlcode)}`);
   }
 };
 

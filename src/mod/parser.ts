@@ -261,11 +261,11 @@ export const sectionItems = (i: number, k: number, lines: string[], parsed: Pars
   for (i++; i < k; i++) {
     line = lines[i];
 
-    if (line === '' || /^[\s;}]/.test(line) || rgxSeparator.test(line)) {
+    if (isEmptyStr(line) || /^[\s;}]/.test(line) || rgxSeparator.test(line)) {
       continue;
     }
 
-    if (line.indexOf('[endsection]') == 0) {
+    if (line.indexOf('[endsection]') === 0) {
       break;
     }
 
@@ -290,11 +290,16 @@ export const sectionItems = (i: number, k: number, lines: string[], parsed: Pars
           return [lang.badDeletion, i, parsed];
         }
 
-        deleteProps = false;
         key = key.substring(1);
-        !ignoreProps(key) && unset.push(unsetFmt(key));
+
+        if (ignoreProps(key)) {
+          unset.push(setFmt(key, sep, value));
+        } else {
+          deleteProps = false;
+          unset.push(unsetFmt(key));
+        }
       } else {
-        !ignoreProps(key) && unset.push(setFmt(key, sep, value));
+        unset.push(setFmt(key, sep, value));
       }
 
       section.push(setFmt(key, sep, value));
@@ -303,7 +308,7 @@ export const sectionItems = (i: number, k: number, lines: string[], parsed: Pars
       for (i++; i < k; i++) {
         line = lines[i];
 
-        if (line === '' || line.indexOf(';') === 0) {
+        if (isEmptyStr(line) || line.indexOf(';') === 0) {
           continue;
         }
 
@@ -418,7 +423,7 @@ const patch = (type: PatchSource, lines: string[]): ParsedPatch => {
   for (; i < k; i++) {
     line = lines[i];
 
-    if (line === '' || /^[\s;}]/.test(line) || rgxSeparator.test(line)) {
+    if (isEmptyStr(line) || /^[\s;}]/.test(line) || rgxSeparator.test(line)) {
       continue;
     }
 
@@ -583,7 +588,7 @@ const merge = (base: string[], patch: ParsedPatch): MergeLines => {
       for (i++; i < k; i++) {
         line = base[i];
 
-        if (line === '' || line.indexOf(';') === 0) {
+        if (isEmptyStr(line) || line.indexOf(';') === 0) {
           continue;
         }
 

@@ -31,7 +31,7 @@ TORO氏作のファイル操作ツール集Paper Plane xUIのプラグイン(設
 - [x] [ppm-fileoperation](https://github.com/tar80/ppm-fileoperation) ファイル操作全般
 - [x] [ppm-grep](https://github.com/tar80/ppm-grep) grepの結果を指定した方法で出力
 - [x] [ppm-iconicfont](https://github.com/tar80/ppm-iconicfont) 拡張子アイコン絵文字設定のサポート
-- [x] [ppm-listfile](https://github.com/tar80/ppm-misc) リストファイルの操作を補強
+- [x] [ppm-listfile](https://github.com/tar80/ppm-listfile) リストファイルの操作を補強
 - [ ] [ppm-misc](https://github.com/tar80/ppm-misc) 細々としたカスタマイズの詰め合わせ
 - [ ] [ppm-rclone](https://github.com/tar80/ppm-rclone) オンラインストレージを仮想ドライブとして展開
 - [x] [ppm-theme](https://github.com/tar80/ppm-theme) mbadolato/iTerm2-Color-Schemesから配色設定を参照

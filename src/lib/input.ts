@@ -30,8 +30,9 @@
 
 import '@ppmdev/polyfills/json.ts';
 import {argParse} from '@ppmdev/parsers/json.ts';
-import debug from '@ppmdev/modules/debug.ts';
+import fso from '@ppmdev/modules/filesystem.ts';
 import {ppm} from '@ppmdev/modules/ppm.ts';
+import debug from '@ppmdev/modules/debug.ts';
 
 const main = (): string => {
   const arg: false | string = argParse();
@@ -120,6 +121,13 @@ const postOptions = (arg: Partial<Options>): string => {
   opts('module');
   opts('match');
   opts('detail', true);
+
+  if (arg.file) {
+    if (!fso.FileExists(PPx.Extract(arg.file))) {
+      arg.file = '';
+    }
+  }
+
   opts('file', true);
 
   const result: string[] = [arr.join(' ')];
