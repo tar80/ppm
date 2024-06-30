@@ -66,6 +66,8 @@ const main = (): void => {
     if (error) {
       data !== 'noUpdates' && coloredEcho(ppbID, `${errorHeader} ${lang[data as 'failedToGet' | 'detached']}`);
       continue;
+    } else if (data === 'noUpdates') {
+      continue;
     }
 
     // NOTE: The value of hasUpdate is used to determine whether to overwrite or append to the update log.
@@ -73,13 +75,13 @@ const main = (): void => {
     writeTitle(source.name, hasUpdate);
     hasUpdate = true;
 
-    if (!!dryRun) {
+    if (!dryRun) {
       const logSize = fso.GetFile(updateLog).Size;
       PPx.Execute(`%Os git -C ${source.path} pull`);
       PPx.Execute(`%Obds git -C ${source.path} log ${GIT_LOG_OPTS} head...${data}>> ${updateLog}`);
       owSource(source.name, {version: ppm.getVersion(source.path) ?? '0.0.0'});
 
-      if (!hasUpdate && logSize == fso.GetFile(updateLog).Size) {
+      if (hasUpdate && logSize === fso.GetFile(updateLog).Size) {
         hasUpdate = false;
       }
     }
@@ -107,7 +109,7 @@ const updatePpm = (): Error_String => {
 
   let [error, data] = core.checkUpdate(ppmDir);
 
-  if (!error) {
+  if (!error && data !== 'noUpdates') {
     writeTitle(info.ppmName, false);
     PPx.Execute(`%Os @git -C ${ppmDir} pull`);
     PPx.Execute(`%Obds git -C ${ppmDir} log ${GIT_LOG_OPTS} head...${data}>> ${updateLog}`);

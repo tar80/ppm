@@ -4,7 +4,7 @@ import '@ppmdev/polyfills/arrayIndexOf.ts';
 import '@ppmdev/polyfills/objectKeys.ts';
 import {Level_String} from '@ppmdev/modules/types.ts';
 import fso from '@ppmdev/modules/filesystem.ts';
-import {isEmptyStr} from '@ppmdev/modules/guard.ts';
+import {isEmptyStr, isBottom} from '@ppmdev/modules/guard.ts';
 import {cursorMove} from '@ppmdev/modules/ansi.ts';
 import {echoExe, coloredEcho} from '@ppmdev/modules/echo.ts';
 import {copyFile} from '@ppmdev/modules/filesystem.ts';
@@ -22,7 +22,7 @@ import {type LogLevel, pluginInstall as core} from './mod/core.ts';
 import debug from '@ppmdev/modules/debug.ts';
 
 // restart on pptray
-if (PPx.Extract('%n%N') !== '') {
+if (!isEmptyStr(PPx.Extract('%n%N'))) {
   PPx.Execute(`*pptray -c *script ${PPx.ScriptName},${PPx.Arguments.Item(-1)}`);
   PPx.Quit(1);
 }
@@ -56,43 +56,45 @@ const main = (): void => {
     let dep: string | undefined;
     let plugin = pluginList[i];
 
-    if (plugin.path && fso.FolderExists(plugin.path)) {
-      /* installed plugins */
-      if (oldSources[plugin.name] != null) {
-        hasUpdate = true;
-        enableSource(plugin.name, plugin.path);
-        [error, errorMsg, dep] = parseInstall(plugin.name, `${plugin.path}\\install`, true);
-        coloredEcho(ppbID, core.decorateLog(plugin.name, notify(!!errorMsg), dep));
+    if (plugin.location === 'local') {
+      if (plugin.path && fso.FolderExists(plugin.path)) {
+        /* installed plugins */
+        if (!isBottom(oldSources[plugin.name])) {
+          hasUpdate = true;
+          enableSource(plugin.name, plugin.path);
+          [error, errorMsg, dep] = parseInstall(plugin.name, `${plugin.path}\\install`, true);
+          coloredEcho(ppbID, core.decorateLog(plugin.name, notify(!!errorMsg), dep));
 
-        if (error) {
-          !!errorMsg && coloredEcho(ppbID, errorMsg);
+          if (error) {
+            !!errorMsg && coloredEcho(ppbID, errorMsg);
+            continue;
+          }
+
+          copyToCache(plugin);
+          clearItem();
+
+          // debug.log(`already installed: ${plugin.name}`);
           continue;
         }
 
-        copyToCache(plugin);
-        clearItem();
+        [error, errorMsg] = parseInstall(plugin.name, `${plugin.path}\\install`, true);
 
-        // debug.log(`already installed: ${plugin.name}`);
-        continue;
+        if (error) {
+          coloredEcho(ppbID, core.decorateLog(plugin.name, 'error', plugin.name));
+          coloredEcho(ppbID, errorMsg);
+          continue;
+        }
+
+        hasUpdate = true;
+        plugin.version = parsedItem.pluginVersion;
+        coloredEcho(ppbID, core.decorateLog(plugin.name, 'install', dep));
+
+        errorMsg = core.gitSwitch(plugin);
+        !isEmptyStr(errorMsg) && coloredEcho(ppbID, errorMsg);
+      } else {
+        /* local plugin that does not exist */
+        coloredEcho(ppbID, core.decorateLog(plugin.name, 'error', `${lang.couldNotGet} ${plugin.path}`));
       }
-
-      [error, errorMsg] = parseInstall(plugin.name, `${plugin.path}\\install`, true);
-
-      if (error) {
-        coloredEcho(ppbID, core.decorateLog(plugin.name, 'error', plugin.name));
-        coloredEcho(ppbID, errorMsg);
-        continue;
-      }
-
-      hasUpdate = true;
-      plugin.version = parsedItem.pluginVersion;
-      coloredEcho(ppbID, core.decorateLog(plugin.name, 'install', dep));
-
-      errorMsg = core.gitSwitch(plugin);
-      !isEmptyStr(errorMsg) && coloredEcho(ppbID, errorMsg);
-    } else if (plugin.location === 'local') {
-      /* local plugin that does not exist */
-      coloredEcho(ppbID, core.decorateLog(plugin.name, 'error', `${lang.couldNotGet} ${plugin.path}`));
     } else {
       /* plugins to download */
       if (!fso.FolderExists(`${ppmrepo}\\${plugin.name}`)) {

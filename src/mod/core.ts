@@ -9,8 +9,9 @@ import {pathJoin} from '@ppmdev/modules/path.ts';
 import {ppm} from '@ppmdev/modules/ppm.ts';
 import {colorlize} from '@ppmdev/modules/ansi.ts';
 import {gitCmd} from '@ppmdev/modules/git.ts';
-import {readLines, writeLines, stdout} from '@ppmdev/modules/io.ts';
+import {readLines, writeLines} from '@ppmdev/modules/io.ts';
 import {branchName, branchHead} from '@ppmdev/modules/git.ts';
+import {runStdout} from '@ppmdev/modules/run.ts';
 
 /**
  * Extract the path of the directory where git is installed.
@@ -135,10 +136,12 @@ const gitSwitch = function (item: Source): string {
 
   if (!!item.commit) {
     cmdline['opts'] = `--detach ${item.commit}`;
-    resp = stdout({cmd: gitCmd(cmdline)});
+    resp = runStdout({cmdline: gitCmd(cmdline), hide: true});
+    // resp = stdout({cmd: gitCmd(cmdline)});
   } else if (!!item.branch) {
     cmdline['opts'] = item.branch;
-    resp = stdout({cmd: gitCmd(cmdline)});
+    resp = runStdout({cmdline: gitCmd(cmdline), hide: true});
+    // resp = stdout({cmd: gitCmd(cmdline)});
   }
 
   return resp[1];
@@ -267,7 +270,8 @@ const checkUpdate = (path: string): Error_String => {
     return [true, 'detached'];
   }
 
-  const [exitcode, remote] = stdout({cmd: `git ls-remote origin ${branch}`, wd: path});
+  const [exitcode, remote] = runStdout({cmdline: `git ls-remote origin ${branch}`, wd: path, hide: true});
+  // const [exitcode, remote] = stdout({cmd: `git ls-remote origin ${branch}`, wd: path});
 
   if (exitcode !== 0) {
     return [true, remote];
