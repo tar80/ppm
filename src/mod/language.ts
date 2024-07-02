@@ -115,14 +115,10 @@ export const langRestoreRegister = {
 
 export const langRestore = {
   en: {
-    notEnoughArgument: 'Not enough arguments',
     notExist: ' is not exists',
-    restart: 'Restart PPc'
   },
   ja: {
-    notEnoughArgument: '引数が足りません',
     notExist: ' はありません',
-    restart: '再起動します'
   }
 } as const;
 

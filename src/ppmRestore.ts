@@ -8,34 +8,27 @@ import {useLanguage, uniqName} from '@ppmdev/modules/data.ts';
 import {pathSelf} from '@ppmdev/modules/path.ts';
 import {msgBox} from '@ppmdev/modules/ppm.ts';
 import {langRestore} from './mod/language.ts';
+import {safeArgs} from '@ppmdev/modules/argument.ts';
 
 const {scriptName} = pathSelf();
 const lang = langRestore[useLanguage()];
 
-const data = ((): {ppmcache: string; ppmDir: string} | string => {
-  const arr: string[] = ['', ''];
-  const len = PPx.Arguments.length;
+const main = (): void => {
+  const [ppmcache, ppmDir] = safeArgs('', '');
 
-  if (len < 2) {
-    return lang.notEnoughArgument;
+  if (!fso.FolderExists(ppmcache)) {
+    msgBox(scriptName, `${ppmcache} ${lang.notExist}`);
+    PPx.Quit(-1);
   }
 
-  for (let i = 0; i < len; i++) {
-    arr[i] = PPx.Argument(i);
-
-    if (!fso.FolderExists(arr[i])) {
-      return `${arr[i]} ${lang.notExist}`;
-    }
+  if (!fso.FolderExists(ppmDir)) {
+    msgBox(scriptName, `${ppmDir} ${lang.notExist}`);
+    PPx.Quit(-1);
   }
 
-  return {ppmcache: arr[0], ppmDir: arr[1]};
-})();
+  PPx.Execute(`*string u,ppmcache=${ppmcache}`);
+  PPx.Execute(`*setcust @${ppmcache}\\ppm\\${uniqName.globalCfg}`);
+  PPx.Execute(`*script ${ppmDir}\\dist\\pluginRegister.js,all,restore,user`);
+};
 
-if (typeof data === 'string') {
-  msgBox(scriptName, data);
-  PPx.Quit(-1);
-}
-
-PPx.Execute(`*string u,ppmcache=${data.ppmcache}`);
-PPx.Execute(`*setcust @${data.ppmcache}\\ppm\\${uniqName.globalCfg}`);
-PPx.Execute(`*script ${data.ppmDir}\\dist\\pluginRegister.js,all,restore,user`);
+main();

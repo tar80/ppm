@@ -5,7 +5,7 @@
 
 import '@ppmdev/polyfills/objectKeys.ts';
 import type {Error_String} from '@ppmdev/modules/types.ts';
-import fso from '@ppmdev/modules/filesystem.ts';
+// import fso from '@ppmdev/modules/filesystem.ts';
 import {info, useLanguage, uniqName} from '@ppmdev/modules/data.ts';
 import {writeLines} from '@ppmdev/modules/io.ts';
 import {runPPb} from '@ppmdev/modules/run.ts';
@@ -70,20 +70,20 @@ const main = (): void => {
       continue;
     }
 
-    // NOTE: The value of hasUpdate is used to determine whether to overwrite or append to the update log.
-    //  Therefore, hasUpdate must be under writeTitle() for initialization.
-    writeTitle(source.name, hasUpdate);
-    hasUpdate = true;
-
     if (!dryRun) {
-      const logSize = fso.GetFile(updateLog).Size;
+      // NOTE: The value of hasUpdate is used to determine whether to overwrite or append to the update log.
+      //  Therefore, hasUpdate must be under writeTitle() for initialization.
+      writeTitle(source.name, hasUpdate);
+      hasUpdate = true;
+
+      // const logSize = fso.GetFile(updateLog).Size;
       PPx.Execute(`%Os git -C ${source.path} pull`);
       PPx.Execute(`%Obds git -C ${source.path} log ${GIT_LOG_OPTS} head...${data}>> ${updateLog}`);
       owSource(source.name, {version: ppm.getVersion(source.path) ?? '0.0.0'});
 
-      if (hasUpdate && logSize === fso.GetFile(updateLog).Size) {
-        hasUpdate = false;
-      }
+      // if (logSize !== fso.GetFile(updateLog).Size) {
+      //   writeLines({path: updateLog, data: [lang.noUpdates], linefeed: info.nlcode, append: true});
+      // }
     }
   }
 
@@ -97,7 +97,7 @@ const main = (): void => {
 /** Write plugin name to the update log */
 const writeTitle = (name: string, update: boolean): void => {
   // In order to add the output of git log, unify the newline code to LF
-  const linefeed = '\n';
+  const linefeed = info.nlcode;
   const opts = update ? {append: true} : {overwrite: true};
   const title = colorlize({message: name, fg: 'black', bg: 'green'});
   writeLines({path: updateLog, data: [title], linefeed, ...opts});
