@@ -147,14 +147,14 @@ export const langPluginUpdate = {
   en: {
     detached: 'Branch is detached',
     failedToGet: 'Failed to get branch',
-    noUpdates: 'No updates',
-    updates: 'Update has been completed'
+    updates: 'Update has been completed',
+    failedPull: 'git pull failed'
   },
   ja: {
     detached: 'ブランチはデタッチ状態です',
     failedToGet: 'ブランチの取得に失敗しました',
-    noUpdates: '更新はありません',
-    updates: '更新が完了しました'
+    updates: '更新が完了しました',
+    failedPull: 'git pull できませんでした'
   }
 } as const;
 

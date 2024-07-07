@@ -4,7 +4,7 @@ import type {AnsiColors, Level_String, Error_String} from '@ppmdev/modules/types
 import {type Source, sourceComp} from '@ppmdev/modules/source.ts';
 import fso from '@ppmdev/modules/filesystem.ts';
 import {info, uniqName} from '@ppmdev/modules/data.ts';
-import {isEmptyStr, isString} from '@ppmdev/modules/guard.ts';
+import {isEmptyStr, isString, isZero} from '@ppmdev/modules/guard.ts';
 import {pathJoin} from '@ppmdev/modules/path.ts';
 import {ppm} from '@ppmdev/modules/ppm.ts';
 import {colorlize} from '@ppmdev/modules/ansi.ts';
@@ -273,7 +273,7 @@ const checkUpdate = (path: string): Error_String => {
   const [exitcode, remote] = runStdout({cmdline: `git ls-remote origin ${branch}`, wd: path, hide: true});
   // const [exitcode, remote] = stdout({cmd: `git ls-remote origin ${branch}`, wd: path});
 
-  if (exitcode !== 0) {
+  if (!isZero(exitcode)) {
     return [true, remote];
   }
 

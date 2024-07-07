@@ -13,8 +13,9 @@ import {ppm} from '@ppmdev/modules/ppm.ts';
 import {type Source, sourceNames, expandSource, owSource} from '@ppmdev/modules/source.ts';
 import {colorlize} from '@ppmdev/modules/ansi.ts';
 import {coloredEcho} from '@ppmdev/modules/echo.ts';
-import {langPluginUpdate} from './mod/language.ts';
+import {isZero} from '@ppmdev/modules/guard.ts';
 import {safeArgs} from '@ppmdev/modules/argument.ts';
+import {langPluginUpdate} from './mod/language.ts';
 import {pluginUpdate as core} from './mod/core.ts';
 
 const GIT_LOG_OPTS = '--oneline --color=always';
@@ -33,17 +34,19 @@ const main = (): void => {
 
   const [target, dryRun] = safeArgs('all', false);
   const pluginNames = target !== 'all' ? [target] : sourceNames();
-  const errorHeader = colorlize({message: ' ERROR ', esc: true, fg: 'black', bg: 'red'});
-  const checkHeader = colorlize({message: ' CHECK ', esc: true, fg: 'black', bg: 'cyan'});
+  const errorHeader = colorlize({message: '  ERROR  ', esc: true, fg: 'black', bg: 'red'});
+  const checkHeader = colorlize({message: '  CHECK  ', esc: true, fg: 'black', bg: 'cyan'});
+  const updateHeader = colorlize({message: ' UPDATED ', esc: true, fg: 'black', bg: 'green'});
   let hasUpdate = false;
 
-  {
+  if (!dryRun) {
     coloredEcho(ppbID, `${checkHeader} ${info.ppmName}`);
     const [error, data] = updatePpm();
     hasUpdate = !error;
 
     if (error && data !== 'noUpdates') {
-      coloredEcho(ppbID, `${errorHeader} ${data}`);
+      coloredEcho(ppbID, `${errorHeader} ${data}`, true);
+      PPx.Quit(-1);
     }
   }
 
@@ -71,25 +74,28 @@ const main = (): void => {
     }
 
     if (!dryRun) {
+      const errorlevel = ppm.execute('.', `@git -C ${source.path} pull`, true);
+
+      if (!isZero(errorlevel)) {
+        coloredEcho(ppbID, `${errorHeader} ${lang.failedPull}`);
+        continue;
+      }
+
       // NOTE: The value of hasUpdate is used to determine whether to overwrite or append to the update log.
       //  Therefore, hasUpdate must be under writeTitle() for initialization.
       writeTitle(source.name, hasUpdate);
       hasUpdate = true;
 
-      // const logSize = fso.GetFile(updateLog).Size;
-      PPx.Execute(`%Os git -C ${source.path} pull`);
       PPx.Execute(`%Obds git -C ${source.path} log ${GIT_LOG_OPTS} head...${data}>> ${updateLog}`);
       owSource(source.name, {version: ppm.getVersion(source.path) ?? '0.0.0'});
-
-      // if (logSize !== fso.GetFile(updateLog).Size) {
-      //   writeLines({path: updateLog, data: [lang.noUpdates], linefeed: info.nlcode, append: true});
-      // }
+    } else {
+      coloredEcho(ppbID, `${updateHeader} ${data}`);
     }
   }
 
   hasUpdate
     ? ppm.execute(ppbID, `*script %sgu'ppm'\\dist\\ppmLogViewer.js,update%%:*closeppx %%n`)
-    : ppm.execute(ppbID, `%%OW echo ${lang.noUpdates}%%:*closeppx %%n`);
+    : ppm.execute(ppbID, `%%OW echo "" %%:*closeppx %%n`);
 
   jobend();
 };
@@ -106,12 +112,16 @@ const writeTitle = (name: string, update: boolean): void => {
 /** Update ppm, and start PPb. */
 const updatePpm = (): Error_String => {
   const ppmDir = ppm.global('ppm');
-
   let [error, data] = core.checkUpdate(ppmDir);
 
   if (!error && data !== 'noUpdates') {
+    const errorlevel = ppm.execute('.', `@git -C ${ppmDir} pull`, true);
+
+    if (!isZero(errorlevel)) {
+      return [true, lang.failedPull];
+    }
+
     writeTitle(info.ppmName, false);
-    PPx.Execute(`%Os @git -C ${ppmDir} pull`);
     PPx.Execute(`%Obds git -C ${ppmDir} log ${GIT_LOG_OPTS} head...${data}>> ${updateLog}`);
     const version = ppm.getVersion(ppmDir) ?? info.ppmVersion;
     owSource(info.ppmName, {version});
