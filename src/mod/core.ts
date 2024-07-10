@@ -271,7 +271,6 @@ const checkUpdate = (path: string): Error_String => {
   }
 
   const [exitcode, remote] = runStdout({cmdline: `git ls-remote origin ${branch}`, wd: path, hide: true});
-  // const [exitcode, remote] = stdout({cmd: `git ls-remote origin ${branch}`, wd: path});
 
   if (!isZero(exitcode)) {
     return [true, remote];

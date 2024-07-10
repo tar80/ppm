@@ -230,7 +230,7 @@ export const specItem = (
   return [false, parsed, i];
 };
 
-// "-- ="
+// "-- =" separator
 const rgxSeparator = /^--[\s]+=[\s]*/;
 const separatorFmt = '--\t=';
 const setFmt = (key: string, sep: string, value: string): string => `${key}\t${sep} ${value}`;

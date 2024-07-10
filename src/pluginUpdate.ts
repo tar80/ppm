@@ -5,7 +5,6 @@
 
 import '@ppmdev/polyfills/objectKeys.ts';
 import type {Error_String} from '@ppmdev/modules/types.ts';
-// import fso from '@ppmdev/modules/filesystem.ts';
 import {info, useLanguage, uniqName} from '@ppmdev/modules/data.ts';
 import {writeLines} from '@ppmdev/modules/io.ts';
 import {runPPb} from '@ppmdev/modules/run.ts';
@@ -16,6 +15,7 @@ import {coloredEcho} from '@ppmdev/modules/echo.ts';
 import {isZero} from '@ppmdev/modules/guard.ts';
 import {safeArgs} from '@ppmdev/modules/argument.ts';
 import {langPluginUpdate} from './mod/language.ts';
+import {parseInstall, clearItem} from './mod/parser.ts';
 import {pluginUpdate as core} from './mod/core.ts';
 
 const GIT_LOG_OPTS = '--oneline --color=always';
@@ -34,9 +34,9 @@ const main = (): void => {
 
   const [target, dryRun] = safeArgs('all', false);
   const pluginNames = target !== 'all' ? [target] : sourceNames();
-  const errorHeader = colorlize({message: '  ERROR  ', esc: true, fg: 'black', bg: 'red'});
-  const checkHeader = colorlize({message: '  CHECK  ', esc: true, fg: 'black', bg: 'cyan'});
-  const updateHeader = colorlize({message: ' UPDATED ', esc: true, fg: 'black', bg: 'green'});
+  const checkHeader = colorlize({message: ' CHECK ', esc: true, fg: 'black', bg: 'cyan'});
+  const errorHeader = colorlize({message: 'ERROR  ', esc: true, fg: 'red'});
+  const updateHeader = colorlize({message: 'UPDATED', esc: true, fg: 'green'});
   let hasUpdate = false;
 
   if (!dryRun) {
@@ -46,6 +46,7 @@ const main = (): void => {
 
     if (error && data !== 'noUpdates') {
       coloredEcho(ppbID, `${errorHeader} ${data}`, true);
+      jobend();
       PPx.Quit(-1);
     }
   }
@@ -58,8 +59,10 @@ const main = (): void => {
     }
 
     source = expandSource(name) as Source;
+    const version = ppm.getVersion(source.path) ?? '0.0.0';
 
     if (source.location === 'local') {
+      version > source.version && owSource(source.name, {version})
       continue;
     }
 
@@ -87,7 +90,7 @@ const main = (): void => {
       hasUpdate = true;
 
       PPx.Execute(`%Obds git -C ${source.path} log ${GIT_LOG_OPTS} head...${data}>> ${updateLog}`);
-      owSource(source.name, {version: ppm.getVersion(source.path) ?? '0.0.0'});
+      owSource(source.name, {version});
     } else {
       coloredEcho(ppbID, `${updateHeader} ${data}`);
     }
@@ -127,6 +130,13 @@ const updatePpm = (): Error_String => {
     owSource(info.ppmName, {version});
     ppm.setcust(`S_ppm#global:version=${version}`);
     PPx.Execute(`*script %sgu"ppm"\\dist\\ppmInstall.js,2`);
+  } else {
+    const globalVer = ppm.global('version');
+    const ppmSource = expandSource('ppx-plugin-manager');
+
+    if (ppmSource) {
+      globalVer !== ppmSource.version && owSource('ppx-plugin-manager', {version: globalVer});
+    }
   }
 
   return [error, data];
