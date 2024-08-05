@@ -94,7 +94,7 @@ checkPid.js
 指定したプロセスIDが存在しているか確認して返します。
 
 @arg 0  {string}  - プロセスIDを指定
-@return {boolean} - プロセスが存在していれば真
+@return {boolean} - プロセスが存在していればtrue
 
 ===============================================================================
 seeProcess.js
@@ -106,7 +106,7 @@ seeProcess.js
 @arg 1  {number}  - 待機時間を指定(初期値:6000)
 @arg 2  {string}  - 起動後に実行するコマンドラインを指定
 @arg 3  {number}  - GUIの起動状態を指定。(WScript.Shell.Runのstyle値)
-@return {boolean} - スクリプト実行時にプロセスが起動済みなら真
+@return {boolean} - スクリプト実行時にプロセスが起動済みならtrue
 
 ===============================================================================
 setsel.js @deprecated
@@ -167,8 +167,11 @@ string型はクオートで括り、boolean型は括りません。
 
 %*input()のオプション、*completelistのオプション、autoselectが含まれます。
 
-autoselectが真のとき、補完リストが表示中かつ非選択状態でEnterキーを押すと
-第一候補が自動で選択されます。
+引数"autoselect"がtrueのとき、補完リストが表示中かつ非選択状態でEnterキーを押す
+と第一候補が自動で選択されます。
+
+引数"file"が設定されているとき、Ctrl+O, Ctrl+Sキーを押すと補完候補のパスが挿入
+されます。
 
 入力バーの終了時にK_ppmTempとM_ppmTempを削除します。
 

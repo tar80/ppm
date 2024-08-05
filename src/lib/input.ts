@@ -31,6 +31,7 @@
 import '@ppmdev/polyfills/json.ts';
 import {argParse} from '@ppmdev/parsers/json.ts';
 import fso from '@ppmdev/modules/filesystem.ts';
+import {isEmptyStr} from '@ppmdev/modules/guard.ts';
 import {ppm} from '@ppmdev/modules/ppm.ts';
 import debug from '@ppmdev/modules/debug.ts';
 
@@ -117,13 +118,25 @@ const inputOptions = (arg: Partial<Options>): string => {
 const postOptions = (arg: Partial<Options>): string => {
   const arr: string[] = ['-k', '*completelist'];
   const opts = parseOptions(arr, arg, true);
+  let keyTbl = '';
   opts('list');
   opts('module');
   opts('match');
   opts('detail', true);
 
   if (arg.file) {
-    if (!fso.FileExists(PPx.Extract(arg.file))) {
+    if (fso.FileExists(PPx.Extract(arg.file))) {
+      keyTbl = ppm.setkey(
+        '^o',
+        `*linecust ppminput,K_lied:FIRSTEVENT,%%(*insert ${arg.file}%%:*linecust ppminput,K_lied:FIRSTEVENT,%%)%%:%%K"@^o"`,
+        true
+      );
+      ppm.setkey(
+        '^s',
+        `*linecust ppminput,K_lied:FIRSTEVENT,%%(*insert ${arg.file}%%:*linecust ppminput,K_lied:FIRSTEVENT,%%)%%:%%K"@^s"`,
+        true
+      );
+    } else {
       arg.file = '';
     }
   }
@@ -133,7 +146,10 @@ const postOptions = (arg: Partial<Options>): string => {
   const result: string[] = [arr.join(' ')];
 
   if (arg.autoselect) {
-    const keyTbl = ppm.setkey('ENTER', `*if -1==%%*sendmessage(%%N-L,392,0,0)%%:%%K"@DOWN"%bn%bt%%K"@ENTER"`, true);
+    keyTbl = ppm.setkey('ENTER', '*if -1==%%*sendmessage(%%N-L,392,0,0)%%:%%K"@DOWN"%bn%bt%%K"@ENTER"', true);
+  }
+
+  if (!isEmptyStr(keyTbl)) {
     result.push(`*mapkey use,${keyTbl}`);
   }
 
