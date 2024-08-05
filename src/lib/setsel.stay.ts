@@ -27,6 +27,7 @@ const main = (): void => {
   ppx_resume(rgx, multi);
 };
 
+const ppx_finally = (): void => PPx.Echo('[WARN] instance remain setsel.stay.js');
 const ppx_resume = (rgx: string, multi: string): void => {
   const text = PPx.Extract('%*edittext()');
   const param: Param | void = !isZero(multi) ? selectMulti(text, rgx) : selectSingle(text, rgx);
