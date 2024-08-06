@@ -126,16 +126,8 @@ const postOptions = (arg: Partial<Options>): string => {
 
   if (arg.file) {
     if (fso.FileExists(PPx.Extract(arg.file))) {
-      keyTbl = ppm.setkey(
-        '^o',
-        `*linecust ppminput,K_lied:FIRSTEVENT,%%(*insert ${arg.file}%%:*linecust ppminput,K_lied:FIRSTEVENT,%%)%%:%%K"@^o"`,
-        true
-      );
-      ppm.setkey(
-        '^s',
-        `*linecust ppminput,K_lied:FIRSTEVENT,%%(*insert ${arg.file}%%:*linecust ppminput,K_lied:FIRSTEVENT,%%)%%:%%K"@^s"`,
-        true
-      );
+      keyTbl = ppm.setkey('^o', `*edit ${arg.file}%%:*completelist -file:${arg.file}`, false);
+      ppm.setkey('^s', `*string e,filename=${arg.file}%%:*completelist -close%%:%%k"@^']'a"`, false);
     } else {
       arg.file = '';
     }
