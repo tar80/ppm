@@ -77,24 +77,3 @@ const getEntries = (parent: string, att: SearchSpec, pattern: string, limit: num
 };
 
 PPx.result = main();
-
-// const getEntriesNet = ({path, att, pattern}: typeof target): string[] => {
-//   // @ts-ignore
-//   const si = NETAPI.System.IO;
-//   const di = si.Directory;
-
-//   if (!di.Exists(path)) {
-//     PPx.result = '';
-//     PPx.Quit(1);
-//   }
-
-//   const method = {both: 'EnumerateFiles', dir: 'GetDirectories', file: 'GetFiles'}[att];
-//   const entries = di[method](path, pattern);
-//   const result = [];
-
-//   for (const entry of entries) {
-//     result.push(entry);
-//   }
-
-//   return result;
-// };
