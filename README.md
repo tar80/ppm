@@ -38,4 +38,4 @@ TORO氏作のファイル操作ツール集Paper Plane xUIのプラグイン(設
 - [x] [ppm-translate](https://github.com/tar80/ppm-translate) 日本語/英語の相互翻訳
 - [x] [ppm-switchmenu](https://github.com/tar80/ppm-switchmenu) 入れ替え可能なプリセットメニュー
 - [ ] [ppm-view](https://github.com/tar80/ppm-view) PPv設定集
-- [ ] [ppm-vilikekeys](https://github.com/tar80/ppm-vilikekeys) viキーバインドをエミュレート
+- [x] [ppm-vilikekeys](https://github.com/tar80/ppm-vilikekeys) viキーバインドをエミュレート

@@ -7,13 +7,13 @@
 import '@ppmdev/polyfills/objectKeys.ts';
 import '@ppmdev/polyfills/objectIsEmpty.ts';
 import type {FileEncode} from '@ppmdev/modules/types.ts';
+import {validArgs} from '@ppmdev/modules/argument.ts';
 import {getLfMeta} from '@ppmdev/parsers/listfile.ts';
 import {valueEscape as jsonValue} from '@ppmdev/parsers/json.ts';
 import {isEmptyStr} from '@ppmdev/modules/guard.ts';
 import {readLines} from '@ppmdev/modules/io.ts';
 import {uniqID} from '@ppmdev/modules/data.ts';
 import debug from '@ppmdev/modules/debug.ts';
-import {validArgs} from '@ppmdev/modules/argument.ts';
 
 const userID = `${uniqID.lfDset}${PPx.Extract('%n')}`;
 
@@ -46,7 +46,7 @@ const main = (): string => {
 
     const labelId = `${userID},KC_main`;
     PPx.Execute(
-      `*linecust ${labelId}:LOADEVENT,*if ("%%n"=="%n")&&(4!=%%*js("PPx.result=PPx.DirectoryType"))` +
+      `*linecust ${labelId}:LOADEVENT,*if ("%%n"=="%n")&&(4!=%%*js("PPx.result=PPx.DirectoryType;"))` +
         `%%:*deletecust _User:${userID}` +
         mapkey.delete +
         `%%:*linecust ${labelId}:CLOSEEVENT,` +

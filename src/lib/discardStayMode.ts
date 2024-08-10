@@ -1,6 +1,6 @@
 /* @file Discard instance of Stay-Mode
  * @arg 0 {string} - Specify the _User data property name
- * @arg 1 {number} - Scecify the instance number of the Stay-Mode
+ * @arg 1 {number} - Scecify the instance number of StayMode
  * @arg 2 {string} - Displays debug messages when "DEBUG" is specified
  */
 
