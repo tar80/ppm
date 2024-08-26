@@ -31,14 +31,14 @@ const isSearchSpec = (v: string): v is SearchSpec => v === 'both' || v === 'file
 
 const getEntries = (parent: string, att: SearchSpec, pattern: string, limit: number): string[] => {
   const extractEntries = (collection: any, path: string): void => {
-    for (var v = PPx.Enumerator(collection); !v.atEnd(); v.moveNext()) {
+    for (const obj = PPx.Enumerator(collection); !obj.atEnd(); obj.moveNext()) {
       //for (const item of collection) {
       if (limit > 0 && entries.length >= limit) {
         return;
       }
 
-      if (~v.Item().Name.toLowerCase().indexOf(pattern)) {
-        entries.push(fso.BuildPath(path, v.Item().Name));
+      if (~obj.Item().Name.toLowerCase().indexOf(pattern)) {
+        entries.push(fso.BuildPath(path, obj.Item().Name));
       }
     }
 

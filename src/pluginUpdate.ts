@@ -4,19 +4,19 @@
  */
 
 import '@ppmdev/polyfills/objectKeys.ts';
-import type {Error_String} from '@ppmdev/modules/types.ts';
-import {info, useLanguage, uniqName} from '@ppmdev/modules/data.ts';
-import {writeLines} from '@ppmdev/modules/io.ts';
-import {runPPb} from '@ppmdev/modules/run.ts';
-import {ppm} from '@ppmdev/modules/ppm.ts';
-import {type Source, sourceNames, expandSource, owSource} from '@ppmdev/modules/source.ts';
 import {colorlize} from '@ppmdev/modules/ansi.ts';
+import {safeArgs} from '@ppmdev/modules/argument.ts';
+import {info, uniqName, useLanguage} from '@ppmdev/modules/data.ts';
 import {coloredEcho} from '@ppmdev/modules/echo.ts';
 import {isZero} from '@ppmdev/modules/guard.ts';
-import {safeArgs} from '@ppmdev/modules/argument.ts';
-import {langPluginUpdate} from './mod/language.ts';
-import {parseInstall, clearItem} from './mod/parser.ts';
+import {writeLines} from '@ppmdev/modules/io.ts';
+import {ppm} from '@ppmdev/modules/ppm.ts';
+import {runPPb} from '@ppmdev/modules/run.ts';
+import {type Source, expandSource, owSource, sourceNames} from '@ppmdev/modules/source.ts';
+import type {Error_String} from '@ppmdev/modules/types.ts';
 import {pluginUpdate as core} from './mod/core.ts';
+import {langPluginUpdate} from './mod/language.ts';
+// import {clearItem, parseInstall} from './mod/parser.ts';
 
 const GIT_LOG_OPTS = '--oneline --color=always';
 const updateLog = `${ppm.global('ppmcache')}\\ppm\\${uniqName.updateLog}`;
@@ -62,7 +62,7 @@ const main = (): void => {
     const version = ppm.getVersion(source.path) ?? '0.0.0';
 
     if (source.location === 'local') {
-      version > source.version && owSource(source.name, {version})
+      version > source.version && owSource(source.name, {version});
       continue;
     }
 

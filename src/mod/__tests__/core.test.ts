@@ -1,13 +1,13 @@
 import PPx from '@ppmdev/modules/ppx.ts';
 global.PPx = Object.create(PPx);
-import type {AnsiColors} from '@ppmdev/modules/types.ts';
-import {type Source} from '@ppmdev/modules/source.ts';
+import {execSync} from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
 import {colors} from '@ppmdev/modules/ansi.ts';
 import {uniqName} from '@ppmdev/modules/data.ts';
+import type {Source} from '@ppmdev/modules/source.ts';
+import type {AnsiColors} from '@ppmdev/modules/types.ts';
 import {installer, pluginInstall, pluginRegister, pluginUpdate} from '../core.ts';
-import fs from 'fs';
-import os from 'os';
-import {execSync} from 'child_process';
 
 const tempDir = `${os.tmpdir()}\\ppmdevtest`;
 
@@ -42,7 +42,7 @@ describe('globalPath()', function () {
     expect(PPx.Execute).toHaveBeenCalledWith('*deletecust _User:ppmhome');
     expect(PPx.Execute).toHaveBeenCalledWith('*deletecust _User:ppmarch');
     expect(PPx.Execute).toHaveBeenCalledWith('*deletecust _User:ppmrepo');
-    expect(PPx.Execute).toHaveBeenCalledWith(`*deletecust _User:ppmcache`);
+    expect(PPx.Execute).toHaveBeenCalledWith('*deletecust _User:ppmcache');
     expect(PPx.Execute).toHaveBeenCalledWith('*deletecust _User:ppmlib');
     // });
     expect(PPx.Execute).toHaveBeenCalledTimes(6);
@@ -130,8 +130,7 @@ describe.skip('checkUpdate()', function () {
   const path = `${tempDir}\\ppm`;
   beforeAll(() => {
     !fs.existsSync(tempDir) && fs.mkdirSync(tempDir);
-    !fs.existsSync(path) &&
-      execSync(`git clone --depth=1 --recurse-submodules --shallow-submodules https://github.com/tar80/ppm ${path}`);
+    !fs.existsSync(path) && execSync(`git clone --depth=1 --recurse-submodules --shallow-submodules https://github.com/tar80/ppm ${path}`);
   });
   afterAll(() => {
     fs.rmSync(tempDir, {recursive: true, force: true});

@@ -5,15 +5,15 @@
  * @return - Error level for open and opendiff commands
  */
 
-import type {Level_String} from '@ppmdev/modules/types.ts';
+import {validArgs} from '@ppmdev/modules/argument.ts';
+import {info, uniqName, useLanguage} from '@ppmdev/modules/data.ts';
 import fso from '@ppmdev/modules/filesystem.ts';
-import {expandSource, sourceComp, sourceComplistPath} from '@ppmdev/modules/source.ts';
-import {info, useLanguage, uniqName} from '@ppmdev/modules/data.ts';
+import {isEmptyStr} from '@ppmdev/modules/guard.ts';
 import {pathSelf} from '@ppmdev/modules/path.ts';
 import {ppm} from '@ppmdev/modules/ppm.ts';
-import {isEmptyStr} from '@ppmdev/modules/guard.ts';
+import {expandSource, sourceComp, sourceComplistPath} from '@ppmdev/modules/source.ts';
+import type {Level_String} from '@ppmdev/modules/types.ts';
 import {langCommand} from './mod/language.ts';
-import {validArgs} from '@ppmdev/modules/argument.ts';
 
 const {scriptName} = pathSelf();
 const lang = langCommand[useLanguage()];

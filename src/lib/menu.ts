@@ -8,13 +8,13 @@
  */
 
 import '@ppmdev/polyfills/objectKeys.ts';
-import {properties} from '@ppmdev/parsers/table.ts';
-import {isEmptyObj} from '@ppmdev/modules/guard.ts';
-import {info, useLanguage, tmp} from '@ppmdev/modules/data.ts';
-import {pathSelf} from '@ppmdev/modules/path.ts';
-import {writeLines} from '@ppmdev/modules/io.ts';
 import {safeArgs} from '@ppmdev/modules/argument.ts';
+import {info, useLanguage} from '@ppmdev/modules/data.ts';
 import debug from '@ppmdev/modules/debug.ts';
+import {isEmptyObj} from '@ppmdev/modules/guard.ts';
+import {writeLines} from '@ppmdev/modules/io.ts';
+import {pathSelf} from '@ppmdev/modules/path.ts';
+import {properties} from '@ppmdev/parsers/table.ts';
 
 const main = (): string => {
   const [order, menuId, itemNum, subId, itemValue] = safeArgs('insert', '', -1, undefined, '');
@@ -47,7 +47,7 @@ const main = (): string => {
   const newTbl = adjustTable[order as Order](items, numSpec, newProp);
 
   debug.log(newTbl.join(info.nlcode));
-  const tmpFile = tmp().file;
+  const tmpFile = `${PPx.Extract("%'temp'%\\ppm")}\\_menu.cfg`;
   const [error, errorMsg] = writeLines({path: tmpFile, data: newTbl, overwrite: true});
 
   if (error) {
@@ -76,7 +76,7 @@ const lang = {
 
 type Order = 'insert' | 'replace' | 'delete';
 
-const rebuildMenu = (id: string, props: properties): typeof items => {
+const rebuildMenu = (id: string, props: ReturnType<typeof properties>): typeof items => {
   const items = [`-|${id} =${info.nlcode}${id}\t= {`];
 
   for (const subid of Object.keys(props)) {
@@ -88,7 +88,7 @@ const rebuildMenu = (id: string, props: properties): typeof items => {
   return items;
 };
 
-const adjustTable: {[key in Order]: Function} = {
+const adjustTable: {[key in Order]: (items: string[], num: number, prop: string) => string[]} = {
   insert(items: string[], num: number, prop: string) {
     items.splice(num, 0, prop);
 

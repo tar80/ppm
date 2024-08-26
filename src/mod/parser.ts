@@ -2,12 +2,12 @@ import type {Error_Data} from '@ppmdev/modules/types.ts';
 import '@ppmdev/polyfills/stringTrim.ts';
 import '@ppmdev/polyfills/stringPrecedes.ts';
 import '@ppmdev/polyfills/arrayIndexOf.ts';
-import type {ScriptEngine} from '@ppmdev/modules/types.ts';
-import {type PermissionItems, permission} from '@ppmdev/modules/permission.ts';
-import {readLines} from '@ppmdev/modules/io.ts';
-import {isBottom, isEmptyStr} from '@ppmdev/modules/guard.ts';
 import {info, uniqName} from '@ppmdev/modules/data.ts';
+import {isBottom, isEmptyStr} from '@ppmdev/modules/guard.ts';
+import {readLines} from '@ppmdev/modules/io.ts';
+import {type PermissionItems, permission} from '@ppmdev/modules/permission.ts';
 import {ppm} from '@ppmdev/modules/ppm.ts';
+import type {ScriptEngine} from '@ppmdev/modules/types.ts';
 import {langParser} from './language.ts';
 
 const lang = langParser[ppm.lang()];
@@ -68,7 +68,9 @@ const item = {
 };
 
 export let parsedItem = {...item};
-export const clearItem = () => (parsedItem = {...item});
+export const clearItem = () => {
+  parsedItem = {...item};
+};
 
 type installPermissions = typeof permissions;
 type installPermissionKeys = keyof installPermissions;
@@ -139,7 +141,8 @@ export const parseInstall = (name: string, path: string, local: boolean): [boole
         continue;
       }
 
-      let error2, dataStr;
+      let error2: boolean;
+      let dataStr: string;
       if (key === 'pluginVersion') {
         parsedItem[key] = value;
         [error2, dataStr] = permission['pluginVersion'](value as never, name);
@@ -166,7 +169,7 @@ export const parseInstall = (name: string, path: string, local: boolean): [boole
 export const getProp = (line: string): {key: string; sep: string; value: string} => {
   const delim = '@ppm!delim#';
   const param = /^'/.test(line)
-    ? line.replace(/^('[^']+'\s*)([=,])\s*(.*)$/, `$1${delim}$2${delim}$3`)
+    ? line.replace(/^((?:'''|'[^']+')\s*)([=,])\s*(.*)$/, `$1${delim}$2${delim}$3`)
     : line.replace(/^([^=,]+)([=,])\s*(.*)$/, `$1${delim}$2${delim}$3`);
   const param_ = param.split(delim);
 
@@ -180,7 +183,7 @@ type SpecValue = {[key: string]: {sep: string; value: string}};
 type SpecProp = {[key in SpecKeys]: SpecValue};
 type ExtraProp = {[key in ExtraKeys]: string[]};
 type LinecustValue = {[key: string]: {id: string; sep: string; value: string}};
-type LinecustProp = {'linecust': LinecustValue};
+type LinecustProp = {linecust: LinecustValue};
 
 export const specItem = (
   i: number,
@@ -366,7 +369,7 @@ export const linecustItems = (i: number, k: number, lines: string[], parsed: Par
     line.replace(rgx, function (_, ...rest): string {
       let [label, id, sep, value] = [...rest];
 
-      if (!!sep) {
+      if (sep) {
         value = value ?? '';
         linecust[label] = {id, sep, value};
       }
@@ -437,7 +440,7 @@ const patch = (type: PatchSource, lines: string[]): ParsedPatch => {
 
     [error, parsedPatch, i] = specItem(i, k, line, lines, parsedPatch);
 
-    if (!!error) {
+    if (error) {
       throw new Error(errorDetail(error, i, line));
     }
   }
@@ -448,7 +451,7 @@ const patch = (type: PatchSource, lines: string[]): ParsedPatch => {
     if (line.indexOf('[section]') === 0) {
       [error, i, parsedPatch] = sectionItems(i, k, lines, parsedPatch);
 
-      if (!!error) {
+      if (error) {
         throw new Error(errorDetail(error, i, line));
       }
     } else if (type === 'user' && line.indexOf('[linecust]') === 0) {
@@ -522,7 +525,7 @@ export const mergeProp = (
     key_ = key.substring(DEFAULT_VALUE.length);
     attach = patch.default[key_];
 
-    if (!!attach) {
+    if (attach) {
       [sep_, value_] = [attach.sep, attach.value];
     }
   } else if (key.indexOf(REPLACE_KEY) === 0) {

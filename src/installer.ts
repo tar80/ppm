@@ -3,16 +3,16 @@
  * @arg 1 {number} - If non-zero, do not install and check permissions
  */
 
-import type {Level_String} from '@ppmdev/modules/types.ts';
-import {isEmptyStr} from '@ppmdev/modules/guard.ts';
-import {info, useLanguage, uniqName, tmp} from '@ppmdev/modules/data.ts';
-import {pathSelf, pathNormalize} from '@ppmdev/modules/path.ts';
-import {ppm} from '@ppmdev/modules/ppm.ts';
 import {safeArgs} from '@ppmdev/modules/argument.ts';
-import {createBackup} from '@ppmdev/modules/ppcust.ts';
-import {langInstaller} from './mod/language.ts';
-import {installer as core} from './mod/core.ts';
+import {info, tmp, uniqName, useLanguage} from '@ppmdev/modules/data.ts';
 import debug from '@ppmdev/modules/debug.ts';
+import {isEmptyStr} from '@ppmdev/modules/guard.ts';
+import {pathNormalize, pathSelf} from '@ppmdev/modules/path.ts';
+import {createBackup} from '@ppmdev/modules/ppcust.ts';
+import {ppm} from '@ppmdev/modules/ppm.ts';
+import type {Level_String} from '@ppmdev/modules/types.ts';
+import {installer as core} from './mod/core.ts';
+import {langInstaller} from './mod/language.ts';
 
 const {scriptName, parentDir} = pathSelf();
 const lang = langInstaller[useLanguage()];
@@ -73,9 +73,7 @@ const main = () => {
   }
 
   if (overwriteCachedData && ppmhome !== cachedDataDir) {
-    const exitcode = PPx.Execute(
-      `*file !move,${cachedDataDir}\\,${ppmhome},-min -querycreatedirectory:off -error:abort`
-    );
+    const exitcode = PPx.Execute(`*file !move,${cachedDataDir}\\,${ppmhome},-min -querycreatedirectory:off -error:abort`);
 
     if (exitcode !== 0) {
       ppm.echo(scriptName, lang.failedToMove, exitcode);
