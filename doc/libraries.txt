@@ -8,6 +8,7 @@ CONTENTS
 
 	checkPid.js
 	countEntries.js
+	cryptXOR.js
 	discardStayMode.js
 	errors.js
 	exeExists.js
@@ -23,7 +24,9 @@ CONTENTS
 	seeProcess.js
 	setsel.stay.js
 	spinner.js
+	stackPPb.js
 	toggleOpacity.js
+	vehandler.js
 
 ===============================================================================
 checkpid.js
@@ -36,9 +39,20 @@ checkpid.js
 countEntries.js
 指定ディレクトリ配下のエントリ数を返します。
 
-@arg 0 {string} - ディレクトリパスを指定
-@arg 1 {string} "both"(default)|"dir"|"file" - 対象とするファイル属性を指定
-@arg 2 {number} - 取得上限を設定
+@arg 0  {string} - ディレクトリパスを指定
+@arg 1  {string} "both"(default)|"dir"|"file" - 対象とするファイル属性を指定
+@arg 2  {number} - 取得上限を設定
+@return {number} - エントリ数
+
+===============================================================================
+cryptXOR.js
+XOR暗号化・複合化です。暗号としての強度はありません。
+平文で記録したくない文字列などに使用します。
+暗号化・複合化した文字列を返します。
+
+@arg 0  {number} - 暗号化・複合化キーを指定
+@arg 1  {string} - 暗号化・複合化する文字列を指定
+@return {string} - 暗号化・複合化済み文字列
 
 ===============================================================================
 discardStayMode.js
@@ -146,14 +160,17 @@ lfActions.js
 
 ===============================================================================
 lfDset.js
+指定したListFileのメタデータを取得しメタデータ"cmd"の値を返します。
+ListFileが仮想エントリリストの場合はveHandler.jsを実行します。
+
+@arg 0 {string} - 通常ListFileのViewStyleを指定
+@arg 1 {"sjis"|"utf8"|"utf16le"(default)} - リストファイルのエンコードを指定
+@return {string} - メタデータ"cmd"の値
+
 指定したListFileのメタデータを取得して返し、同時に%su'ppmlfdset%n'にJSON形式で
 メタデータを登録し、メタデータ"cmd"の値を返します。
 また、リストファイルを閉じたときに%su'ppmlfdset%n'、K_ppmTemp、M_ppmTempを
 削除するための一時設定をKC_main:LOADEVENT、KC_main:CLOSEEVENTに登録します。
-
-@arg 0 {string} - リストファイルのパスを指定
-@arg 1 {string} - メタデータのIDを指定
-@arg 2 {"sjis"|"utf8"|"utf16le"(default)} - リストファイルのエンコードを指定
 
 ===============================================================================
 lfMetadata.js
@@ -227,11 +244,24 @@ setsel.stay.js
 ===============================================================================
 spinner.js
 PPcのステータス行にテキストアニメーションを表示します。
-PPbからの呼び出し時のみ実行されます。
+PPbからの呼び出し時のみ実行されます。実行されると
+*string i,<user_spec>=1が設定され、%si'<user_spec>'が空になると終了します。
+  %Od *ppb -c *script %sgu'ppm'\dist\lib\spinner.js,CA,dot,<user_spec> で開始。
+  *execute CA,*string i,<user_spec>= で終了。
 
 @arg 0 {string} - スピナーを表示するPPcのIDを指定
 @arg 1 {string} - 表示するスピン名を指定。dot|star|box|toggle
 @arg 2 {string} - スピンの破棄に使用する特殊環境変数iの名前を指定
+
+===============================================================================
+stackPPb.js
+PPbを非同期に実行し、指定された起点から整列して積み上げます。J,K,L,M,Nの5つのID
+を使用し5枚まで同時に実行します。6-10までのタスクはIDに空きがでるまで待機します。
+10以上のタスクはキャンセルされます。同時実行するコマンドは@arg0をそろえておく
+必要があります。バラバラにすると綺麗に積み上がりません。
+
+@arg 0 {string} - PPbの積み上げ起点位置。NW(左上)|NE(右上)|SW(左下)|SE(右下)
+@arg 1 {string} - PPb上で実行するコマンドを指定
 
 ===============================================================================
 toggleOpacity.js
@@ -239,5 +269,8 @@ toggleOpacity.js
 
 @arg 0 {number} - 不透明度(高)を指定(初期値:90)
 @arg 1 {number} - 不透明度(低)を指定(初期値:80)
+
+===============================================================================
+veHandler.js
 
 ===============================================================================
