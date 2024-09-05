@@ -3,12 +3,12 @@
  * @arg 1 {number} - Customization detail log tab width
  */
 
-import fso from '@ppmdev/modules/filesystem.ts';
+import {safeArgs} from '@ppmdev/modules/argument.ts';
 import {info, tmp, uniqName, useLanguage} from '@ppmdev/modules/data.ts';
+import fso from '@ppmdev/modules/filesystem.ts';
 import {pathSelf} from '@ppmdev/modules/path.ts';
 import {ppm} from '@ppmdev/modules/ppm.ts';
 import {langLogViewer} from './mod/language.ts';
-import {safeArgs} from '@ppmdev/modules/argument.ts';
 
 const {scriptName, parentDir} = pathSelf();
 const lang = langLogViewer[useLanguage()];
@@ -42,16 +42,14 @@ const main = (): void => {
   });
 
   const resetCaret = setCaret();
-  PPx.Execute(
-    `%Oi *ppv -r -bootid:${info.ppmID} -utf8 -esc:on -history:off ${log.opts} ${log.path} -k *mapkey use,${keyTbl}`
-  );
+  PPx.Execute(`%Oi *ppv -r -bootid:${info.ppmID} -utf8 -esc:on -history:off ${log.opts} ${log.path} -k *mapkey use,${keyTbl}`);
   resetCaret();
 };
 
 type LogType = 'update' | 'customize';
 const isLogType = (arg: string): arg is LogType => /update|customize/.test(arg);
 
-const setCaret = (): Function => {
+const setCaret = (): (() => number | void) => {
   const FIELD_ID = 'XV_tmod';
   const caretMode = ppm.getcust(FIELD_ID)[1];
 

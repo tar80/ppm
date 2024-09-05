@@ -59,7 +59,7 @@ const getUseIds = (names: string[]): typeof lines => {
   for (const name of names) {
     const p = expandSource(name);
 
-    if ((!p || !p.setup) && name !== info.ppmName) {
+    if (!p?.enable && name !== info.ppmName) {
       continue;
     }
 
