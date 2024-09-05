@@ -32,32 +32,42 @@ if (PPx.Extract('%n').indexOf('B') !== 0) {
   PPx.Quit(-1);
 }
 
-type SpinType = keyof typeof spinPattern;
+type SpinType = (typeof spinKeys)[number];
+const spinKeys = ['dot', 'star', 'box', 'toggle'] as const;
 const spinPattern = {
-  dot: {interval: 80, frames: ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']},
-  star: {interval: 80, frames: ['✶', '✸', '✹', '✺', '✹', '✷']},
-  box: {interval: 100, frames: ['▌', '▀', '▐', '▄']},
-  toggle: {interval: 500, frames: ['⊶', '⊷']}
+  [spinKeys[0]]: {interval: 100, frames: ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']},
+  [spinKeys[1]]: {interval: 100, frames: ['✶', '✸', '✹', '✺', '✹', '✷']},
+  [spinKeys[2]]: {interval: 120, frames: ['▌', '▀', '▐', '▄']},
+  [spinKeys[3]]: {interval: 500, frames: ['⊶', '⊷']}
 };
 
 const main = () => {
   const [ppcid, spinType, siName] = safeArgs('CA', 'dot', 'stop');
-  const spinner = spinPattern[spinType as SpinType] ?? 'dot';
+  const spinner = getSpinner(spinType);
   const len = spinner.frames.length;
   let i = 0;
+
+  PPx.Execute(`*execute ${ppcid},*string i,${siName}=1`);
 
   while (true) {
     showSpinner(ppcid, spinner.frames[i]);
     PPx.Sleep(spinner.interval);
 
-    if (PPx.Extract(`%*extract(${ppcid},"%%si'${siName}'")`) !== '') {
-      PPx.Execute(`*execute ${ppcid},*string i,${siName}=`);
+    if (PPx.Extract(`%*extract(${ppcid},"%%si'${siName}'")`) === '') {
       showSpinner(ppcid, ' ');
       break;
     }
 
     i = i < len - 1 ? i + 1 : 0;
   }
+};
+
+const getSpinner = (spinType: string): (typeof spinPattern)[SpinType] => {
+  if (/^[0-3]$/.test(spinType)) {
+    spinType = spinKeys[spinType as '0' | '1' | '2' | '3'];
+  }
+
+  return spinPattern[spinType as SpinType] ?? spinPattern.dot;
 };
 
 const showSpinner = (id: string, mark: string): number => PPx.Execute(`*execute ${id},*linemessage !"${mark}`);
