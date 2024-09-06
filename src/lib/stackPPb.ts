@@ -1,6 +1,8 @@
 /* @file Step through tasks in PPb
  * @arg 0 {string} - Specify direction. "NW" | "NE" | "SW" | "SE"
  * @arg 1 {string} - Specify the command line to run in PPb
+ *
+ * NOTE: Passing no arguments will abort all pending tasks.
  */
 
 import '@ppmdev/polyfills/objectKeys.ts';
@@ -42,23 +44,34 @@ const main = (): void => {
   const ppcid = PPx.Extract('%n');
   let direction = getDirection(dirSpec);
 
+  if (!dirSpec) {
+    PPx.Execute(`*execute ${ppcid},*string i,${SI_NAME}=break`);
+    PPx.Execute('*wait 2000,2');
+    PPx.Execute(`*execute ${ppcid},*string i,${SI_NAME}=`);
+
+    return;
+  }
+
   while (true) {
     for (const ppbid of Object.keys(USE_IDS)) {
-      if (isEmptyStr(siValue(ppcid, ppbid))) {
-        PPx.Execute(`*execute ${ppcid},*string i,${SI_NAME}${ppbid}=1`);
-        stackPPb(ppcid, ppbid as KeyId, direction, cmdline);
+      const iStatus = siValue(ppcid, ppbid);
+      const isInactive = isEmptyStr(PPx.Extract(`%NB${ppbid}`));
 
-        return;
-      } else if (siValue(ppcid, ppbid) === '1') {
-        PPx.Execute(`*execute ${ppcid},*string i,${SI_NAME}${ppbid}=2`);
+      if (isInactive && iStatus !== 'starting') {
+        PPx.Execute(`*execute ${ppcid},*string i,${SI_NAME}${ppbid}=starting`);
         stackPPb(ppcid, ppbid as KeyId, direction, cmdline);
 
         return;
       }
     }
 
-    const waitCount = 1000 + Math.floor(Math.random() * 1000);
+    const waitCount = 1000 + Math.floor(Math.random() * 800);
     PPx.Execute(`*wait ${waitCount},2`);
+
+    if (PPx.Extract(`%*extract(${ppcid},"%%si'${SI_NAME}'")`) === 'break') {
+      PPx.Echo(111)
+      break;
+    }
   }
 };
 
@@ -104,10 +117,11 @@ const stackPPb = (ppcid: string, ppbid: KeyId, direction: Direction, cmdline: st
   const runOptions = '-breakjob -newgroup -noppb -nostartmsg -noactive -wait:no';
   const ppbOptions = `-bootid:${ppbid} -q`;
   const winsize = `*windowsize %N,${PPB_WIDTH},${ppbHeight}`;
+  const setSiActivate = `*execute ${ppcid},*string i,${SI_NAME}${ppbid}=activate`;
   const postProc = `*execute ${ppcid},*string i,${SI_NAME}${ppbid}=%:*closeppx %n`;
 
   PPx.Execute(`*setcust _WinPos:B${ppbid}=${pos.join(',')},${PPB_WIDTH},${ppbHeight},0`);
-  PPx.Execute(`*run ${runOptions} %0ppbw.exe ${ppbOptions} -k %(${winsize}%:${cmdline}%&${postProc}%)`);
+  PPx.Execute(`%OP *run ${runOptions} %0ppbw.exe ${ppbOptions} -k %(${winsize}%:${setSiActivate}%:${cmdline}%&${postProc}%)`);
 };
 
 main();
