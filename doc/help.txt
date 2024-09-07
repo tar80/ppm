@@ -99,6 +99,8 @@ S_ppm#global	ppmが使用する各種設定値の保存場所
   ├─module	モジュールスクリプトの保存場所 *deprecated
   └─scripttype	使用中のJavaScriptライブラリ *deprecated
 
+S_ppm#event	プラグインが設定するユーザーイベント
+
 S_ppm#plugins	S_ppm#sourcesに変更 *deprecated
 
 S_ppm#sources	インストール済みのプラグインの名称(サブID)と値
