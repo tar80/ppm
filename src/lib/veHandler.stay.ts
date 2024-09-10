@@ -243,4 +243,4 @@ const startPPv = (ppvid: string, position: string, search: string, jumpline: str
 };
 
 if (!debug.jestRun()) main();
-export {blankHandle, replaceCmdline};
+// export {blankHandle, replaceCmdline};
