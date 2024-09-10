@@ -8,7 +8,7 @@ TORO氏作のファイル操作ツール集Paper Plane xUIのプラグイン(設
 - UNICODE版、64bit版のPPxが対象。MultiByte版は動作対象外となります。  
 その他の条件として、
 
-  - PPx Script Module、Key Module、 Message Module、 Text Moduleの導入
+  - PPxScriptModule、KeyModule、MessageModule、TextModule、WindowModuleの導入
   - 正規表現ライブラリbregonig.dllの導入
   - gitのインストール
 
