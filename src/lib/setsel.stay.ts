@@ -61,4 +61,4 @@ const selectMulti = (text: string, rgxstr: string): Param => {
 };
 
 if (!debug.jestRun()) main();
-export {selectSingle, selectMulti};
+// export {selectSingle, selectMulti};
