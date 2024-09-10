@@ -1,21 +1,21 @@
 import PPx from '@ppmdev/modules/ppx.ts';
 global.PPx = Object.create(PPx);
-import {blankHandleSpec, replaceCmdline} from '../lfActions.ts';
+import {blankHandle, replaceCmdline} from '../veHandler.stay.ts';
 
-describe('blankHandleSpec()', function () {
+describe('blankHandle()', function () {
   const path = 'test test test';
 
   it('specify "enclose". return value must be enclosed in double quotes', () => {
-    const replacer = blankHandleSpec('enclose');
+    const replacer = blankHandle('enclose');
     expect(replacer(path)).toBe(`"test test test"`);
   });
   it('specify "double". return value must be enclosed in two double quotes', () => {
-    const replacer = blankHandleSpec('double');
+    const replacer = blankHandle('double');
     expect(replacer(path)).toBe(`""test test test""`);
   });
   it('specify "double". return value must be enclosed in two double quotes', () => {
-    const replacer = blankHandleSpec('escape');
-    expect(replacer(path)).toBe(`test\\ test\\ test`);
+    const replacer = blankHandle('escape');
+    expect(replacer(path)).toBe('test\\ test\\ test');
   });
 });
 

@@ -6,28 +6,29 @@
 
 import '@ppmdev/polyfills/objectKeys.ts';
 import '@ppmdev/polyfills/objectIsEmpty.ts';
-import type {FileEncode} from '@ppmdev/modules/types.ts';
 import {validArgs} from '@ppmdev/modules/argument.ts';
-import {getLfMeta} from '@ppmdev/parsers/listfile.ts';
-import {valueEscape as jsonValue} from '@ppmdev/parsers/json.ts';
-import {isEmptyStr} from '@ppmdev/modules/guard.ts';
-import {readLines} from '@ppmdev/modules/io.ts';
-import {uniqID} from '@ppmdev/modules/data.ts';
 import debug from '@ppmdev/modules/debug.ts';
+import {isEmptyStr} from '@ppmdev/modules/guard.ts';
+import {confirmFileEncoding, readLines} from '@ppmdev/modules/io.ts';
+import {getLfMeta} from '@ppmdev/parsers/listfile.ts';
 
-const userID = `${uniqID.lfDset}${PPx.Extract('%n')}`;
+const VE_HANDLER_PATH = '%sgu"ppmlib"\\veHandler.stay.js';
 
 const main = (): string => {
-  const path = PPx.Extract('%FDV');
-  const dset = PPx.Extract(`%*getcust(XC_dset:${path})`);
+  if (PPx.DirectoryType !== 4) {
+    return noExecution('', 'Not a ListFile');
+  }
 
-  if (!isEmptyStr(dset)) {
-    return altExecution(dset);
+  const path = PPx.Extract('%FDV');
+  const [yes, cmdline] = hasDset(path);
+
+  if (yes) {
+    return cmdline;
   }
 
   const args = validArgs();
-  const fileEncode = /sjis|utf8|utf16le/.test(args[1]) ? (args[1] as FileEncode) : 'utf16le';
-  const [error, data] = readLines({path, enc: fileEncode});
+  const enc = confirmFileEncoding(args[1]);
+  const [error, data] = readLines({path, enc});
 
   if (error) {
     return noExecution(args[0], data);
@@ -37,47 +38,37 @@ const main = (): string => {
 
   if (Object.isEmpty(meta)) {
     return noExecution(args[0], 'no metadata');
-  } else {
-    const hasMapkey = !!meta.mapkey && !isEmptyStr(meta.mapkey);
-    const mapkey = {
-      true: {use: `%:*mapkey use,${meta.mapkey}`, delete: `%%:*mapkey delete,${meta.mapkey}`},
-      false: {use: '', delete: ''}
-    }[hasMapkey.toString() as 'true' | 'false'];
-
-    const labelId = `${userID},KC_main`;
-    PPx.Execute(
-      `*linecust ${labelId}:LOADEVENT,*if ("%%n"=="%n")&&(4!=%%*js("PPx.result=PPx.DirectoryType;"))` +
-        `%%:*deletecust _User:${userID}` +
-        mapkey.delete +
-        `%%:*linecust ${labelId}:CLOSEEVENT,` +
-        `%%:*linecust ${labelId}:LOADEVENT,`
-    );
-    PPx.Execute(`*string u,${userID}=${objToJson(meta)}${mapkey.use}`);
-
-    return meta.cmd;
   }
+
+  PPx.Execute(
+    `*script ${VE_HANDLER_PATH},"${meta.base}","${meta.dirtype}","${meta.search}","${meta.ppm}","${meta.mapkey}","${meta.freq}"`
+  );
+
+  return meta.cmd ?? '';
+};
+
+const hasDset = (path: string): [boolean, string] => {
+  const rgx = /^B\d+,[-,B0-9]+(?:disp:"[^"]+" )?(?:mask:"[^"]+" )?cmd:"([^"]*)".*$/;
+  let dset = PPx.Extract(`%*getcust(XC_dset:${path})`);
+
+  do {
+    if (!isEmptyStr(dset)) {
+      const cmdline = ~dset.indexOf('cmd:') ? dset.replace(rgx, '$1') : '';
+
+      return [true, cmdline];
+    }
+
+    path = path.slice(0, path.lastIndexOf('\\'));
+    dset = PPx.Extract(`%*getcust(XC_dset:${path}%\\)`);
+  } while (~path.indexOf('\\'));
+
+  return [false, ''];
 };
 
 const noExecution = (style: string, message: string): string => {
   debug.log(message);
 
   return isEmptyStr(style) ? '' : `*viewstyle -temp "${style}"`;
-};
-
-const altExecution = (dset: string): string => {
-  const rgx = /^B\d+,[\-B0-9,]+(.+)$/;
-
-  return ~dset.indexOf('cmd') ? dset.replace(rgx, (_, opts) => opts.replace(/^.*cmd:"([^"]*)".*$/, '$1')) : '';
-};
-
-const objToJson = (items: Record<string, string>): string => {
-  const arr = [];
-
-  for (const item of Object.keys(items)) {
-    arr.push(`"${item}":"${jsonValue(items[item as keyof typeof items])}"`);
-  }
-
-  return `{${arr.join(',')}}`;
 };
 
 PPx.result = main();

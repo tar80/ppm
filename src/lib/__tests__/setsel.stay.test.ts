@@ -1,6 +1,6 @@
 import PPx from '@ppmdev/modules/ppx.ts';
 global.PPx = Object.create(PPx);
-import {selectSingle, selectMulti} from '../setsel.ts';
+import {selectMulti, selectSingle} from '../setsel.stay.ts';
 
 describe('selectSingle()', function () {
   it('pass an empty string. the return value must be {w:0, l:0}', () => {
@@ -16,7 +16,9 @@ describe('selectSingle()', function () {
 });
 
 describe('selectMulti()', function () {
-  afterAll(() => PPx.Extract = ppxt)
+  afterAll(() => {
+    PPx.Extract = ppxt;
+  });
   const ppxt = PPx.Extract;
 
   const rgxstr = '([\\s\\S]*")([^"]*)[\\s\\S]*';

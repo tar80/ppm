@@ -22,7 +22,7 @@ if (fso.FileExists(PPx.Extract('%OR %FDC'))) {
 const DELIM = '@#_#@';
 
 const main = (): void => {
-  let [action, blank, duplicate] = safeArgs('*ppv', 'enclose', false);
+  let [action, blank, duplicate] = safeArgs('ppv', 'enclose', false);
   const userData = PPx.Extract(`%*extract(%%su'${uniqID.lfDset}%n')`);
 
   if (isEmptyStr(userData)) {

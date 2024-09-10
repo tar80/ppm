@@ -1,38 +1,33 @@
 /* @file Controls string selection
  * @arg 0 {string} - RegExp. "(<before the select string>)(<select string>)"
  * @arg 1 {number} - If non-zero, enable multiple lines
- * @arg 2 {number} - Specify "1" to maintain the running state
  */
 
+import {safeArgs} from '@ppmdev/modules/argument.ts';
+import debug from '@ppmdev/modules/debug.ts';
 import {isEmptyStr, isZero} from '@ppmdev/modules/guard.ts';
 import {pathSelf} from '@ppmdev/modules/path.ts';
-import {safeArgs} from '@ppmdev/modules/argument.ts';
-import {atActiveEvent} from '@ppmdev/modules/staymode.ts';
-import debug from '@ppmdev/modules/debug.ts';
+
+const {scriptName, parentDir} = pathSelf();
 
 const main = (): void => {
-  const [rgx, multi, staymode] = safeArgs('', '0', '');
+  const [rgx, multi] = safeArgs('', '0');
 
   if (isEmptyStr(rgx) || rgx.split(')').length < 3) {
-    const {scriptName, parentDir} = pathSelf();
     PPx.Execute(`*script "${parentDir}\\errors.js",arg,${scriptName}`);
     PPx.Quit(-1);
-  }
-
-  if (staymode === '1') {
-    PPx.StayMode = 2;
-    atActiveEvent.hold('ppm_setsel');
   }
 
   ppx_resume(rgx, multi);
 };
 
-const ppx_finally = (): void => PPx.Echo('[WARN] instance remain setsel.stay.js');
 const ppx_resume = (rgx: string, multi: string): void => {
   const text = PPx.Extract('%*edittext()');
   const param: Param | void = !isZero(multi) ? selectMulti(text, rgx) : selectSingle(text, rgx);
   param && param.w !== param.l && PPx.Execute(`*sendmessage %N,177,${param.w},${param.l}`);
 };
+
+// const ppx_finally = (): void => PPx.Echo(`[ERROR] remaining instance:${scriptName}`);
 
 type Param = {w: number; l: number};
 const selectSingle = (text: string, rgxstr: string): Param | void => {
@@ -66,4 +61,4 @@ const selectMulti = (text: string, rgxstr: string): Param => {
 };
 
 if (!debug.jestRun()) main();
-// export {selectSingle, selectMulti};
+export {selectSingle, selectMulti};

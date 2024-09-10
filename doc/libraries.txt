@@ -18,13 +18,13 @@ CONTENTS
 	lfActions.js
 	lfDset.js
 	lfMetadata.js
-	lfSyncview.stay.js
+	lfSyncview.stay.js @deprecated
 	libExists.js
 	menu.js
 	seeProcess.js
 	setsel.stay.js
 	spinner.js
-	stackPPb.js
+	stackPPb.stay.js
 	toggleOpacity.js
 	vehandler.js
 
@@ -117,21 +117,21 @@ valueの型は、string|booleanのどちらかです。
 string型はクオートで括り、boolean型は括りません。
 以下はkey,{type},value初期値のリストです。
 {
-  "text":         {string}  "",
-  "title":        {string}  "ppm/input.js",
-  "mode":         {string}  "e",
-  "select":       {string}  "a",
-  "k":            {string}  "",
-  "forpath":     {boolean}  false,
-  "fordigit":    {boolean}  false,
-  "leavecancel": {boolean}  false,
-  "multi":       {boolean}  false,
+  "text":        {string}  "",
+  "title":       {string}  "ppm/input.js",
+  "mode":        {string}  "e",
+  "select":      {string}  "a",
+  "k":           {string}  "",
+  "forpath":     {boolean} false,
+  "fordigit":    {boolean} false,
+  "leavecancel": {boolean} false,
+  "multi":       {boolean} false,
 
-  "list":         {string}  "off",
-  "module":       {string}  "off",
-  "match":        {string}  "",
-  "detail":       {string}  "",
-  "file":         {string}  "",
+  "list":        {string}  "off",
+  "module":      {string}  "off",
+  "match":       {string}  "",
+  "detail":      {string}  "",
+  "file":        {string}  "",
 
   "autoselect":  {boolean}  false,
 }
@@ -160,17 +160,13 @@ lfActions.js
 
 ===============================================================================
 lfDset.js
-指定したListFileのメタデータを取得しメタデータ"cmd"の値を返します。
-ListFileが仮想エントリリストの場合はveHandler.jsを実行します。
+指定したListFileのメタデータを取得しメタデータ"cmd:"の値を返します。
+メタデータ"cmd:"が見つからないときは、*viewstyle -temp "@arg0"を実行し、
+仮想エントリリストのときは、veHandler.stay.jsを常駐します。
 
 @arg 0 {string} - 通常ListFileのViewStyleを指定
 @arg 1 {"sjis"|"utf8"|"utf16le"(default)} - リストファイルのエンコードを指定
 @return {string} - メタデータ"cmd"の値
-
-指定したListFileのメタデータを取得して返し、同時に%su'ppmlfdset%n'にJSON形式で
-メタデータを登録し、メタデータ"cmd"の値を返します。
-また、リストファイルを閉じたときに%su'ppmlfdset%n'、K_ppmTemp、M_ppmTempを
-削除するための一時設定をKC_main:LOADEVENT、KC_main:CLOSEEVENTに登録します。
 
 ===============================================================================
 lfMetadata.js
@@ -180,10 +176,10 @@ lfMetadata.js
 @arg 0 {string} - リストファイルのパスを指定
 @arg 1 {string} - メタデータの名前を指定
 @arg 2 {"sjis"|"utf8"|"utf16le"(default)} - リストファイルのエンコードを指定
-@return {string} - 指定されたメタデータ
+@return {string} - 指定されたメタデータの値
 
 ===============================================================================
-lfSyncview.stay.js
+lfSyncview.stay.js @deprecated
 仮想エントリ形式のリストファイル上で連動ビューを実行します
 再実行したときと、PPvが終了したときに常駐が破棄されます
 
@@ -239,7 +235,6 @@ setsel.stay.js
 
 @arg 0 {string} - 正規表現 "(<範囲の前の文字列>)(範囲選択する文字列>)"
 @arg 1 {number} - 0以外のとき、複数行の範囲選択を受け付ける
-@arg 2 {number} - 1を指定したとき、一行編集を閉じるまでスクリプトの実行状態維持
 
 ===============================================================================
 spinner.js
@@ -258,11 +253,19 @@ stackPPb.stay.js
 PPbを非同期に実行し、指定された起点から整列して積み上げます。J,K,L,M,Nの5つのID
 を使用し5枚まで同時に実行します。6-10までのタスクはIDに空きがでるまで待機します。
 10以上のタスクはキャンセルされます。
+ユーザーイベントDoneStackPPbを発行します。すべてのタスクが終了したときに
+S_ppm#event:DoneStackPPbを起動元のPPc上で実行します。
+例として、タスクの終了時にエントリリストの更新をする場合は、事前に
+*setcust S_ppm#event:DoneStackPPb=%K"@F5"を実行しておきます。
+S_ppm#event:DoneStackPPbは実行後に削除されるプロパティです。
+また、引数なしで実行すると待機状態のタスクを強制終了します。
 
-インスタンス番号: 80001
+インスタンス番号: 80003
+ユーザーイベント: DONE:DoneStackPPb
 @arg 0 {number} - PPbの横幅(初期値:400)
 @arg 1 {string} - PPbの積み上げ起点位置。NW(左上)|NE(右上)|SW(左下)|SE(右下)
 @arg 2 {string} - PPb上で実行するコマンドを指定
+@return {string} - "DONE:DoneStackPPb,"
 
 ===============================================================================
 toggleOpacity.js

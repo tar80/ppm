@@ -42,19 +42,19 @@ const spinPattern = {
 };
 
 const main = () => {
-  const [ppcid, spinType, siName] = safeArgs('CA', 'dot', 'stop');
+  const [ppxid, spinType, siName] = safeArgs('CA', 'dot', 'stop');
   const spinner = getSpinner(spinType);
   const len = spinner.frames.length;
   let i = 0;
 
-  PPx.Execute(`*execute ${ppcid},*string i,${siName}=1`);
+  PPx.Execute(`*execute ${ppxid},*string i,${siName}=1`);
 
   while (true) {
-    showSpinner(ppcid, spinner.frames[i]);
+    showSpinner(ppxid, spinner.frames[i]);
     PPx.Sleep(spinner.interval);
 
-    if (PPx.Extract(`%*extract(${ppcid},"%%si'${siName}'")`) === '') {
-      showSpinner(ppcid, ' ');
+    if (PPx.Extract(`%*extract(${ppxid},"%%si'${siName}'")`) === '') {
+      showSpinner(ppxid, ' ');
       break;
     }
 
@@ -70,6 +70,9 @@ const getSpinner = (spinType: string): (typeof spinPattern)[SpinType] => {
   return spinPattern[spinType as SpinType] ?? spinPattern.dot;
 };
 
-const showSpinner = (id: string, mark: string): number => PPx.Execute(`*execute ${id},*linemessage !"${mark}`);
+const showSpinner = (id: string, mark: string): void => {
+  const prefix = id.indexOf('C') === 0 ? '!"' : ''
+  PPx.Execute(`*execute ${id}, *linemessage ${prefix}${mark}`);
+};
 
 main();
