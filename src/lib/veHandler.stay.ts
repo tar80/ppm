@@ -8,16 +8,16 @@
  */
 
 import {validArgs} from '@ppmdev/modules/argument.ts';
-import {staymodeID, uniqID} from '@ppmdev/modules/data.ts';
+import {ppmTable, staymodeID, uniqID} from '@ppmdev/modules/data.ts';
 import debug from '@ppmdev/modules/debug.ts';
 import fso from '@ppmdev/modules/filesystem.ts';
 import {isEmptyStr} from '@ppmdev/modules/guard.ts';
-import {atLoadEvent} from '@ppmdev/modules/staymode.ts';
+import {atLoadEvent, getStaymodeId} from '@ppmdev/modules/staymode.ts';
 import {waitMoment} from '@ppmdev/modules/util.ts';
 
-const STAYMODE_ID = staymodeID.veHandler;
+const STAYMODE_ID = getStaymodeId('veHandler') || staymodeID.veHandler;
 const EVENT_LABEL = uniqID.virtualEntry;
-const TABLE_ACTIONS = 'S_ppm#actions';
+const TABLE_ACTIONS = ppmTable.actions;
 const DELIM = '@#_#@';
 
 type MetadataKey = 'base' | 'dirtype' | 'ppm' | 'search' | 'mapkey' | 'freq';

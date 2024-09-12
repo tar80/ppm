@@ -13,10 +13,11 @@ import debug from '@ppmdev/modules/debug.ts';
 import {userEvent} from '@ppmdev/modules/event.ts';
 import {isEmptyStr, isZero} from '@ppmdev/modules/guard.ts';
 import {pathSelf} from '@ppmdev/modules/path.ts';
+import {getStaymodeId} from '@ppmdev/modules/staymode.ts';
 
-const STAYMODE_ID = staymodeID.stackPPb;
+const STAYMODE_ID = getStaymodeId('stachPPb') || staymodeID.stackPPb;
 const EVENT_LABEL = 'ppm_stackppb';
-const EVENT_DONE = 'DoneStackPPb'
+const EVENT_DONE = 'DoneStackPPb';
 const ENABLED_IDS = {J: 0, K: 1, L: 2, M: 3, N: 4} as const;
 const PPB_WIDTH = 400;
 const PPB_PADDING = 10;
