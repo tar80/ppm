@@ -86,6 +86,8 @@ ppmは以下のファイルから構成されます。
 ===============================================================================
 テーブル情報
 
+S_ppm#actions	仮想エントリリストで実行されるコマンドの登録場所
+
 S_ppm#global	ppmが使用する各種設定値の保存場所
   ├─version	ppmのバージョン
   ├─home	ppmが使用するファイルの保存場所
@@ -105,6 +107,8 @@ S_ppm#plugins	S_ppm#sourcesに変更 *deprecated
 
 S_ppm#sources	インストール済みのプラグインの名称(サブID)と値
  plugin-name = {location, enable, setup, path?, branch?, commit?}
+
+S_ppm#staymode	ppmが使用するインスタンス番号のリスト
 
 S_ppm#user	利用者が変更可能なプラグインの設定値
 

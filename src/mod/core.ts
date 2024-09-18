@@ -1,17 +1,17 @@
 import '@ppmdev/polyfills/objectKeys.ts';
-import debug from '@ppmdev/modules/debug.ts';
-import type {AnsiColors, Level_String, Error_String} from '@ppmdev/modules/types.ts';
-import {type Source, sourceComp} from '@ppmdev/modules/source.ts';
-import fso from '@ppmdev/modules/filesystem.ts';
+import {colorlize} from '@ppmdev/modules/ansi.ts';
 import {info, uniqName} from '@ppmdev/modules/data.ts';
+import debug from '@ppmdev/modules/debug.ts';
+import fso from '@ppmdev/modules/filesystem.ts';
+import {gitCmd} from '@ppmdev/modules/git.ts';
+import {branchHead, branchName} from '@ppmdev/modules/git.ts';
 import {isEmptyStr, isString, isZero} from '@ppmdev/modules/guard.ts';
+import {readLines, writeLines} from '@ppmdev/modules/io.ts';
 import {pathJoin} from '@ppmdev/modules/path.ts';
 import {ppm} from '@ppmdev/modules/ppm.ts';
-import {colorlize} from '@ppmdev/modules/ansi.ts';
-import {gitCmd} from '@ppmdev/modules/git.ts';
-import {readLines, writeLines} from '@ppmdev/modules/io.ts';
-import {branchName, branchHead} from '@ppmdev/modules/git.ts';
 import {runStdout} from '@ppmdev/modules/run.ts';
+import {type Source, sourceComp} from '@ppmdev/modules/source.ts';
+import type {AnsiColors, Error_String, Level_String} from '@ppmdev/modules/types.ts';
 
 /**
  * Extract the path of the directory where git is installed.

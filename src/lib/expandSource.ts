@@ -11,7 +11,7 @@ const main = (): string | number | boolean => {
   const [name, field] = safeArgs('', 'path');
   const source = expandSource(name);
 
-  if (!!source) {
+  if (source) {
     type Key = keyof typeof source;
     const value = source[field as Key];
 
