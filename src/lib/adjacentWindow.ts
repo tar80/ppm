@@ -101,8 +101,10 @@ const tabID = (list: string[], currentid: string, nextid: string): string => {
   for (let i = list.indexOf(currentid) + 1, k = list.length; i < k; i++) {
     id = list[i];
 
-    if (!~skipID.findIndex((v) => v === id)) {
-      return id;
+    for (let i = 0, k = skipID.length; i < k; i++) {
+      if (skipID[i] !== id) {
+        return id;
+      }
     }
   }
 
