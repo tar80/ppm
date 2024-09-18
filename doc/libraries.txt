@@ -70,9 +70,9 @@ XOR暗号化・複合化です。暗号としての強度はありません。
 ===============================================================================
 discardStayMode.js
 ppmdev/modules/staymode.tsのatDebounce関数から実行される前提のスクリプトです。
-指定されたインスタンスのPPx.StayMode=0(破棄)します。
+指定されたインスタンスを破棄(PPx.StayMode=0)します。
 
-@arg 0 {string} - _Userに一時的に登録するプロパティ名を指定
+@arg 0 {string} - インスタンスの実行元PPxIDを指定
 @arg 1 {number} - PPx.StayModeが返すスクリプトのインスタンス番号を指定
 @arg 2 {string} - "DEBUG"を指定すると、デバッグメッセージを表示
 

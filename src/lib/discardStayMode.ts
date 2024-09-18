@@ -1,5 +1,5 @@
 /* @file Discard instance of Stay-Mode
- * @arg 0 {string} - Specify the _User data property name
+ * @arg 0 {string} - Specify the PPx ID
  * @arg 1 {number} - Scecify the instance number of StayMode
  * @arg 2 {string} - Displays debug messages when "DEBUG" is specified
  */
@@ -8,21 +8,28 @@ import {validArgs} from '@ppmdev/modules/argument.ts';
 import debug from '@ppmdev/modules/debug.ts';
 
 const main = (): void => {
-  const [propName, instance, debug] = validArgs();
+  const [ppxid, instance, debugMode] = validArgs();
 
-  if (!propName || !instance) {
+  if (!instance) {
     return;
   }
 
-  const count = PPx.Extract(`%su'${propName}'`);
+  const hasInstance = PPx.Extract(`%*extract(${ppxid},"%%*stayinfo(${instance})")`) === '1';
 
-  if (Number(count) > 0) {
-    debug === 'DEBUG' && PPx.Execute(`*execute C,*linemessage [DEBUG] keep ${instance}`);
-    PPx.Execute(`*string u,${propName}=0`);
-    PPx.Execute(`%Od *ppb -c *wait ${count}%%:*script ${PPx.ScriptName},${propName},${instance},${debug}`);
-  } else {
-    PPx.Execute(`*execute C,*script ":${instance},ppx_Discard",${debug},${instance}`);
-    PPx.Execute(`*deletecust _User:${propName}`);
+  if (hasInstance) {
+    keepStayMode(ppxid, instance, debugMode);
+    PPx.Execute(`*execute ${ppxid},*js ":${instance},ppx_Discard",${debugMode},${instance}`);
+  }
+};
+
+const keepStayMode = (ppxid: string, instance: string, debugMode: string): void => {
+  const count = Number(PPx.Extract(`%*extract(${ppxid},"%%*js("":${instance}"",""PPx.result=cache.debounce"")")`));
+
+  if (count > 0) {
+    debugMode === 'DEBUG' && PPx.Execute(`*execute C,*linemessage [DEBUG] keep ${instance}`);
+    PPx.Execute(`*execute ${ppxid},*js ":${instance}","cache.debounce='0';"`)
+    PPx.Sleep(count);
+    keepStayMode(ppxid, instance, debugMode);
   }
 };
 
