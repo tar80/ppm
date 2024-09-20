@@ -7,12 +7,15 @@
 import '@ppmdev/polyfills/objectKeys.ts';
 import '@ppmdev/polyfills/objectIsEmpty.ts';
 import {validArgs} from '@ppmdev/modules/argument.ts';
+import {staymodeID} from '@ppmdev/modules/data.ts';
 import debug from '@ppmdev/modules/debug.ts';
-import {isEmptyStr} from '@ppmdev/modules/guard.ts';
+import {isEmptyStr, isZero} from '@ppmdev/modules/guard.ts';
 import {confirmFileEncoding, readLines} from '@ppmdev/modules/io.ts';
+import {getStaymodeId} from '@ppmdev/modules/staymode.ts';
 import {getLfMeta} from '@ppmdev/parsers/listfile.ts';
 
 const VE_HANDLER_PATH = '%sgu"ppmlib"\\veHandler.stay.js';
+const VE_HANDLER_ID = getStaymodeId('veHandler') || staymodeID.veHandler;
 
 const main = (): string => {
   if (PPx.DirectoryType !== 4) {
@@ -40,9 +43,11 @@ const main = (): string => {
     return noExecution(args[0], 'no metadata');
   }
 
-  PPx.Execute(
-    `*script ${VE_HANDLER_PATH},"${meta.base}","${meta.dirtype}","${meta.search}","${meta.ppm}","${meta.mapkey}","${meta.freq}"`
-  );
+  if (isZero(PPx.Extract(`%*stayinfo(${VE_HANDLER_ID})`))) {
+    PPx.Execute(
+      `*script ${VE_HANDLER_PATH},"${meta.base}","${meta.dirtype}","${meta.search}","${meta.ppm}","${meta.mapkey}","${meta.freq}"`
+    );
+  }
 
   return meta.cmd ?? '';
 };

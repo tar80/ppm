@@ -45,9 +45,9 @@ const main = (): void => {
         break;
       }
 
-      s = Date.now();
+      s = (new Date).getTime();
       isRun = processRunning(processName);
-      e = Date.now();
+      e = (new Date).getTime();
 
       if (isRun) {
         break;

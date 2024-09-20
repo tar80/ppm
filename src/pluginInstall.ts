@@ -2,24 +2,24 @@
 
 import '@ppmdev/polyfills/arrayIndexOf.ts';
 import '@ppmdev/polyfills/objectKeys.ts';
-import {Level_String} from '@ppmdev/modules/types.ts';
-import fso from '@ppmdev/modules/filesystem.ts';
-import {isEmptyStr, isBottom} from '@ppmdev/modules/guard.ts';
 import {cursorMove} from '@ppmdev/modules/ansi.ts';
-import {echoExe, coloredEcho} from '@ppmdev/modules/echo.ts';
+import {info, tmp, uniqName, uri} from '@ppmdev/modules/data.ts';
+import debug from '@ppmdev/modules/debug.ts';
+import {coloredEcho, echoExe} from '@ppmdev/modules/echo.ts';
+import fso from '@ppmdev/modules/filesystem.ts';
 import {copyFile} from '@ppmdev/modules/filesystem.ts';
-import {type Source, setSource, owSource, expandSource} from '@ppmdev/modules/source.ts';
-import {info, uniqName, uri, tmp} from '@ppmdev/modules/data.ts';
+import {isBottom, isEmptyStr} from '@ppmdev/modules/guard.ts';
+import {readLines, stdout} from '@ppmdev/modules/io.ts';
 import {createBackup} from '@ppmdev/modules/ppcust.ts';
 import {ppm} from '@ppmdev/modules/ppm.ts';
 import {runPPb} from '@ppmdev/modules/run.ts';
-import {readLines, stdout} from '@ppmdev/modules/io.ts';
+import {type Source, expandSource, owSource, setSource} from '@ppmdev/modules/source.ts';
+import type {Level_String} from '@ppmdev/modules/types.ts';
 import {properties} from '@ppmdev/parsers/table.ts';
-import {langPluginInstall} from './mod/language.ts';
-import {parsePluginlist, parseInstall, parsedItem, clearItem} from './mod/parser.ts';
 import {conf} from './mod/configuration.ts';
 import {type LogLevel, pluginInstall as core} from './mod/core.ts';
-import debug from '@ppmdev/modules/debug.ts';
+import {langPluginInstall} from './mod/language.ts';
+import {clearItem, parseInstall, parsePluginlist, parsedItem} from './mod/parser.ts';
 
 // restart on pptray
 if (!isEmptyStr(PPx.Extract('%n%N'))) {
@@ -199,13 +199,13 @@ const copyDirectory = (source: string, dirname: string): void => {
 const copyToCache = (item: Source): void => {
   if (parsedItem.copyFlag) {
     const src = `${item.path}\\sheet`;
-    const dest = `list`;
+    const dest = 'list';
     copyDirectory(src, dest);
   }
 
   if (parsedItem.copyScript) {
     const src = `${item.path}\\userscript`;
-    const dest = `userscript`;
+    const dest = 'userscript';
     copyDirectory(src, dest);
   }
 
@@ -227,7 +227,7 @@ const enableSource = (name: string, path?: string): void => {
 };
 
 /** Adjust cursor postion on console. */
-const cursorBack = (n: number = 1): void => {
+const cursorBack = (n = 1): void => {
   ppm.execute(ppbID, `${echoExe} -ne "${cursorMove('u', n)}"`);
 };
 
@@ -243,7 +243,7 @@ const checkPermissions = (plugin: Source, local: boolean): [boolean, string, str
 
 const clonePlugin = (plugin: Source): Level_String => {
   const url = `${uri.github}/${plugin.autor}/${plugin.name}`;
-  const branch = !!plugin.branch ? ` --branch=${plugin.branch}` : '';
+  const branch = plugin.branch ? ` --branch=${plugin.branch}` : '';
   cursorBack(1);
 
   return stdout({cmd: `%Osq git clone ${GIT_CLONE_OPTS}${branch} ${url} ${plugin.path}`});
