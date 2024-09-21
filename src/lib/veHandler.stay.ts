@@ -12,10 +12,13 @@ import {ppmTable, staymodeID, uniqID} from '@ppmdev/modules/data.ts';
 import debug from '@ppmdev/modules/debug.ts';
 import fso from '@ppmdev/modules/filesystem.ts';
 import {isEmptyStr} from '@ppmdev/modules/guard.ts';
+import {capturePPv} from '@ppmdev/modules/ppv.ts';
 import {atLoadEvent, getStaymodeId} from '@ppmdev/modules/staymode.ts';
+import type {Letters} from '@ppmdev/modules/types.ts';
 import {waitMoment} from '@ppmdev/modules/util.ts';
 
 const STAYMODE_ID = getStaymodeId('veHandler') || staymodeID.veHandler;
+const RESTORE_SCRIPT_NAME = 'restorePPv.js';
 const EVENT_LABEL = uniqID.virtualEntry;
 const TABLE_ACTIONS = ppmTable.actions;
 const DELIM = '@#_#@';
@@ -27,6 +30,7 @@ type EntryDetails = {att: PPxEntry.Attribute; hl: number; path: string; sname: s
 type BoolStr = '0' | '1';
 type Cache = {metadata: Metadata; ppv: PPv};
 const cache = {metadata: {}, ppv: {}} as Cache;
+PPx.StayMode = STAYMODE_ID;
 
 const main = (): void => {
   const [base, dirtype, search, ppm, mapkey, freq] = validArgs();
@@ -35,16 +39,11 @@ const main = (): void => {
     return;
   }
 
-  PPx.StayMode = STAYMODE_ID;
-  cache.metadata = _convMetadata(base, dirtype, search, ppm, mapkey, freq);
+  cache.metadata = convMetadata(base, dirtype, search, ppm, mapkey, freq);
   atLoadEvent.discard({table: 'KC_main', label: EVENT_LABEL, mapkey, cond: 'hold'});
 };
 
-const _convMetadata = (base: string, dirtype: string, search: string, ppm: string, mapkey: string, freq: string): Metadata => {
-  const conv = (value: string): string => (value !== 'undefined' ? value : '');
-
-  return {base: conv(base), dirtype: conv(dirtype), search: conv(search), ppm, mapkey: conv(mapkey), freq: conv(freq)} as const;
-};
+const ppx_resume = (): void => {};
 
 const ppx_Action = (cmdAlias: string, escBlank: string, allowDup: string) => {
   const cmdline = escapedCmdline(cache.metadata.ppm, cmdAlias);
@@ -107,6 +106,63 @@ const ppx_Action = (cmdAlias: string, escBlank: string, allowDup: string) => {
   }
 };
 
+const ppx_Syncview = (ppvid: Letters, close: string, position: string, search: string, jumpline: string): void => {
+  const isClose = close === '1';
+
+  if (!cache.ppv.id) {
+    cache.ppv.id = startPPv(ppvid, position, search, jumpline);
+
+    if (isEmptyStr(cache.ppv.id)) {
+      PPx.linemessage('!"could not get PPv ID');
+
+      return;
+    }
+
+    PPx.Execute(
+      _selectEvent(`*if %*stayinfo(${STAYMODE_ID})&&("%n"=="%%n")&&("%FDV"=="%%FDV")%%:*js ":${STAYMODE_ID},ppx_SelectEvent",${jumpline}`)
+    );
+    PPx.Execute(_closeEvent(cache.ppv.id.slice(-1)));
+    ppx_SelectEvent(jumpline);
+  } else if (!isEmptyStr(PPx.Extract(`%N${cache.ppv.id}`))) {
+    PPx.Execute(_selectEvent(''));
+    if (isClose) {
+      PPx.Execute(`*closeppx ${cache.ppv.id}`);
+      cache.ppv = {};
+    } else {
+      cache.ppv.id = undefined;
+    }
+  }
+};
+
+const ppx_SelectEvent = (jumpline: string): void => {
+  const path = PPx.Extract(`%*name(DC,"%*comment")`);
+
+  if (jumpline !== '1') {
+    PPx.Execute(`*execute ${cache.ppv.id},%%J"${path}"`);
+
+    return;
+  }
+
+  const row = PPx.Extract(`%*name(SC,"%FSC")`);
+
+  if (row === '-') {
+    return;
+  }
+
+  if (path !== PPx.Extract(`%*extract(${cache.ppv.id},"%%FDC")`)) {
+    PPx.Execute(`*execute ${cache.ppv.id},%%J"${path}"`);
+    waitMoment(() => PPx.Extract(`%*extract(${cache.ppv.id},"%%FDC")`) !== path);
+  }
+
+  PPx.Execute(`*execute ${cache.ppv.id},*jumpline ${row}`);
+};
+
+const convMetadata = (base: string, dirtype: string, search: string, ppm: string, mapkey: string, freq: string): Metadata => {
+  const conv = (value: string): string => (value !== 'undefined' ? value : '');
+
+  return {base: conv(base), dirtype: conv(dirtype), search: conv(search), ppm, mapkey: conv(mapkey), freq: conv(freq)} as const;
+};
+
 const escapedCmdline = (plugin: string, command: string): string => {
   const value =
     PPx.Extract(`%*getcust(${TABLE_ACTIONS}:${plugin}_${command})`) || PPx.Extract(`%*getcust(${TABLE_ACTIONS}:all_${command})`);
@@ -147,85 +203,31 @@ const replaceCmdline = ({cmdline, base, dirtype, search, isDup, entry}: CmdParam
   return PPx.Extract(`%OP %*regexp("%(${data}%)","%(/${rgx}/${cmdline}/%)")`);
 };
 
-const ppx_Syncview = (ppvid: string, close: string, position: string, search: string, jumpline: string): void => {
-  if (!cache.ppv.id) {
-    startPPv(ppvid, position, search, jumpline);
-    PPx.Execute(
-      _selectevent(
-        `*if %*stayinfo(${STAYMODE_ID})&&("%n"=="%%n")&&("%FDV"=="%%FDV")%%:*script ":${STAYMODE_ID},ppx_SelectEvent",${jumpline}`
-      )
-    );
-    PPx.Execute(_activeevent(`*if ("%%N%n"=="")%%:${_selectevent('')}%%:${_activeevent('')}`));
-    ppx_SelectEvent(jumpline);
-  } else if (!isEmptyStr(PPx.Extract(`%N${cache.ppv.id}`))) {
-    PPx.SyncView = 0;
-    PPx.Execute(`${_selectevent('')}%:${_activeevent('')}`);
-    close === '1' && PPx.Execute(`*closeppx ${cache.ppv.id}`);
-    PPx.Execute(`*setcust XV_lnum=${cache.ppv.lnum}%:*setcust XV_tmod=${cache.ppv.tmod}`);
+const _selectEvent = (cmdline: string): string => `*linecust ${EVENT_LABEL},KC_main:SELECTEVENT,${cmdline}`;
+const _closeEvent = (id: string): string => {
+  const closeevent = `*linecust ${EVENT_LABEL},KV_main:CLOSEEVENT,`;
+  const cmdline: string[] = [];
+  cache.ppv.lnum && cmdline.push(`*setcust XV_lnum=${cache.ppv.lnum}`);
+  cache.ppv.tmod && cmdline.push(`*setcust XV_tmod=${cache.ppv.tmod}`);
+  cache.ppv.xwin && cmdline.push(`*setcust X_win:V=${cache.ppv.xwin}`);
 
-    if (position !== '0') {
-      PPx.Execute(`*setcust _WinPos:${cache.ppv.id}=${cache.ppv.winpos}`);
-      position === '2' && PPx.Execute(`*setcust X_win:V=${cache.ppv.xwin}`);
-    }
-
-    cache.ppv = {};
+  if (cache.ppv.winpos) {
+    const path = `%sgu'ppmlib'\\${RESTORE_SCRIPT_NAME}`;
+    const launchOpts = '-nostartmsg -hide -noppb';
+    const ppbCmdline = `*script ${path},"${id}","${cache.ppv.winpos}","DEBUG"`;
+    cmdline.push(`%Oq *launch ${launchOpts} %0ppbw.exe -c ${ppbCmdline}`);
   }
+
+  return `${closeevent}%(*if("V${id}"=="%n")%:${closeevent}%:${_selectEvent('')}%:${cmdline.join('%:')}%)`;
 };
 
-const ppx_SelectEvent = (jumpline: string): void => {
-  const path = PPx.Extract(`%*name(DC,"%*comment")`);
-
-  if (jumpline !== '1') {
-    PPx.Execute(`*execute ${cache.ppv.id},%%J"${path}"`);
-
-    return;
-  }
-
-  const row = PPx.Extract(`%*name(SC,"%FSC")`);
-
-  if (row === '-') {
-    return;
-  }
-
-  if (path !== PPx.Extract(`%*extract(${cache.ppv.id},"%%FDC")`)) {
-    PPx.Execute(`*execute ${cache.ppv.id},%%J"${path}"`);
-    waitMoment(() => PPx.Extract(`%*extract(${cache.ppv.id},"%%FDC")`) !== path);
-  }
-
-  PPx.Execute(`*execute ${cache.ppv.id},*jumpline ${row}`);
-};
-
-const _selectevent = (cmdline: string): string => `*linecust ${EVENT_LABEL},KC_main:SELECTEVENT,${cmdline}`;
-const _activeevent = (cmdline: string): string => `*linecust ${EVENT_LABEL},KC_main:ACTIVEEVENT,${cmdline}`;
-
-const startPPv = (ppvid: string, position: string, search: string, jumpline: string) => {
-  const hasPairedWindow = PPx.Pane.Count > 1;
+const startPPv = (ppvid: Letters, position: string, search: string, jumpline: string): string => {
   const hasId = !isEmptyStr(ppvid);
-
-  if (position !== '0' && hasPairedWindow) {
-    if (hasId && !isEmptyStr(PPx.Extract(`%NV${ppvid}`))) {
-      PPx.Execute(`*closeppx V${ppvid}`);
-    }
-
-    cache.ppv.winpos = PPx.Extract(`%*getcust(_WinPos:V${ppvid})`);
-
-    if (position === '2') {
-      cache.ppv.xwin = PPx.Extract('%*getcust(X_win:V)');
-      PPx.Execute(`*setcust X_win:V=B1${cache.ppv.xwin.slice(2)}`);
-    }
-  }
-
-  let ppvOptions = '';
-
-  if (hasId) {
-    ppvOptions = `-bootid:${ppvid}`;
-    ppvOptions = position === '1' ? `${ppvOptions} -popup:%~N` : '';
-  }
-
-  let postOptions = '*topmostwindow %N,1';
+  const hasPair = PPx.Pane.Count === 2;
+  const postOpts: string[] = ['*focus %n', '*topmostwindow %N,1'];
 
   if (search === '1' && !isEmptyStr(cache.metadata.search)) {
-    postOptions = `${postOptions}%:*find "${cache.metadata.search}"`;
+    postOpts.push(`*find "${cache.metadata.search}"`);
   }
 
   if (jumpline === '1') {
@@ -234,12 +236,32 @@ const startPPv = (ppvid: string, position: string, search: string, jumpline: str
     PPx.Execute('*setcust XV_lnum=1%:*setcust XV_tmod=1');
   }
 
-  cache.ppv.id = PPx.Extract(`%Oai *ppv ${ppvOptions} -k %(${postOptions}%)%%:*focus %n%:%*extract(V,"%%n")`);
+  const ppvOpts: string[] = [];
+  let cmdGetId: string;
 
-  if (position === '2' && hasPairedWindow) {
-    cache.ppv.winpos = cache.ppv.winpos ?? PPx.Extract(`%*getcust(_WinPos:${cache.ppv.id})`);
-    PPx.Execute(`*capturewindow ${cache.ppv.id} -pane:~ -selectnoactive`);
+  if (hasId) {
+    ppvOpts.push(`-bootid:${ppvid} -r`);
+    cmdGetId = `%:V${ppvid}`;
+  } else {
+    cmdGetId = '%:%*extract(V,"%%n")';
   }
+
+  if (position !== '0' && hasPair) {
+    cache.ppv.winpos = PPx.Extract(`%*getcust(_WinPos:V${ppvid})`);
+
+    if (position === '2') {
+      cache.ppv.xwin = PPx.Extract('%*getcust(X_win:V)');
+      PPx.Execute(`*setcust X_win:V=B1${cache.ppv.xwin.slice(2)}`);
+      const id = PPx.Extract(`*launch -nostartmsg -hide -wait:idle %0ppvw.exe ${ppvOpts.join(' ')}${cmdGetId}`);
+      capturePPv(id.slice(-1) as Letters, true, false);
+
+      return id;
+    } else {
+      ppvOpts.push('-popup:%~N');
+    }
+  }
+
+  return PPx.Extract(`*launch -nostartmsg -wait:idle %0ppvw.exe ${ppvOpts.join(' ')} -k %(${postOpts.join('%:')}%)${cmdGetId}`);
 };
 
 if (!debug.jestRun()) main();
