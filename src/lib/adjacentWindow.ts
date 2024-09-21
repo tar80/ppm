@@ -77,10 +77,11 @@ const tabExtract = (target: number): string[] => {
   const skipTabs: string[] = [];
   const pane = (num: number) => PPx.Pane.Item(num).Tab;
   const currentIdname = pane(-1).IDName;
+  const currentPane = pane(target);
   let idname: string;
 
-  for (let i = 0, k = pane(target).length; i < k; i++) {
-    idname = pane(i).IDName;
+  for (let i = 0, k = currentPane.length; i < k; i++) {
+    idname = currentPane(i).IDName;
     idname !== currentIdname && skipTabs.push(idname);
   }
 
@@ -91,7 +92,7 @@ const tabID = (list: string[], currentid: string, nextid: string): string => {
   let skipID = tabExtract(-2);
 
   if (PPx.Pane.Count > 0 && ~skipID.indexOf(nextid)) {
-    return PPx.Extract('%~n');
+    return PPx.Pane.Count === 1 ? nextid : PPx.Extract('%~n');
   }
 
   skipID = tabExtract(-3);
