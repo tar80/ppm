@@ -22,6 +22,7 @@ CONTENTS
 	lfSyncview.stay.js @deprecated
 	libExists.js
 	menu.js
+	restorePPv.js
 	seeProcess.js
 	setsel.stay.js
 	spinner.js
@@ -224,6 +225,15 @@ menu.js
 
 
 ===============================================================================
+restorePPv.js
+PPbから呼び出します。
+PPv終了後に起動位置とタイトルバーを復元します。
+
+@arg 0 {string} - PPvIDを指定
+@arg 1 {string} - _WinPos:Vの値を指定
+@arg 2 {number} - "DEBUG"を指定したとき、デバッグメッセージを表示します
+
+===============================================================================
 seeProcess.js
 指定プロセスが起動するまで待機します。
 凡そ500ミリ秒ごとにプロセスの起動を確認します。
@@ -241,6 +251,7 @@ setsel.js @deprecated
 
 @arg 0 {string} - 正規表現 "(<範囲の前の文字列>)(範囲選択する文字列>)"
 @arg 1 {number} - 0以外のとき、複数行の範囲選択を受け付ける
+@arg 2 {number} - 0以外のとき、常駐する
 
 ===============================================================================
 setsel.stay.js
