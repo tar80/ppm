@@ -12,7 +12,7 @@ const main = (): void => {
 
   if (!isEmptyStr(winpos)) {
     const key = `_WinPos:V${idName}`;
-    PPx.Execute(`*execute C,*setcust ${key}=${winpos}`);
+    PPx.Execute(`*setcust ${key}=${winpos}`);
     debugMsg(debugMode, `restorePPv setcust:${key}=${winpos}`);
   }
 };

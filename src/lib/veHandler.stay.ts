@@ -224,7 +224,7 @@ const _closeEvent = (id: string): string => {
 const startPPv = (ppvid: Letters, position: string, search: string, jumpline: string): string => {
   const hasId = !isEmptyStr(ppvid);
   const hasPair = PPx.Pane.Count === 2;
-  const postOpts: string[] = ['*focus %n', '*topmostwindow %N,1'];
+  const postOpts: string[] = ['*topmostwindow %N,1'];
 
   if (search === '1' && !isEmptyStr(cache.metadata.search)) {
     postOpts.push(`*find "${cache.metadata.search}"`);
@@ -261,7 +261,7 @@ const startPPv = (ppvid: Letters, position: string, search: string, jumpline: st
     }
   }
 
-  return PPx.Extract(`*launch -nostartmsg -wait:idle %0ppvw.exe ${ppvOpts.join(' ')} -k %(${postOpts.join('%:')}%)${cmdGetId}`);
+  return PPx.Extract(`*launch -nostartmsg -wait:idle %0ppvw.exe ${ppvOpts.join(' ')} -k %(${postOpts.join('%:')}%)%%:*focus %n${cmdGetId}`);
 };
 
 if (!debug.jestRun()) main();

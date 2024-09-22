@@ -37,5 +37,5 @@ TORO氏作のファイル操作ツール集Paper Plane xUIのプラグイン(設
 - [x] [ppm-theme](https://github.com/tar80/ppm-theme) mbadolato/iTerm2-Color-Schemesから配色設定を参照
 - [x] [ppm-translate](https://github.com/tar80/ppm-translate) 日本語/英語の相互翻訳
 - [x] [ppm-switchmenu](https://github.com/tar80/ppm-switchmenu) 入れ替え可能なプリセットメニュー
-- [ ] [ppm-view](https://github.com/tar80/ppm-view) PPv設定集
+- [x] [ppm-view](https://github.com/tar80/ppm-view) PPv設定集
 - [x] [ppm-vilikekeys](https://github.com/tar80/ppm-vilikekeys) viキーバインドをエミュレート

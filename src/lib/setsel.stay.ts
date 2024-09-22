@@ -1,6 +1,7 @@
 /* @file Controls string selection
  * @arg 0 {string} - RegExp. "(<before the select string>)(<select string>)"
  * @arg 1 {number} - If non-zero, enable multiple lines
+ * @arg 2 {number} - If non-zero, enable StayMode
  */
 
 import {safeArgs} from '@ppmdev/modules/argument.ts';
@@ -11,11 +12,15 @@ import {pathSelf} from '@ppmdev/modules/path.ts';
 const {scriptName, parentDir} = pathSelf();
 
 const main = (): void => {
-  const [rgx, multi] = safeArgs('', '0');
+  const [rgx, multi, staymode] = safeArgs('', '0', '0');
 
   if (isEmptyStr(rgx) || rgx.split(')').length < 3) {
     PPx.Execute(`*script "${parentDir}\\errors.js",arg,${scriptName}`);
     PPx.Quit(-1);
+  }
+
+  if (!isZero(staymode)) {
+    PPx.StayMode = 2;
   }
 
   ppx_resume(rgx, multi);
@@ -26,8 +31,6 @@ const ppx_resume = (rgx: string, multi: string): void => {
   const param: Param | void = !isZero(multi) ? selectMulti(text, rgx) : selectSingle(text, rgx);
   param && param.w !== param.l && PPx.Execute(`*sendmessage %N,177,${param.w},${param.l}`);
 };
-
-// const ppx_finally = (): void => PPx.Echo(`[ERROR] remaining instance:${scriptName}`);
 
 type Param = {w: number; l: number};
 const selectSingle = (text: string, rgxstr: string): Param | void => {
