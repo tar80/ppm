@@ -114,10 +114,11 @@ const decorateLog = (name: string, state: LogLevel, message?: string): string =>
     case 'warn':
       message = colorlize({esc: true, message: name, fg: 'white'});
       break;
-    default:
+    default: {
       const dep = colorlize({esc: true, message: `Dependencies => ${message}`, fg: 'yellow'});
       message = isString(message) ? `${name}\\n ${dep}` : name;
       break;
+    }
   }
 
   return `${header} ${message}`;
@@ -134,11 +135,11 @@ const gitSwitch = function (item: Source): string {
   let resp: Level_String = [0, ''];
   const cmdline: gitCmd = {wd: item.path, subcmd: 'switch'};
 
-  if (!!item.commit) {
+  if (item.commit) {
     cmdline['opts'] = `--detach ${item.commit}`;
     resp = runStdout({cmdline: gitCmd(cmdline), hide: true});
     // resp = stdout({cmd: gitCmd(cmdline)});
-  } else if (!!item.branch) {
+  } else if (item.branch) {
     cmdline['opts'] = item.branch;
     resp = runStdout({cmdline: gitCmd(cmdline), hide: true});
     // resp = stdout({cmd: gitCmd(cmdline)});

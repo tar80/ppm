@@ -26,7 +26,7 @@ const DELIM = '@#_#@';
 type MetadataKey = 'base' | 'dirtype' | 'ppm' | 'search' | 'mapkey' | 'freq';
 type Metadata = {[key in MetadataKey]: string};
 type PPv = {id?: string; lnum?: string; tmod?: string; winpos?: string; xwin?: string};
-type EntryDetails = {att: PPxEntry.Attribute; hl: number; path: string; sname: string};
+type EntryDetails = {att: PPx.FileAttribute; hl: number; path: string; sname: string};
 type BoolStr = '0' | '1';
 type Cache = {metadata: Metadata; ppv: PPv};
 const cache = {metadata: {}, ppv: {}} as Cache;
@@ -40,7 +40,7 @@ const main = (): void => {
   }
 
   cache.metadata = convMetadata(base, dirtype, search, ppm, mapkey, freq);
-  atLoadEvent.discard({table: 'KC_main', label: EVENT_LABEL, mapkey, cond: 'hold'});
+  atLoadEvent.discard({table: 'KC_main', label: EVENT_LABEL, mapkey: cache.metadata.mapkey, cond: 'hold'});
 };
 
 const ppx_resume = (): void => {};

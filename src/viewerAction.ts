@@ -47,8 +47,8 @@ const main = (): void => {
 const getPluginName = (lnum: number, lines: string[]): string => {
   const rgx = /^\x1b\[42;30m\s*([\S]+)\s*\x1b\[49;39m$/;
 
-  for (let i = lnum, line; i >= 0; i--) {
-    line = lines[i];
+  for (let i = lnum; i >= 0; i--) {
+    const line = lines[i];
 
     if (~line.indexOf('\x1b[42;30m')) {
       return line.replace(rgx, '$1');

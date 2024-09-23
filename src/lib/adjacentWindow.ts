@@ -81,7 +81,7 @@ const tabExtract = (target: number): string[] => {
   let idname: string;
 
   for (let i = 0, k = currentPane.length; i < k; i++) {
-    idname = currentPane(i).IDName;
+    idname = currentPane.Item(i).IDName;
     idname !== currentIdname && skipTabs.push(idname);
   }
 

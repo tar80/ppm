@@ -52,7 +52,7 @@ const ppmVersion: string = (() => {
 })();
 
 const main = (): void => {
-  const jobend: Function = ppm.jobstart('.');
+  const jobend: () => number = ppm.jobstart('.');
   const abort = (exitcode: number): void => {
     jobend();
     PPx.Quit(exitcode);
@@ -77,7 +77,7 @@ const main = (): void => {
     }
 
     // dryrun finish
-    if (!!dryRun) {
+    if (dryRun) {
       logs.push(`\\n${lang.success}`);
       coloredEcho(ppbID, logs.join('\\n'));
       abort(1);

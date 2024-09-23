@@ -3,11 +3,11 @@
  */
 
 import '@ppmdev/polyfills/arrayIndexOf.ts';
-import {NlCodes, Error_String} from '@ppmdev/modules/types.ts';
 import {useLanguage} from '@ppmdev/modules/data.ts';
+import {readLines, writeLines} from '@ppmdev/modules/io.ts';
 import {pathSelf} from '@ppmdev/modules/path.ts';
 import {ppm} from '@ppmdev/modules/ppm.ts';
-import {readLines, writeLines} from '@ppmdev/modules/io.ts';
+import type {Error_String, NlCodes} from '@ppmdev/modules/types.ts';
 import {langRestoreRegister} from './mod/language.ts';
 
 const RANGE_START = ';[ppm]';

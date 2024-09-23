@@ -48,6 +48,6 @@ if (isEmptyStr(cleanupPlugins.name)) {
 
 debug.log(`source: ${cleanupPlugins.source}\nrepo:${cleanupPlugins.repo}`);
 
-let code = PPx.Execute(cleanupPlugins.source) == 0;
-code = code && PPx.Execute(cleanupPlugins.repo) == 0;
+let code = PPx.Execute(cleanupPlugins.source) === 0;
+code = code && PPx.Execute(cleanupPlugins.repo) === 0;
 code ? ppm.linemessage('.', lang.success, true) : ppm.echo(scriptName, lang.failed);
