@@ -67,7 +67,10 @@ const main = (): void => {
   cache.direction = getDirection(dirSpec);
 
   PPx.StayMode = STAYMODE_ID;
-  PPx.Execute(`*linecust ${EVENT_LABEL},KC_main:LOADEVENT,*execute ${cache.ppcid},*js ":${STAYMODE_ID},ppx_Discard"`);
+  PPx.Execute(
+    `*linecust ${EVENT_LABEL},` +
+      `KC_main:LOADEVENT,*execute ${cache.ppcid},%(*if 0%%*stayinfo(${STAYMODE_ID})%%:*js ":${STAYMODE_ID},ppx_Discard"%)`
+  );
   PPx.Execute('%K"@LOADCUST"');
   ppx_resume(widthSpec, dirSpec, cmdline);
 };
@@ -149,7 +152,7 @@ const ppx_Discard = (): void => {
 const setPPbWidth = (widthSpec: string): number => {
   const userSpec = Number(widthSpec);
 
-  return Number.isNaN(userSpec) ? PPB_WIDTH : userSpec;
+  return isNaN(userSpec) ? PPB_WIDTH : userSpec;
 };
 
 const getDirection = (direction: string): Direction => {
@@ -192,7 +195,7 @@ const stackPPb = (ppcid: string, ppbid: EnableId, direction: Direction, cmdline:
   const ppbOptions = `-bootid:${ppbid} -q`;
   const winsize = `*windowsize %N,${cache.ppbWidth},${cache.ppbHeight}`;
   const activate = `*execute ${ppcid},*js ":${STAYMODE_ID},ppx_Activate",${ppbid}`;
-  const info = `echo "%(${cmdline}%)"`;
+  const info = `*linemessage %(${cmdline}%)`;
   const postProc = `*execute ${ppcid},*js ":${STAYMODE_ID},ppx_Success",${ppbid}`;
 
   PPx.Execute(`*setcust _WinPos:B${ppbid}=${pos.join(',')},${cache.ppbWidth},${cache.ppbHeight},0`);
@@ -202,4 +205,5 @@ const stackPPb = (ppcid: string, ppbid: EnableId, direction: Direction, cmdline:
 };
 
 PPx.result = `DONE:${EVENT_DONE}`;
+
 main();
