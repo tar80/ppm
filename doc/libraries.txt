@@ -269,7 +269,7 @@ PPbからの呼び出し時のみ実行されます。実行されると
   *execute CA,*string i,<user_spec>= で終了。
 
 @arg 0 {string} - スピナーを表示するPPcのIDを指定
-@arg 1 {string} - 表示するスピン名を指定。dot|star|box|toggle
+@arg 1 {string} - 表示するスピン名を指定。dot|star|block|toggle|triangle|line
 @arg 2 {string} - スピンの破棄に使用する特殊環境変数iの名前を指定
 
 ===============================================================================

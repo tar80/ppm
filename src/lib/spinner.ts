@@ -33,12 +33,14 @@ if (PPx.Extract('%n').indexOf('B') !== 0) {
 }
 
 type SpinType = (typeof spinKeys)[number];
-const spinKeys = ['dot', 'star', 'box', 'toggle'] as const;
+const spinKeys = ['dot', 'star', 'block', 'toggle', 'triangle', 'line'] as const;
 const spinPattern = {
   [spinKeys[0]]: {interval: 100, frames: ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']},
   [spinKeys[1]]: {interval: 100, frames: ['✶', '✸', '✹', '✺', '✹', '✷']},
   [spinKeys[2]]: {interval: 120, frames: ['▌', '▀', '▐', '▄']},
-  [spinKeys[3]]: {interval: 500, frames: ['⊶', '⊷']}
+  [spinKeys[3]]: {interval: 500, frames: ['⊶', '⊷']},
+  [spinKeys[4]]: {interval: 100, frames: ['◢', '◣', '◤', '◥']},
+  [spinKeys[5]]: {interval: 100, frames: ['-', '\\', '|', '/']}
 };
 
 const main = () => {
@@ -63,7 +65,7 @@ const main = () => {
 };
 
 const getSpinner = (spinType: string): (typeof spinPattern)[SpinType] => {
-  if (/^[0-3]$/.test(spinType)) {
+  if (/^[0-5]$/.test(spinType)) {
     spinType = spinKeys[spinType as '0' | '1' | '2' | '3'];
   }
 
@@ -71,8 +73,7 @@ const getSpinner = (spinType: string): (typeof spinPattern)[SpinType] => {
 };
 
 const showSpinner = (id: string, mark: string): void => {
-  const prefix = id.indexOf('C') === 0 ? '!"' : ''
-  PPx.Execute(`*execute ${id}, *linemessage ${prefix}${mark}`);
+  PPx.Execute(`*execute ${id}, *linemessage !"${mark}`);
 };
 
 main();
