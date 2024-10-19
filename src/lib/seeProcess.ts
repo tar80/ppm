@@ -2,7 +2,7 @@
  * @arg 0 {string} - Specify the process name
  * @arg 1 {number} - Specify the waiting time (default: 6000)
  * @arg 2 {string} - Specifies the command line to run if there is no process
- * @arg 3 {number} - Specifies the GUI startup state. (WScript.Shell.Run style value)
+ * @arg 3 {number} - Specifies the GUI startup state. (WScript.Shell.Run option style value)
  * @return - "-1"(true) if the process has been started when the script is executed
  *
  * NOTE: Check for process startup approximately every 500 milliseconds.

@@ -39,8 +39,8 @@ const spinPattern = {
   [spinKeys[1]]: {interval: 100, frames: ['✶', '✸', '✹', '✺', '✹', '✷']},
   [spinKeys[2]]: {interval: 120, frames: ['▌', '▀', '▐', '▄']},
   [spinKeys[3]]: {interval: 500, frames: ['⊶', '⊷']},
-  [spinKeys[4]]: {interval: 100, frames: ['◢', '◣', '◤', '◥']},
-  [spinKeys[5]]: {interval: 100, frames: ['-', '\\', '|', '/']}
+  [spinKeys[4]]: {interval: 120, frames: ['◢', '◣', '◤', '◥']},
+  [spinKeys[5]]: {interval: 120, frames: ['-', '\\', '|', '/']}
 };
 
 const main = () => {
@@ -66,7 +66,7 @@ const main = () => {
 
 const getSpinner = (spinType: string): (typeof spinPattern)[SpinType] => {
   if (/^[0-5]$/.test(spinType)) {
-    spinType = spinKeys[spinType as '0' | '1' | '2' | '3'];
+    spinType = spinKeys[spinType as '0' | '1' | '2' | '3' | '4' | '5'];
   }
 
   return spinPattern[spinType as SpinType] ?? spinPattern.dot;

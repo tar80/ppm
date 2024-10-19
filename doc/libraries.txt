@@ -275,19 +275,19 @@ PPbからの呼び出し時のみ実行されます。実行されると
 ===============================================================================
 stackPPb.stay.js
 PPbを非同期に実行し、指定された起点から整列して積み上げます。J,K,L,M,Nの5つのID
-を使用し5枚まで同時に実行します。6-10までのタスクはIDに空きがでるまで待機します。
-10以上のタスクはキャンセルされます。
+を使用し5枚まで同時に実行します。6-30までのタスクはIDに空きがでるまで待機します。
+30以上のタスクはキャンセルされます。
 ユーザーイベントDoneStackPPbを発行します。すべてのタスクが終了したときに
 S_ppm#event:DoneStackPPbを起動元のPPc上で実行します。
 例として、タスクの終了時にエントリリストの更新をする場合は、事前に
 *setcust S_ppm#event:DoneStackPPb=%K"@F5"を実行しておきます。
 S_ppm#event:DoneStackPPbは実行後に削除されるプロパティです。
-また、引数なしで実行すると待機状態のタスクを強制終了します。
+また引数なしで実行すると待機状態のタスクを強制終了します。
 
 インスタンス番号: 80003
 ユーザーイベント: DONE:DoneStackPPb
 @arg 0 {number} - PPbの横幅(初期値:400)
-@arg 1 {string} - PPbの積み上げ起点位置。NW(左上)|NE(右上)|SW(左下)|SE(右下)
+@arg 1 {string} - PPbの積み上げ起点位置。NW(左上)|NE(右上)|SW(左下)|SE(右下)|MIN
 @arg 2 {string} - PPb上で実行するコマンドを指定
 @return {string} - "DONE:DoneStackPPb,"
 
@@ -300,5 +300,14 @@ toggleOpacity.js
 
 ===============================================================================
 veHandler.js
+仮想エントリリストのバックグラウンドに常駐し操作を補助します。
+
+インスタンス番号: 80001
+@arg 0 {string} - Matadata base
+@arg 1 {string} - Metadata dirtype
+@arg 2 {string} - Metadata search
+@arg 3 {string} - Metadata ppm
+@arg 4 {string} - Metadata mapkey
+@arg 5 {string} - Metadata freq
 
 ===============================================================================

@@ -1,6 +1,6 @@
 /* @file Step through tasks in PPb
  * @arg 0 {number} - Specify PPb width. default is 400
- * @arg 1 {string} - Specify direction. "NW" | "NE" | "SW" | "SE"(default)
+ * @arg 1 {string} - Specify direction. "min" | "nw" | "ne" | "sw" | "se"(default)
  * @arg 2 {string} - Specify the command line to run in PPb
  *
  * NOTE: Passing no arguments will abort all pending tasks.
@@ -15,19 +15,19 @@ import {isEmptyStr, isZero} from '@ppmdev/modules/guard.ts';
 import {pathSelf} from '@ppmdev/modules/path.ts';
 import {getStaymodeId} from '@ppmdev/modules/staymode.ts';
 
-const STAYMODE_ID = getStaymodeId('stachPPb') || staymodeID.stackPPb;
+const STAYMODE_ID = getStaymodeId('stackPPb') || staymodeID.stackPPb;
 const EVENT_LABEL = 'ppm_stackppb';
 const EVENT_DONE = 'DoneStackPPb';
 const ENABLED_IDS = {J: 0, K: 1, L: 2, M: 3, N: 4} as const;
 const PPB_WIDTH = 400;
 const PPB_PADDING = 10;
-const PPB_CONCURRENCY_LIMIT = 10;
+const PPB_CONCURRENCY_LIMIT = 30;
 const TASKBAR_MARGIN = 50;
 const DEFAULT_DIRECTION = 'SE';
-const STATUS = {STANDBY: 'READY', INITIAL: 'STARTING', ACTIVE: 'ACTIVATE', BREAK: 'BREAKING'} as const;
+const STATUS = {STANDBY: 'READY', INITIAL: 'STARTING', ACTIVE: 'ACTIVATE'} as const;
 
 type EnableId = keyof typeof ENABLED_IDS;
-type Direction = 'NE' | 'NW' | 'SE' | 'SW';
+type Direction = 'NE' | 'NW' | 'SE' | 'SW' | 'MIN';
 type PPbStatus = typeof STATUS.STANDBY | typeof STATUS.INITIAL | typeof STATUS.ACTIVE;
 type Cache = {
   dispWidth: number;
@@ -39,6 +39,8 @@ type Cache = {
   instances: number;
   ppcid: string;
   direction: Direction;
+  finish: boolean;
+  stack: string[];
 };
 const cache = {
   dispWidth: Number(PPx.Extract('%*getcust(S_ppm#global:disp_width)')),
@@ -48,7 +50,9 @@ const cache = {
   ppbState: {J: STATUS.STANDBY, K: STATUS.STANDBY, L: STATUS.STANDBY, M: STATUS.STANDBY, N: STATUS.STANDBY},
   enableIds: Object.keys(ENABLED_IDS),
   instances: 0,
-  ppcid: PPx.Extract('%n')
+  ppcid: PPx.Extract('%n'),
+  finish: false,
+  stack: [] as Cache['stack']
 } as Cache;
 
 if (isZero(cache.dispWidth) || isZero(cache.dispHeight)) {
@@ -56,9 +60,6 @@ if (isZero(cache.dispWidth) || isZero(cache.dispHeight)) {
   PPx.Echo(`[ERROR] ${scriptName} S_ppm#global:disp_width & disp_height needs to be set.`);
   PPx.Quit(-1);
 }
-
-type State = typeof STATUS.STANDBY | typeof STATUS.BREAK;
-let _internalStatus: State;
 
 const main = (): void => {
   const [widthSpec, dirSpec, cmdline] = validArgs();
@@ -69,23 +70,27 @@ const main = (): void => {
   PPx.StayMode = STAYMODE_ID;
   PPx.Execute(
     `*linecust ${EVENT_LABEL},` +
-      `KC_main:LOADEVENT,*execute ${cache.ppcid},%(*if 0%%*stayinfo(${STAYMODE_ID})%%:*js ":${STAYMODE_ID},ppx_Discard"%)`
+      `KB_edit:CLOSEEVENT,*execute ${cache.ppcid},%(*if 0%%*stayinfo(${STAYMODE_ID})%%:*js ":${STAYMODE_ID},ppx_Completion",%n%)`
   );
-  PPx.Execute('%K"@LOADCUST"');
   ppx_resume(widthSpec, dirSpec, cmdline);
 };
 
+/**
+ * @desc The function that actually exeutes PPb.
+ * - Tasks with 6 or more will be put on hold until a PPb ID becomes available
+ * - More than 30 tasks will de discarded
+ * - If there is no argument, the held Tasks will be discarded
+ * @arg widthSpec - Specify the length of PPb as a string
+ * @arg _dirSpec  - Specify the stacking direction. Not used because it uses caching
+ * @arg cmdline   - Specify the command line to execute with PPb
+ */
 const ppx_resume = (widthSpec: string, _dirSpec: string, cmdline: string): void => {
-  /**
-   * NOTE: Not running a message loop may lead to an infinite loop
-   * if more than 5 commands are passed in concurrently.
-   */
-  PPx.Execute('*wait 0,2');
-
-  cache.instances++;
+  if (cache.finish) {
+    return;
+  }
 
   if (widthSpec == null) {
-    _internalStatus = STATUS.BREAK;
+    cache.stack = [];
 
     return;
   }
@@ -94,58 +99,52 @@ const ppx_resume = (widthSpec: string, _dirSpec: string, cmdline: string): void 
     return;
   }
 
-  while (true) {
-    for (const ppbid of cache.enableIds) {
-      const isInactive = isEmptyStr(PPx.Extract(`%NB${ppbid}`));
-      const state = cache.ppbState[ppbid];
+  cache.instances++;
 
-      if (isInactive && state !== STATUS.INITIAL) {
-        cache.ppbState[ppbid] = STATUS.INITIAL;
-        stackPPb(cache.ppcid, ppbid, cache.direction, cmdline);
+  for (const ppbid of cache.enableIds) {
+    const isInActive = isEmptyStr(PPx.Extract(`%NB${ppbid}`));
 
-        return;
-      }
-    }
+    if (isInActive && cache.ppbState[ppbid] !== STATUS.INITIAL) {
+      cache.ppbState[ppbid] = STATUS.INITIAL;
+      stackPPb(cache.ppcid, ppbid, cache.direction, cmdline);
 
-    const waitCount = 1000 + Math.floor(Math.random() * 100);
-    PPx.Execute(`*wait ${waitCount},2`);
-
-    if (_internalStatus === STATUS.BREAK) {
-      cache.instances--;
-
-      break;
+      return;
     }
   }
+
+  cache.stack.push(cmdline);
 };
 
 const ppx_Activate = (ppbid: EnableId): void => {
   cache.ppbState[ppbid] = STATUS.ACTIVE;
 };
 
-const ppx_Success = (ppbid: EnableId): void => {
-  cache.ppbState[ppbid] = STATUS.STANDBY;
+const ppx_Completion = (ppbid: string): void => {
+  const id = ppbid.slice(1) as EnableId;
+  cache.ppbState[id] = STATUS.STANDBY;
   cache.instances--;
-  PPx.Execute(`*closeppx B${ppbid}`);
-  ppx_Discard();
+
+  if (cache.instances === 0 && !cache.finish) {
+    ppx_Discard();
+  } else if (cache.stack.length > 0) {
+    const cmdline = cache.stack.splice(0, 1)[0];
+
+    if (cmdline) {
+      cache.ppbState[id] = STATUS.INITIAL;
+      stackPPb(cache.ppcid, id, cache.direction, cmdline);
+    }
+  }
 };
 
 const ppx_Discard = (): void => {
-  if (cache.instances >= 0) {
-    const alivePPbList = PPx.Extract('%*ppxlist(-B)');
-
-    for (const ppbid of cache.enableIds) {
-      if (~alivePPbList.indexOf(`B_${ppbid}`)) {
-        return;
-      }
-    }
-  }
+  cache.finish = true;
 
   for (const ppbid of cache.enableIds) {
     PPx.Execute(`*deletecust _WinPos:B${ppbid}`);
   }
 
+  PPx.Execute(`*linecust ${EVENT_LABEL},KB_edit:CLOSEEVENT,`);
   userEvent.once(EVENT_DONE);
-  PPx.Execute(`*linecust ${EVENT_LABEL},KC_main:LOADEVENT,`);
   PPx.StayMode = 0;
 };
 
@@ -156,7 +155,7 @@ const setPPbWidth = (widthSpec: string): number => {
 };
 
 const getDirection = (direction: string): Direction => {
-  const rgx = /^(NW|NE|SW|SE)$/i;
+  const rgx = /^(NW|NE|SW|SE|MIN)$/i;
 
   return rgx.test(direction) ? (direction.toUpperCase() as Direction) : DEFAULT_DIRECTION;
 };
@@ -190,17 +189,25 @@ const _screenAlignment = {
 
 const stackPPb = (ppcid: string, ppbid: EnableId, direction: Direction, cmdline: string): void => {
   const order = ENABLED_IDS[ppbid as EnableId];
-  const pos = _screenAlignment[direction](order);
-  const runOptions = '-breakjob -noppb -noactive -nostartmsg -wait:no';
+  const runOptions = ['-breakjob', '-noppb', '-nostartmsg', '-wait:no'];
   const ppbOptions = `-bootid:${ppbid} -q`;
-  const winsize = `*windowsize %N,${cache.ppbWidth},${cache.ppbHeight}`;
   const activate = `*execute ${ppcid},*js ":${STAYMODE_ID},ppx_Activate",${ppbid}`;
+  const postProc = `*closeppx B${ppbid}`;
   const info = `*linemessage %(${cmdline}%)`;
-  const postProc = `*execute ${ppcid},*js ":${STAYMODE_ID},ppx_Success",${ppbid}`;
+  let winsize = '';
 
-  PPx.Execute(`*setcust _WinPos:B${ppbid}=${pos.join(',')},${cache.ppbWidth},${cache.ppbHeight},0`);
+  if (direction !== 'MIN') {
+    const pos = _screenAlignment[direction](order);
+    winsize = `*windowsize %N,${cache.ppbWidth},${cache.ppbHeight}`;
+    PPx.Execute(`*setcust _WinPos:B${ppbid}=${pos.join(',')},${cache.ppbWidth},${cache.ppbHeight},0`);
+    runOptions.push('-noactive');
+  } else {
+    runOptions.push('-min');
+  }
+
   PPx.Execute(
-    `*maxlength 3000%:%OP *run ${runOptions} %0ppbw.exe ${ppbOptions} -k %(${winsize}%:${activate}%:${info}%:${cmdline}%:${postProc}%)`
+    '*maxlength 3000%:' +
+      `%OP *run ${runOptions.join(' ')} %0ppbw.exe ${ppbOptions} -k %(${winsize}%:${activate}%:${info}%:${cmdline}%:${postProc}%)`
   );
 };
 

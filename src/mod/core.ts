@@ -137,13 +137,11 @@ const gitSwitch = function (item: Source): string {
 
   if (item.commit) {
     cmdline['opts'] = `--detach ${item.commit}`;
-    resp = runStdout({cmdline: gitCmd(cmdline), hide: true});
-    // resp = stdout({cmd: gitCmd(cmdline)});
   } else if (item.branch) {
     cmdline['opts'] = item.branch;
-    resp = runStdout({cmdline: gitCmd(cmdline), hide: true});
-    // resp = stdout({cmd: gitCmd(cmdline)});
   }
+
+  resp = runStdout({cmdline: gitCmd(cmdline), hide: true, trim: true});
 
   return resp[1];
 };
