@@ -22,8 +22,12 @@ describe('extractGitDir()', function () {
 });
 
 describe('globalPath()', function () {
-  beforeEach(() => (PPx.Execute = jest.fn()));
-  afterAll(() => (PPx.Execute = ppxe));
+  beforeEach(() => {
+    PPx.Execute = jest.fn();
+  });
+  afterAll(() => {
+    PPx.Execute = ppxe;
+  });
   const cacheDir = PPx.Extract('%0').slice(3).replace(/\\/g, '@');
   it('set globalPaths', () => {
     installer.globalPath.set('home', 'ppm');
@@ -97,7 +101,7 @@ describe('gitSwitch()', function () {
 
   it('switched to branch test', () => {
     testSource.branch = 'test';
-    expect(pluginInstall.gitSwitch(testSource)).toEqual("Switched to branch 'test'\n");
+    expect(pluginInstall.gitSwitch(testSource)).toEqual("Switched to branch 'test'");
   });
   it('switched to detached head', () => {
     testSource.branch = '--detach head';
