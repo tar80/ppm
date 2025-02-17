@@ -143,7 +143,7 @@ const ppx_SelectEvent = (jumpline: string): void => {
     return;
   }
 
-  const row = PPx.Extract(`%*name(SC,"%FSC")`);
+  const row = PPx.Extract(`%*name(SCN,"%FSCN")`);
 
   if (row === '-') {
     return;
